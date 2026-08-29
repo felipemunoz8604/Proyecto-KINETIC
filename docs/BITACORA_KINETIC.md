@@ -5,6 +5,95 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
+## 29 de agosto de 2026 (cierre) — La re-corrida limpia. Estos son los números vigentes
+
+Walk-forward re-corrido con el arreglo del recorte. Salida cruda en
+`docs/salida_walkforward_29ago2026_corregida.txt`. **Estas cifras reemplazan
+a las de la primera entrada de hoy**, que se midieron con tramos mutilados.
+
+| Par / TF | Fuera de muestra | FIJO 2x | Aporte de la hipótesis | Elegidos | Concentr. |
+|---|---|---|---|---|---|
+| BTC 15m | **−351.20** (−70.24%), PF 0.854, 976 ops | −451.48 | +100 | 6.0 en las 6 | −26% |
+| **BTC 1h** | **+267.15** (+53.43%), PF 1.560, 117 ops | +10.89 | **+256** | 4,6,5,4,5,5 | **50%** |
+| ETH 15m | **−224.20** (−44.84%), PF 0.908, 811 ops | −421.07 | +197 | 6.0 en 5 de 6 | −33% |
+| ETH 1h | **+10.00** (+2.00%), PF 1.051, 59 ops | +88.87 | **−79** | 5,5,2,6,6,6 | **920%** |
+
+### Qué cambió respecto de la corrida con el bug
+
+Todo se movió, y el movimiento tiene sentido en cada caso:
+
+- **Los 15m empeoraron** (BTC −63% → −70%, ETH −35% → −45%). Al devolverles
+  el 9% del período aparecieron más señales y todas restaron. Coherente con
+  que el problema de 15m es el peaje: más velas = más operaciones = más
+  comisión sobre una ventaja que no la cubre.
+- **BTC 1h mejoró en las tres dimensiones a la vez**: PF 1.367 → 1.560,
+  +33% → +53%, y **concentración 66% → 50%**. Que mejoren juntas es
+  tranquilizador: si el retorno hubiera subido empeorando la concentración,
+  sería otra operación afortunada y no una mejora.
+- **ETH 1h dejó de perder** (−13.6% → +2.0%) pero destapó algo peor: ver
+  abajo.
+
+### Dos validaciones de que el arreglo hace lo que debe
+
+1. **En BTC 15m la brecha contra el «mejor en retrospectiva» dio 0.00
+   exacto.** Tiene que ser así: si el parámetro elegido es el mismo en todas
+   las ventanas, coser los tramos debe dar idéntico a correr todo de una.
+   Antes no coincidía porque cada costura tenía 30 días de agujero.
+2. **Desapareció la ventana 7 fantasma.** La última ventana ahora llega a
+   2026-08-29, el final real de los datos.
+
+### El hallazgo más importante de la re-corrida: ETH 1h, concentración 920%
+
+No es un error de impresión. El neto es +10 USDT y la mejor operación sola
+aportó ~+92: **todo el resto junto perdió ~82**. No es una estrategia con un
+pico afortunado, es una operación afortunada rodeada de 58 perdedoras. Es la
+cifra más elocuente de todo lo que llevamos medido.
+
+### Un defecto de la bandera de estabilidad, encontrado por accidente
+
+En ETH 1h los elegidos son `[5, 5, 2, 6, 6, 6]` — van de 2 a 6, dispersión
+visible a ojo. Pero la bandera dijo **«Estable: SÍ»**, porque el criterio es
+«el mismo valor gana en al menos la mitad de las ventanas» y 6.0 ganó
+exactamente 3 de 6.
+
+En la corrida anterior este mismo tramo daba «NO» y acertaba. Lo único que
+cambió fue tener 6 ventanas en vez de 7: **la aritmética se dio vuelta sin
+que la estrategia cambiara.** Con pocas ventanas, una mayoría mínima alcanza
+para declarar estabilidad donde no la hay.
+
+**No se tocó el criterio.** Cambiar cómo se juzga la estabilidad justo
+después de ver un resultado que no gusta es exactamente la forma de
+engañarse que este proyecto trata de evitar. Queda anotado como decisión
+pendiente de Felipe.
+
+### Estado
+
+**Fase 1 sigue ABIERTA. Los `null` de `config.yaml` siguen en `null`.**
+Nada se decidió.
+
+Lo que quedó establecido con evidencia:
+
+1. **La hipótesis del trailing es un mecanismo real.** Aportó +100, +256 y
+   +197 USDT en tres de los cuatro tramos, y el entrenamiento eligió entre 4x
+   y 6x año tras año con datos distintos, sin tocar nunca 2 ni 3. Sobrevivió
+   al arreglo de un bug que movió todos los números.
+2. **Los 15m están descartados** en los dos pares.
+3. **ETH 1h está descartado**: la hipótesis lo empeora y su resultado es una
+   sola operación.
+4. **Queda un único candidato: BTCUSDT 1h**, con 50% de concentración y 117
+   operaciones en seis años (~19 por año).
+
+Pendientes anotados, ninguno resuelto:
+
+- Quedan 126.01 USDT de brecha en BTC 1h contra el «mejor en retrospectiva»,
+  con el mismo parámetro elegido (5.0x), así que tampoco es sobreajuste.
+  Probablemente sean cierres forzados en las costuras nuevas (los bordes se
+  corrieron del 17-ago al 16-sep). Se mide re-corriendo
+  `tools/medir_cierres_de_ventana.py`, que ahora usa el código arreglado.
+- El criterio de la bandera de estabilidad.
+
+---
+
 ## 29 de agosto de 2026 (más tarde) — Medir el artefacto encontró un bug peor
 
 Felipe pidió medir cuánto cuestan los cierres forzados de ventana, antes de
