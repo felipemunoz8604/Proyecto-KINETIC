@@ -115,10 +115,10 @@ def evaluar_vela(fila: pd.Series, cfg: dict) -> Senal:
         return _esperar(momento, precio, motivos, "regimen", datos)
 
     # --- 2. Consolidacion previa -----------------------------------------
-    umbral_cons = est["consolidacion"]["umbral_atr_pct"]
+    umbral_cons = est["consolidacion"]["umbral_desviacion_pct"]
     if umbral_cons is None:
         raise ValueError(
-            "estrategia.consolidacion.umbral_atr_pct esta sin definir en "
+            "estrategia.consolidacion.umbral_desviacion_pct esta sin definir en "
             "config.yaml. Es un pendiente de la Fase 1: lo decide el backtest."
         )
     desviacion = float(fila["desv_pct"])

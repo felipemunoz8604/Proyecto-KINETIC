@@ -57,7 +57,7 @@ estrategia:
 
   consolidacion:
     velas: 50
-    umbral_atr_pct: null      # PENDIENTE FASE 1 (barrido empirico)
+    umbral_desviacion_pct: null      # PENDIENTE FASE 1 (barrido empirico)
 
   volumen:
     periodo_promedio: 50
@@ -98,8 +98,44 @@ estrategia:
 costos:
   # Binance Spot cobra 0.1% por lado (entrada Y salida) sin descuentos.
   comision_por_lado_pct: 0.1
-  # PENDIENTE FASE 1 — se propone con justificacion, no se inventa.
-  slippage_supuesto_pct: null
+
+  # Slippage: 0,05% por lado. De donde sale el numero, medido el 28-ago-2026
+  # sobre las 659 velas de senal de BTCUSDT y ETHUSDT en 1h (2017-2026):
+  #
+  #   - El salto entre el cierre de la vela de senal y la apertura de la
+  #     siguiente (que es cuando el bot puede comprar de verdad) tiene
+  #     mediana 0,0000% y media +-0,001%. En cripto no hay huecos de fin de
+  #     semana: el mercado es continuo. O sea que ese costo es CERO.
+  #   - Lo que si se paga es el spread mas el impacto de la orden. En
+  #     BTCUSDT el spread ronda 0,01%, y nuestras compras son de ~100-250
+  #     USDT sobre un libro de millones: impacto despreciable.
+  #   - 0,05% es 5 veces el spread tipico. El margen extra cubre que las
+  #     rupturas ocurren en momentos rapidos, justo cuando el spread se
+  #     abre. Es deliberadamente pesimista.
+  #
+  # Se corre igual una sensibilidad a 0,02% y 0,10% (ver el informe de la
+  # Fase 1). Si el resultado da vuelta entre esos dos valores, la estrategia
+  # no tiene ventaja: tiene un empate que depende del supuesto.
+  slippage_pct_por_lado: 0.05
+
+backtest_motor:
+  # La entrada se ejecuta a la APERTURA DE LA VELA SIGUIENTE, no al cierre
+  # de la vela de senal. Comprar al cierre es imposible: solo sabes cual fue
+  # el cierre cuando la vela ya cerro, y para entonces el precio es otro. Un
+  # backtest que compra al cierre se regala plata que en vivo no existe.
+  entrada_en_apertura_siguiente: true
+
+  # Se descartan los primeros dias de cotizacion de cada par. Medido el
+  # 28-ago-2026: ETHUSDT tiene el 22-ago-2017 una vela que abre en 144,21
+  # (su propio minimo) tras cerrar en 280 la anterior, y cierra en 287. Un
+  # -48,5% que no es un desplome sino una operacion suelta en un libro casi
+  # vacio, cinco dias despues del listado. Backtestear sobre eso genera
+  # operaciones falsas a precios falsos.
+  descartar_dias_iniciales: 30
+
+  # El tamano de cada operacion se calcula sobre el capital ACTUAL, no sobre
+  # los 500 iniciales. Es como funcionaria el bot en vivo.
+  capital_compuesto: true
 
 datos:
   carpeta_historico: data/historico

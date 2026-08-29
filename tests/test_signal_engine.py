@@ -34,7 +34,7 @@ def cfg() -> dict:
     return {
         "estrategia": {
             "tendencia": {"ema_rapida": 9, "ema_lenta": 21},
-            "consolidacion": {"velas": 50, "umbral_atr_pct": 2.0},
+            "consolidacion": {"velas": 50, "umbral_desviacion_pct": 2.0},
             "volumen": {"periodo_promedio": 50, "multiplicador_minimo": 2.0},
             "regimen": {"metodo": "adx", "adx_periodo": 14, "adx_minimo": 20.0},
             "portfolio_guard": {"sma_periodo": 200},
@@ -157,7 +157,7 @@ def test_falta_de_columna_tambien_es_calentamiento(cfg):
 # --- Umbrales sin definir --------------------------------------------------
 
 def test_umbral_de_consolidacion_sin_definir_avisa(cfg):
-    cfg["estrategia"]["consolidacion"]["umbral_atr_pct"] = None
+    cfg["estrategia"]["consolidacion"]["umbral_desviacion_pct"] = None
     with pytest.raises(ValueError, match="sin definir"):
         evaluar_vela(vela(), cfg)
 
