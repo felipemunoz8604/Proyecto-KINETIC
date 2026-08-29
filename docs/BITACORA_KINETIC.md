@@ -5,6 +5,131 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
+## 28 de agosto de 2026 — Fase 1 ABIERTA: datos, indicadores, señal y riesgo
+
+Felipe aprobó abrir la Fase 1. Decisiones tomadas por él antes de empezar:
+**BTCUSDT y ETHUSDT**, **todo el historial desde 2017**, en 15m, 1h y 4h.
+
+### Histórico descargado
+
+**829.930 velas** en disco, de Binance Mainnet por el endpoint público —
+sin llaves. 836 segundos en total, y de acá en más solo se pide lo que
+falta.
+
+| Par | 15m | 1h | 4h |
+|---|---|---|---|
+| BTCUSDT | 316.139 | 79.048 | 19.778 |
+| ETHUSDT | 316.139 | 79.048 | 19.778 |
+
+Todo desde el 17-ago-2017. Cero duplicados, cero desorden. Huecos: 33 en
+15m (565 velas), 28 en 1h, 8 en 4h. Los dos pares dan **exactamente** los
+mismos conteos y los mismos huecos, y eso es correcto, no un error de
+copia: se listaron el mismo día y las paradas de mantenimiento de Binance
+afectan a todos los pares a la vez.
+
+### Módulos entregados
+
+**1 — Capa de datos** (`core/data_feed.py`). Descarga incremental, guardado
+en CSV y auditoría. Vigila las tres cosas que arruinan un backtest en
+silencio: la vela en curso (se descarta siempre, comparando `close_time`
+contra la hora actual), los huecos (se reportan, nunca se rellenan —
+inventar una vela es fabricar precio) y los duplicados/desorden (se
+reauditan al leer del disco).
+
+**2 — Indicadores** (`strategy/indicators.py`). EMA, SMA, ATR, ADX,
+Bollinger, desviación porcentual, rango de consolidación, volumen promedio.
+A mano, sin `pandas_ta`. Con la prueba anti-*lookahead* que recalcula los 13
+indicadores cortando la serie en cuatro puntos: si un valor cambia según
+cuántas velas *posteriores* existan, estaba mirando al futuro.
+
+Dos lugares donde el lookahead se colaba, los dos resueltos con `shift(1)`:
+el rango de consolidación incluía la vela que lo estaba rompiendo, y el
+promedio de volumen incluía la vela de ruptura (que trae volumen enorme, así
+que el filtro se ablandaba justo cuando debía ser exigente).
+
+ATR y ADX usan suavizado de Wilder (α = 1/p), no EMA común (α = 2/(p+1)).
+Hay una prueba que compara contra las dos fórmulas y exige que coincida con
+Wilder y **no** con la otra.
+
+**3 — Señal y riesgo** (`strategy/`, `risk/`). Separados en archivos
+distintos, como manda la Regla 3. El motor de señal no sabe cuánto capital
+hay ni si hoy se perdió el límite; solo dice si hay ruptura. El portero
+decide si eso se ejecuta.
+
+Del lado del riesgo hay cuatro cosas que vale la pena tener anotadas:
+
+- **Las comisiones entran en el dimensionamiento.** Se despeja la cantidad
+  con el 0,1% de ida y el 0,1% de vuelta dentro de la fórmula. Sin eso, la
+  pérdida real al tocar el stop siempre supera un poco el 1% que creíamos
+  arriesgar — poco, pero siempre en contra.
+- **En Spot no se puede comprar por más del capital.** Con un stop muy
+  pegado al precio, la fórmula pide una compra mayor a lo que hay. Se
+  recorta y se avisa: el riesgo real queda *por debajo* del configurado.
+- **Una compra por debajo del mínimo de Binance se rechaza, no se agranda.**
+  Agrandarla para llegar a los 5 USDT sería romper el límite de riesgo para
+  poder operar.
+- **El trailing nunca baja, y se cuelga del mayor CIERRE, no del mayor
+  máximo.** Una mecha larga de un minuto raro subiría el stop a un nivel que
+  el precio nunca sostuvo. Hay una prueba que derrumba el precio con la
+  volatilidad explotando y exige que el stop no retroceda ni una vez.
+- **El break-even NO está implementado, a propósito.** TITAN tuvo un bug de
+  break-even que nunca se activaba y que ninguna prueba automatizada
+  atrapó — solo lo encontró la observación en vivo (`docs/BITACORA.md`,
+  14-ago-2026). Si se quiere, se agrega como regla explícita con su propia
+  prueba, no escondido dentro del trailing.
+
+**El bug F de TITAN está tapado desde el primer día.** `portfolio_guard.py`
+impide abrir dos pares del mismo grupo de correlación. En TITAN eso se
+descubrió operando: el 19-ago-2026 un SELL en EURUSD y un SELL en GOLD eran
+una sola apuesta al dólar tomada dos veces, y pegaron en su stop con 118
+segundos de diferencia. En cripto el problema es peor porque casi todo sigue
+a Bitcoin: comprar BTC y ETH a la vez no es diversificar.
+
+### Hallazgo: la tensión entre el filtro de régimen y la consolidación
+
+Al escribir `regime_filter.py` noté que la sección 7 del MEGAPROMPT pide dos
+cosas que se pelean: **tendencia** (ADX alto) y **consolidación previa**
+(precio quieto en las últimas 50 velas). Una consolidación *es* un tramo sin
+tendencia, así que mientras el precio está quieto el ADX baja.
+
+En vez de dejarlo como sospecha, se midió sobre BTCUSDT 1h, 78.998 velas
+analizables (2017-2026):
+
+| Qué tan quieto estuvo el precio | ADX medio |
+|---|---|
+| Muy quieto (cuartil 1) | 20,7 |
+| Quieto | 24,4 |
+| Movido | 29,1 |
+| Muy movido (cuartil 4) | 36,1 |
+
+**La tensión es real pero no es fatal.** El ADX sí cae cuando el mercado se
+aquieta, pero **el 47% de las velas consolidadas igual pasan ADX ≥ 20**
+(9.311 de 19.750). El motivo: el ADX empieza a subir en la vela de ruptura
+misma, así que funciona más como confirmación que como filtro previo.
+
+Entradas que sobrevivirían a las cuatro condiciones, en nueve años de
+BTCUSDT 1h, con la consolidación fijada en el cuartil más quieto (≤ 0,74%):
+
+| Filtro de régimen | Entradas en 9 años |
+|---|---|
+| Sin filtro | 332 |
+| ADX ≥ 20 | 214 |
+| ADX ≥ 25 | 120 |
+
+**Conclusión provisoria:** el filtro no mata la estrategia, pero es caro. A
+ADX ≥ 25 quedan ~13 entradas por año, que es poca muestra para afirmar nada.
+Si esas 332 operaciones sin filtro no rinden, no hay filtro que las salve.
+No se decide nada acá: se decide con el backtest completo, y por eso
+`config.yaml` sigue con `adx_minimo: null`.
+
+### Estado
+
+- Pruebas: **123 pasan**, 0 fallan. Ninguna toca la red.
+- Falta para cerrar la Fase 1: el motor de backtest (comisiones + slippage),
+  el barrido de parámetros y la validación walk-forward.
+
+---
+
 ## 28 de agosto de 2026 — FASE 0 CERRADA
 
 Felipe creó sus llaves de Testnet y corrió `tools/verificar_conexion.py`.

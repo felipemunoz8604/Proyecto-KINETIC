@@ -68,14 +68,32 @@ estrategia:
     ema_lenta: 21             # largo solo si EMA9 > EMA21
 
   regimen:
-    metodo: adx               # adx | pendiente_sma200
+    # OJO, hay una tension entre este filtro y el de consolidacion, y esta
+    # explicada arriba de todo en strategy/regime_filter.py: una
+    # consolidacion ES un tramo sin tendencia, asi que mientras el precio
+    # esta quieto el ADX baja. Exigir "ADX alto AHORA" y "quieto en las
+    # ultimas 50 velas" a la vez describe algo que casi no pasa.
+    # Por eso hay dos metodos y el backtest de la Fase 1 decide cual queda.
+    metodo: adx               # adx | pendiente_sma
+
     adx_periodo: 14
     adx_minimo: null          # PENDIENTE FASE 1
+
+    # Solo se usan si metodo = pendiente_sma. Miden hacia donde apunta el
+    # mercado EN GRANDE, que no se pelea con una pausa local de 50 velas.
+    pendiente_ventana: 20
+    pendiente_minima_pct: null   # PENDIENTE FASE 1
 
   portfolio_guard:
     # No abrir largos si el precio esta muy por debajo de su SMA200.
     sma_periodo: 200
     distancia_maxima_bajo_sma_pct: null   # PENDIENTE FASE 1
+
+    # Una sola posicion por grupo de correlacion. En cripto casi todo se
+    # mueve con Bitcoin: comprar BTC y ETH a la vez no es diversificar, es
+    # la misma apuesta tomada dos veces. Es el bug F de TITAN, que alla se
+    # descubrio operando y aca esta desde el primer dia.
+    una_posicion_por_grupo: true
 
 costos:
   # Binance Spot cobra 0.1% por lado (entrada Y salida) sin descuentos.
