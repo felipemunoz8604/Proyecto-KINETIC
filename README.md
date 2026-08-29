@@ -138,8 +138,9 @@ crearse con **lectura + spot trading, y el permiso de retiro APAGADO**.
   de conexión de solo lectura. ✅ **CERRADA el 28-ago-2026**
 - **Fase 1 — Backtest local.** Señal y riesgo integrados desde el inicio,
   walk-forward, neto de comisiones (0,1 % por lado) y slippage.
-  ⬅️ *acá estamos — motor y walk-forward construidos; falta la corrida
-  de validación. Ver `docs/BITACORA_KINETIC.md`, entrada del 28-ago*
+  ⬅️ *acá estamos — walk-forward corrido y validado. Sobrevive un solo
+  candidato, BTCUSDT 1h, y con reparos. Ver `docs/BITACORA_KINETIC.md`,
+  entrada del 29-ago (cierre)*
 - **Fase 2 — Binance Testnet.** Se prueba la mecánica de ejecución, no el
   rendimiento (el Testnet tiene liquidez y datos limitados).
 - **Fase 3 — Micro-testing en Mainnet (5 USD).** Solo tras validar 1 y 2, y

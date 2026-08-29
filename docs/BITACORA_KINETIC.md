@@ -7,6 +7,10 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ## 29 de agosto de 2026 (cierre) — La re-corrida limpia. Estos son los números vigentes
 
+> **Si estás retomando el proyecto, empezá por acá.** Las dos entradas de
+> más abajo del 29-ago cuentan cómo se llegó hasta este punto; las cifras que
+> valen son las de esta.
+
 Walk-forward re-corrido con el arreglo del recorte. Salida cruda en
 `docs/salida_walkforward_29ago2026_corregida.txt`. **Estas cifras reemplazan
 a las de la primera entrada de hoy**, que se midieron con tramos mutilados.
@@ -296,7 +300,10 @@ ninguna todavía:
 
 ## 28 de agosto de 2026 — CIERRE DE SESIÓN. Módulo 5 y qué falta
 
-> **Si estás retomando el proyecto, empezá por acá.**
+> **Histórico. NO empieces por acá** — el walk-forward que esta entrada dejó
+> pendiente ya se corrió el 29-ago, encontró un bug de medición por el
+> camino, y se volvió a correr arreglado. Empezá por la entrada del 29 de
+> agosto (cierre).
 
 ### Dónde quedó todo
 
