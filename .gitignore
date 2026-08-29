@@ -19,3 +19,6 @@ logs/
 # Estado en vivo del bot
 state/
 risk_state.json
+
+# Configuracion y estado de Obsidian: cambia cada vez que se mueve un panel
+.obsidian/
