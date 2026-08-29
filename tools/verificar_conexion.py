@@ -31,6 +31,10 @@ from core.exchange_client import ClienteBinance  # noqa: E402
 # para operar: ese se decide con el backtest de la Fase 1.
 PAR_DE_PRUEBA = "BTCUSDT"
 
+# La cuenta de Testnet viene con cientos de monedas de regalo. Solo estas
+# nos interesan; el resto se cuenta pero no se lista.
+DESTACADOS = ("USDT", "BTC", "ETH", "BNB", "USDC")
+
 
 def titulo(texto: str) -> None:
     print("\n" + texto)
@@ -95,12 +99,22 @@ def main() -> int:
     print("    Puede operar (canTrade):   " + str(cuenta.get("canTrade")))
     print("    Puede retirar (canWithdraw): " + str(cuenta.get("canWithdraw")))
     saldos = cliente.saldos_no_cero()
-    if saldos:
-        print("    Saldos con fondos:")
-        for activo, cantidad in sorted(saldos.items()):
-            print("      " + activo.ljust(8) + " " + str(cantidad))
-    else:
+    if not saldos:
         print("    (sin saldos - normal en una cuenta de Testnet recien creada)")
+    elif "--todos-los-saldos" in sys.argv:
+        for activo, cantidad in sorted(saldos.items()):
+            print("      " + activo.ljust(10) + " " + str(cantidad))
+    else:
+        # La cuenta de Testnet viene con cientos de monedas de regalo.
+        # Listarlas todas hace ilegible la salida, asi que mostramos las que
+        # de verdad importan y contamos el resto.
+        print("    Activos con saldo: " + str(len(saldos)))
+        for activo in DESTACADOS:
+            if activo in saldos:
+                print("      " + activo.ljust(10) + " " + str(saldos[activo]))
+        otros = len(saldos) - sum(1 for a in DESTACADOS if a in saldos)
+        if otros > 0:
+            print("      (+" + str(otros) + " mas - usa --todos-los-saldos para verlos)")
     print("[OK] lectura de cuenta correcta")
 
     titulo("4. Permisos de la llave")

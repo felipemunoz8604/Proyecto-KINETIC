@@ -8,9 +8,10 @@ independiente de la estrategia.
 Proyecto **separado de TITAN** (MetaTrader 5 / forex). Cada uno tiene su
 propio repositorio, su propio entorno y su propio protocolo.
 
-> ⚠️ **Estado: Fase 0 (entorno).** Hoy este repositorio **no puede operar**.
-> No existe código capaz de enviar una orden a Binance, y hay pruebas
-> automáticas que fallan si alguien lo agrega.
+> ⚠️ **Estado: Fase 0 CERRADA (28-ago-2026). Fase 1 sin iniciar.**
+> Hoy este repositorio **no puede operar**. No existe código capaz de enviar
+> una orden a Binance, y hay pruebas automáticas que fallan si alguien lo
+> agrega.
 
 ---
 
@@ -134,9 +135,10 @@ crearse con **lectura + spot trading, y el permiso de retiro APAGADO**.
 ## Las cuatro fases
 
 - **Fase 0 — Entorno.** venv, dependencias, llaves de Testnet, verificación
-  de conexión de solo lectura. ⬅️ *acá estamos*
+  de conexión de solo lectura. ✅ **CERRADA el 28-ago-2026**
 - **Fase 1 — Backtest local.** Señal y riesgo integrados desde el inicio,
   walk-forward, neto de comisiones (0,1 % por lado) y slippage.
+  ⬅️ *siguiente, pendiente de aprobación*
 - **Fase 2 — Binance Testnet.** Se prueba la mecánica de ejecución, no el
   rendimiento (el Testnet tiene liquidez y datos limitados).
 - **Fase 3 — Micro-testing en Mainnet (5 USD).** Solo tras validar 1 y 2, y

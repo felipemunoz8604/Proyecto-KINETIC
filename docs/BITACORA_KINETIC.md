@@ -5,7 +5,71 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 28 de agosto de 2026 — Fase 0: entorno montado y verificado (parcial)
+## 28 de agosto de 2026 — FASE 0 CERRADA
+
+Felipe creó sus llaves de Testnet y corrió `tools/verificar_conexion.py`.
+**Terminó en verde.** Los seis chequeos pasaron: `.env` presente, config
+válido, ping correcto, reloj a −174 ms de Binance (tolerancia: 1000 ms),
+lectura de cuenta correcta y datos de mercado disponibles.
+
+Con eso se cumple lo único que faltaba, y la **Fase 0 queda cerrada**.
+
+### Tres cosas que dejó la verificación
+
+**1. El precio de Testnet SÍ sigue al mercado real.** Al ver BTC a 77.584
+en Testnet sospeché que fuera un precio inventado del servidor de pruebas,
+lo cual habría descalificado a Testnet como fuente de datos. Lo comparé
+contra Mainnet y la sospecha era infundada:
+
+| Par | Mainnet | Testnet | Diferencia |
+|---|---|---|---|
+| BTCUSDT | 77.580,00 | 77.579,99 | −0,00 % |
+| ETHUSDT | 2.436,22 | 2.436,70 | +0,02 % |
+
+Igual, esto no cambia la decisión de dónde sacar los datos (ver punto 2):
+el Testnet replica el precio, pero su libro de órdenes y su liquidez son
+ficticios, así que sigue sin servir para medir rendimiento — solo mecánica.
+
+**2. El histórico de Mainnet se baja SIN NINGUNA LLAVE.** Los endpoints de
+velas (`get_klines`) son públicos: 1000 velas por pedido, encadenables
+hacia atrás. Esto define la fuente de datos de la Fase 1 y es la opción más
+segura posible — el backtest se alimenta de datos reales de mercado sin que
+haya credenciales involucradas en ningún momento.
+
+**3. Queda confirmado que el mínimo de compra no nos afecta.** Binance
+reporta para BTCUSDT: cantidad mínima 0,00001 BTC, paso 0,00001, y compra
+mínima **5,00 USDT**. Con nuestra compra típica de ~100-250 USDT estamos
+entre 20 y 50 veces por encima del mínimo. El hallazgo P de TITAN (el lote
+mínimo de GOLD forzando 2,34 % de riesgo con 1 % configurado) no tiene
+equivalente acá.
+
+### Un detalle a tener presente en Fase 3
+
+La cuenta de Testnet reporta `canWithdraw: True`. En Testnet da igual —es
+dinero de mentira y ese campo describe la cuenta, no la API key—, pero en
+Mainnet ese mismo campo en `True` sería una alarma. El chequeo que sí
+importa es el de permisos de la API key (`enableWithdrawals`), que solo
+existe en Mainnet y que el script ya vigila: si aparece encendido, corta
+con código de error y no sigue.
+
+### Arreglo aplicado
+
+La verificación imprimió ~500 líneas de saldos, porque la cuenta de Testnet
+viene con cientos de monedas de regalo. Salida inservible. Ahora muestra el
+conteo total y solo USDT, BTC, ETH, BNB y USDC; el resto se ve con
+`--todos-los-saldos`.
+
+### Estado
+
+- Fase 0: **CERRADA** el 28-ago-2026.
+- Pruebas: 14 pasan, 0 fallan.
+- Fase 1: **NO iniciada.** Necesita aprobación explícita de Felipe, y antes
+  hay dos decisiones que tomar con él: qué pares entran al barrido y cuánto
+  historial se descarga.
+
+---
+
+## 28 de agosto de 2026 — Fase 0: entorno montado (construcción)
 
 **Qué se hizo.** Se creó el proyecto desde cero en
 `C:\Proyectos\Proyecto-KINETIC`, repositorio git propio, separado de TITAN.
@@ -65,8 +129,9 @@ mayor reciente, así que si algún ejemplo de internet no compila, sospechar
 de eso antes que del código propio.
 
 **Qué falta para cerrar la Fase 0.** Una sola cosa, y depende de Felipe:
+*(hecho el mismo día — ver la entrada de arriba)*
 
-- [ ] Crear las llaves de **Binance Testnet** en https://testnet.binance.vision/
+- [x] Crear las llaves de **Binance Testnet** en https://testnet.binance.vision/
       (se entra con una cuenta de GitHub, es gratis y es dinero de mentira),
       copiarlas al archivo `.env`, y correr
       `venv\Scripts\python.exe tools\verificar_conexion.py`.
