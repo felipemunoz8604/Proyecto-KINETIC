@@ -1,0 +1,21 @@
+# Secretos — NUNCA versionar
+.env
+*.key
+
+# Entorno virtual
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Datos y salidas que se regeneran solos
+data/
+backtesting/reports/*
+!backtesting/reports/.gitkeep
+journal/*.csv
+logs/
+*.log
+
+# Estado en vivo del bot
+state/
+risk_state.json

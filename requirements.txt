@@ -1,0 +1,16 @@
+# KINETIC — dependencias directas, con version fijada.
+# Instalacion:  venv\Scripts\python.exe -m pip install -r requirements.txt
+#
+# Para reproducir el entorno EXACTO (incluidas las dependencias de las
+# dependencias) usa requirements-lock.txt en vez de este archivo.
+#
+# NOTA: no se usa `pandas_ta`. La version original tiene un bug de
+# compatibilidad con numpy reciente (falla al importar `NaN`). Los
+# indicadores de KINETIC se calculan a mano en strategy/indicators.py.
+
+python-binance==1.0.37
+pandas==3.0.5
+numpy==2.5.2
+PyYAML==6.0.3
+python-dotenv==1.2.3
+pytest==9.1.1

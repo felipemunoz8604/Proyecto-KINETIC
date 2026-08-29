@@ -1,0 +1,94 @@
+# ===========================================================================
+# KINETIC — configuracion central
+#
+# REGLA: ningun parametro de riesgo ni ningun par se escribe "a mano" dentro
+# del codigo Python. Todo vive aca. Si un numero no esta en este archivo, el
+# codigo no deberia conocerlo.
+#
+# Los valores en  null  son PENDIENTES: se deciden con evidencia en la fase
+# indicada en el comentario, no por intuicion y no por Claude por su cuenta.
+# ===========================================================================
+
+meta:
+  proyecto: KINETIC
+  version: "0.1.0"
+  fase_actual: 0          # 0=entorno  1=backtest  2=testnet  3=mainnet micro
+
+entorno:
+  # TESTNET = dinero de mentira. MAINNET = dinero real.
+  # Este valor NO lo cambia Claude. Lo cambia Felipe, a mano, en Fase 3.
+  modo: TESTNET
+
+capital:
+  # Confirmado por Felipe el 28-ago-2026.
+  monto: 500.0
+  moneda: USDT
+
+riesgo:
+  # Confirmado por Felipe el 28-ago-2026: 1% de $500 = $5 de perdida maxima
+  # si el stop loss pega. OJO: $5 es lo que se PIERDE, no lo que se compra.
+  por_operacion_pct: 1.0
+
+  # Confirmado por Felipe el 28-ago-2026: al perder $15 en un mismo dia el
+  # bot deja de abrir posiciones nuevas hasta el dia siguiente (UTC).
+  # Las posiciones ya abiertas se siguen gestionando con su stop.
+  perdida_diaria_max_pct: 3.0
+
+  # PENDIENTE FASE 1 — depende de cuantos pares sobrevivan al backtest.
+  max_posiciones_simultaneas: null
+
+  # Kill switch: en true, el bot NO abre nada nuevo. Las posiciones abiertas
+  # se siguen cuidando con su stop. Se activa a mano.
+  kill_switch: false
+
+stops:
+  atr_periodo: 14
+  # Stop inicial = precio de entrada - (2 x ATR14).
+  atr_multiplicador_sl: 2.0
+  trailing_activo: true
+  trailing_tipo: chandelier   # sube con el maximo cierre desde la entrada
+  trailing_atr_multiplicador: 2.0
+
+estrategia:
+  # PENDIENTE FASE 1 — el par y la temporalidad se eligen con el backtest.
+  # El MEGAPROMPT (seccion 7) prohibe explicitamente asumirlos aca.
+  par: null
+  temporalidad: null          # candidatos a evaluar: 15m / 1h / 4h
+
+  consolidacion:
+    velas: 50
+    umbral_atr_pct: null      # PENDIENTE FASE 1 (barrido empirico)
+
+  volumen:
+    periodo_promedio: 50
+    multiplicador_minimo: 2.0 # volumen > 200% del promedio(50)
+
+  tendencia:
+    ema_rapida: 9
+    ema_lenta: 21             # largo solo si EMA9 > EMA21
+
+  regimen:
+    metodo: adx               # adx | pendiente_sma200
+    adx_periodo: 14
+    adx_minimo: null          # PENDIENTE FASE 1
+
+  portfolio_guard:
+    # No abrir largos si el precio esta muy por debajo de su SMA200.
+    sma_periodo: 200
+    distancia_maxima_bajo_sma_pct: null   # PENDIENTE FASE 1
+
+costos:
+  # Binance Spot cobra 0.1% por lado (entrada Y salida) sin descuentos.
+  comision_por_lado_pct: 0.1
+  # PENDIENTE FASE 1 — se propone con justificacion, no se inventa.
+  slippage_supuesto_pct: null
+
+datos:
+  carpeta_historico: data/historico
+  # PENDIENTE FASE 1 — cuanto historial se descarga para el backtest.
+  anios_historial: null
+
+registro:
+  carpeta_logs: logs
+  trade_journal: journal/trade_journal.csv
+  nivel: INFO
