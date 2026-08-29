@@ -5,6 +5,74 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
+## 28 de agosto de 2026 — Módulo 4: el backtest, y las primeras cifras reales
+
+### Decisiones de modelado, todas medidas antes de tomarlas
+
+**La entrada va a la apertura de la vela siguiente, no al cierre de la vela
+de señal.** Comprar al cierre es imposible: recién sabés cuál fue el cierre
+cuando la vela ya cerró. Se midió cuánto cuesta hacerlo bien, sobre las 659
+velas de señal de BTC y ETH en 1h: el salto cierre→apertura siguiente tiene
+**mediana 0,0000%** y media ±0,001%. En cripto no hay huecos de fin de
+semana. O sea que hacerlo bien no cuesta casi nada — pero se hace igual,
+porque lo correcto no depende de que sea barato.
+
+**Slippage: 0,05% por lado.** El spread de BTCUSDT ronda 0,01% y nuestras
+compras de 100-250 USDT no mueven un libro de millones. 0,05% es 5× el
+spread típico; el margen extra cubre que las rupturas ocurren en momentos
+rápidos. Justificación completa en `config/config.yaml`.
+
+**Se descartan los primeros 30 días de cotización de cada par.** Salió de
+mirar el peor hueco a la baja de ETHUSDT: **−48,50%**. No es un desplome. Es
+el 22-ago-2017, cinco días después del listado: la vela abre en 144,21 —que
+es también su mínimo— tras cerrar en 280 la anterior, y cierra en 287. Una
+operación suelta en un libro casi vacío. Backtestear sobre eso genera
+operaciones falsas a precios falsos.
+
+**El stop no siempre se ejecuta en su precio.** Si la vela abre por debajo
+del stop, la orden sale a la apertura, que es peor. Precio de salida =
+`min(stop, apertura)`.
+
+### Resultados — ADX ≥ 20, consolidación ≤ 0,75%, guardia macro apagada
+
+Netos de comisión (0,1% por lado) y slippage (0,05% por lado), capital 500
+USDT, riesgo 1% por operación, 2017-2026.
+
+| Par | TF | Ops | PF | Acierto | Retorno | Max DD |
+|---|---|---|---|---|---|---|
+| BTCUSDT | 15m | 1.496 | **0,756** | 24,5% | **−92,22%** | 93,31% |
+| BTCUSDT | 1h | 157 | 1,130 | 31,8% | +9,93% | 14,91% |
+| BTCUSDT | 4h | 3 | 2,821 | 33,3% | +2,36% | 1,25% |
+| ETHUSDT | 15m | 1.197 | **0,735** | 27,0% | **−85,63%** | 87,12% |
+| ETHUSDT | 1h | 75 | 1,675 | 34,7% | +27,83% | 8,92% |
+| ETHUSDT | 4h | 0 | — | — | — | — |
+
+### Lo que de verdad importa: la concentración
+
+Los dos únicos resultados positivos con muestra son un espejismo.
+
+**BTCUSDT 1h** — neto +49,63 USDT en nueve años. La **mejor operación sola
+aporta +80,14**, o sea el **161%** del resultado. Sin ella el sistema
+**pierde −30,51**. Resultado por año: negativo en 4 de 9 años (2018, 2021,
+2023, 2025), y 2024 solo aporta +81,3.
+
+**ETHUSDT 1h** — neto +139,16. La mejor aporta **+113,63, el 82%**. Sin ella
+quedan +25,53 en nueve años, que es ~0,5% anual. Y 2026 solo aporta +97,1 de
+los +139.
+
+Es **exactamente** el hallazgo de GOLD en TITAN: una ventana aporta el 100%
+del resultado. Un sistema cuyo rendimiento depende de una sola operación no
+tiene ventaja estadística demostrada — tiene suerte documentada.
+
+### Estado
+
+- Pruebas: **141 pasan**.
+- La estrategia de la sección 7 del MEGAPROMPT, tal como está especificada,
+  **no muestra ventaja** en BTC ni en ETH con este historial.
+- Decisión de qué hacer con eso: **pendiente de Felipe.**
+
+---
+
 ## 28 de agosto de 2026 — Fase 1 ABIERTA: datos, indicadores, señal y riesgo
 
 Felipe aprobó abrir la Fase 1. Decisiones tomadas por él antes de empezar:
