@@ -192,6 +192,7 @@ def correr(
     temporalidad: str,
     reglas_simbolo: position_sizing.ReglasSimbolo | None = None,
     rapido: bool = True,
+    recortar_inicio: bool = True,
 ) -> Resultado:
     """
     Recorre el DataFrame y devuelve el resultado neto.
@@ -200,7 +201,13 @@ def correr(
     (`indicators.agregar_indicadores`).
     """
     motor = cfg.get("backtest_motor", {})
-    df = _recortar_inicio(df, motor.get("descartar_dias_iniciales", 0))
+    # `recortar_inicio=False` cuando el que llama YA recorto, o cuando lo que
+    # entra es un TRAMO y no el historico completo. Recortar un tramo seria
+    # tirar 30 dias de mercado normal creyendo que se tira un libro vacio de
+    # recien listado: el walk-forward perdia asi el 9% de su periodo de
+    # prueba, en silencio, y dejaba un mes ciego despues de cada costura.
+    if recortar_inicio:
+        df = _recortar_inicio(df, motor.get("descartar_dias_iniciales", 0))
     if df.empty:
         return Resultado(Metricas(), [], pd.Series(dtype=float))
 

@@ -127,7 +127,11 @@ def main() -> int:
             # --- Referencia 1: no elegir nada, dejar el trailing en 2x ----
             primera = resultado.ventanas[0].prueba_desde
             tramo = df[df.index >= primera]
-            fijo = motor.correr(tramo, cfg, par, tf, REGLAS)
+            # `tramo` es un pedazo del historico, no el historico: si se
+            # dejara recortar, perderia 30 dias que el walk-forward SI
+            # midio, y la comparacion no seria contra lo mismo.
+            fijo = motor.correr(tramo, cfg, par, tf, REGLAS,
+                                recortar_inicio=False)
             print(f"\n  Referencia FIJO 2x sobre el mismo tramo: "
                   f"{fijo.metricas.resultado_neto:+.2f} USDT "
                   f"({fijo.metricas.operaciones} ops)")
@@ -137,7 +141,7 @@ def main() -> int:
             for valor in CANDIDATOS:
                 c = copy.deepcopy(cfg)
                 aplicar_trailing(c, valor)
-                r = motor.correr(tramo, c, par, tf, REGLAS)
+                r = motor.correr(tramo, c, par, tf, REGLAS, recortar_inicio=False)
                 if r.metricas.resultado_neto > mejor_neto:
                     mejor_valor, mejor_neto = valor, r.metricas.resultado_neto
             print(f"  Referencia MEJOR EN RETROSPECTIVA ({mejor_valor}x): "

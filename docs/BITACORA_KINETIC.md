@@ -5,6 +5,100 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
+## 29 de agosto de 2026 (más tarde) — Medir el artefacto encontró un bug peor
+
+Felipe pidió medir cuánto cuestan los cierres forzados de ventana, antes de
+creerle a los números de la corrida anterior. Se construyó
+`tools/medir_cierres_de_ventana.py` (solo lectura, no toca el motor). Salida
+cruda en `docs/salida_cierres_de_ventana_29ago2026.txt`.
+
+La herramienta **replica cada operación cortada desde su entrada** y, al
+llegar al borde, compara el stop reconstruido contra el que el motor
+registró. Si no coinciden, lo dice y descarta el caso en vez de devolver un
+número inventado. **Las cuatro réplicas validaron; cero descartes.**
+
+### Lo que costaron los cierres forzados
+
+| Par / TF | Cortadas | Dejado sobre la mesa | Resultado del WF |
+|---|---|---|---|
+| BTC 15m | 1 de 888 | +2.02 | −316.74 |
+| **BTC 1h** | **1 de 109** | **+142.39** | **+165.24** |
+| ETH 15m | 1 de 744 | −1.45 | −173.86 |
+| ETH 1h | 1 de 55 | −2.61 | −67.81 |
+
+En BTC 1h **una sola operación cortada valía el 86% del resultado del
+tramo**. Entró el 17-ago-2026 y fue cortada el mismo día, en el borde de la
+ventana 6; de haber seguido llegaba al 23-ago con +140.66. Explica 142 de los
+227.92 USDT de brecha contra el «mejor en retrospectiva».
+
+En 15m el artefacto es despreciable: las operaciones entran y salen rápido,
+así que la costura casi nunca las agarra abiertas. **Solo pesa en 1h.**
+
+**No leerlo como «BTC 1h en realidad da +307».** Es UNA operación, de la
+semana pasada, y arreglar una medición que cuelga de una operación con una
+estimación que cuelga de la misma operación no da terreno firme. Lo que sí
+queda establecido es que el walk-forward con costuras anuales es una regla de
+medición ruidosa para una estrategia de pocas operaciones largas.
+
+### Y buscando el porqué apareció un bug de verdad
+
+Los cuatro cierres forzados caían todos en la misma costura y ninguna ventana
+anterior tenía posiciones abiertas. Eso no cerraba, y tirando de ahí:
+
+**`backtest_engine.correr()` aplicaba `descartar_dias_iniciales: 30` a
+CUALQUIER DataFrame que recibiera.** Correcto para el histórico completo (la
+idea es saltear el libro vacío de un par recién listado). **Incorrecto para
+los tramos que le pasa el walk-forward**, que son pedazos del medio de la
+historia.
+
+Medido sobre BTCUSDT 1h:
+
+| Ventana | Velas de prueba | Tras el recorte | Perdidas |
+|---|---|---|---|
+| 1 a 6 | ~8.760 c/u | ~8.040 | **720 c/u** |
+| 7 | 289 | **0** | 289 |
+
+**4.609 velas de prueba que el motor nunca miró** — 192 días, medio año de
+los seis evaluados, casi el 9% del período fuera de muestra. Tres
+consecuencias:
+
+1. **La ventana 7 se descartaba entera** por ser más corta que el recorte.
+   Por eso siempre reportaba 0 operaciones: no era falta de señales.
+2. **Un mes ciego después de cada costura.** Por eso la operación huérfana
+   del 17-ago nunca se retomó en la ventana siguiente.
+3. **Lo más serio: también mutilaba cada tramo de ENTRENAMIENTO.** Los 5
+   candidatos × 7 ventanas se evaluaron sobre datos incompletos, así que **la
+   elección del parámetro estaba contaminada**, no solo la medición.
+
+### El arreglo
+
+Decisión de Felipe: arreglar y re-correr. En tres capas:
+
+- `backtest_engine.correr()` recibe `recortar_inicio: bool = True`. El
+  comportamiento por defecto no cambia.
+- `walk_forward.correr()` recorta **una vez**, sobre el histórico entero,
+  antes de partirlo, y pasa `recortar_inicio=False` en cada tramo. El
+  descarte por listado reciente se sigue aplicando igual.
+- Las dos referencias de `main_walkforward.py` (FIJO 2x y mejor en
+  retrospectiva) corren sobre un tramo, así que también lo apagan — si no, se
+  comparaba contra un período distinto del que midió el walk-forward.
+
+**Tres pruebas nuevas** (158 en total). Se verificó que las dos del
+walk-forward **fallan sin el arreglo**: una prueba que pasa igual con y sin
+el arreglo no prueba nada.
+
+### Qué queda invalidado
+
+**Los números de la entrada anterior de hoy.** Se midieron con tramos a los
+que les faltaba el 9% del período y con la selección de parámetro
+contaminada. Las conclusiones cualitativas probablemente aguanten (el
+mecanismo del trailing funciona; los 15m no pagan sus costos; ETH 1h es
+inestable), pero **ninguna cifra de esa entrada es citable** hasta que la
+re-corrida diga otra cosa. Se dejan igual, sin borrar, para que se vea qué
+cambió y por qué.
+
+---
+
 ## 29 de agosto de 2026 — El walk-forward corrió. Qué dijo
 
 Corrida completa de `main_walkforward.py` sobre los cuatro tramos

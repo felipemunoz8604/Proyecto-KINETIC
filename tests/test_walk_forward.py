@@ -125,6 +125,67 @@ def test_la_eleccion_no_puede_ver_el_tramo_de_prueba(velas, cfg):
         indice += 1   # la corrida de prueba, esa si ve el tramo de prueba
 
 
+def test_los_tramos_no_se_recortan_una_segunda_vez(velas, cfg):
+    """
+    El descarte de los primeros dias tras el listado va UNA vez, sobre el
+    historico entero. Si el motor lo repitiera en cada tramo, cada ventana
+    perderia sus primeros 30 dias: el entrenamiento elegiria el parametro con
+    datos mutilados y la prueba dejaria sin medir casi el 9% del periodo,
+    ademas de un mes ciego justo despues de cada costura.
+
+    Se verifico en datos reales el 29-ago-2026: eran 4.609 velas de prueba de
+    BTCUSDT 1h que el motor nunca miraba, y la ultima ventana quedaba vacia
+    entera por ser mas corta que el recorte.
+    """
+    cfg["backtest_motor"]["descartar_dias_iniciales"] = 30
+
+    vistos: list[tuple] = []
+    original = wf.motor.correr
+
+    def espia(df, *args, **kwargs):
+        vistos.append((df.index[0], kwargs.get("recortar_inicio", True)))
+        return original(df, *args, **kwargs)
+
+    wf.motor.correr = espia
+    try:
+        r = correr(velas, cfg, anios_entrenamiento=2, anios_prueba=1)
+    finally:
+        wf.motor.correr = original
+
+    assert r.ventanas, "no se genero ninguna ventana"
+
+    # Ningun tramo puede llegar al motor con el recorte encendido.
+    assert all(not recorta for _, recorta in vistos), (
+        "algun tramo se paso con recortar_inicio=True: el motor le va a "
+        "morder los primeros 30 dias"
+    )
+
+    # Y el tramo de prueba tiene que empezar donde dice la ventana, no un mes
+    # despues. Esta es la parte que fallaba.
+    candidatos = 2
+    indice = 0
+    for v in r.ventanas:
+        indice += candidatos          # las corridas de entrenamiento
+        arranque_prueba = vistos[indice][0]
+        assert arranque_prueba == v.prueba_desde, (
+            f"la ventana {v.numero} dice probar desde {v.prueba_desde} pero el "
+            f"motor recibio datos desde {arranque_prueba}: hay un hueco"
+        )
+        indice += 1
+
+
+def test_el_recorte_del_listado_se_aplica_igual_una_vez(velas, cfg):
+    """Apagarlo por tramo no puede hacer que el listado deje de descartarse."""
+    cfg["backtest_motor"]["descartar_dias_iniciales"] = 30
+    r = correr(velas, cfg, anios_entrenamiento=2, anios_prueba=1)
+
+    assert r.ventanas
+    assert r.ventanas[0].entrena_desde >= velas.index[0] + pd.Timedelta(days=30), (
+        "el primer tramo de entrenamiento arranca dentro de los dias que "
+        "habia que descartar por listado reciente"
+    )
+
+
 def test_los_tramos_de_prueba_no_se_pisan_entre_si(velas, cfg):
     r = correr(velas, cfg, anios_entrenamiento=2, anios_prueba=1)
     for anterior, siguiente in zip(r.ventanas, r.ventanas[1:]):

@@ -232,6 +232,23 @@ def test_se_descartan_los_primeros_dias(cfg):
     assert len(r.operaciones) == 0, "la senal estaba en el tramo descartado"
 
 
+def test_el_recorte_se_puede_apagar_para_un_tramo(cfg):
+    """
+    El recorte existe para saltear el libro vacio de un par recien listado.
+    Cuando lo que entra es un TRAMO del medio de la historia -- como los que
+    le pasa el walk-forward -- recortarlo tira 30 dias de mercado normal.
+    Por eso el que llama tiene que poder apagarlo.
+    """
+    cfg["backtest_motor"]["descartar_dias_iniciales"] = 1
+    filas = [vela(100, 101, 99, 110, senal=True)] + [vela(100, 102, 99, 101)] * 40
+    df = construir(filas)
+
+    r = motor.correr(df, cfg, "TEST", "1h", REGLAS, recortar_inicio=False)
+
+    assert r.metricas.desde == df.index[0], "no tendria que haber recortado nada"
+    assert len(r.operaciones) == 1, "la senal de la primera vela tenia que operar"
+
+
 # ===========================================================================
 # 5. El trailing dentro del backtest
 # ===========================================================================

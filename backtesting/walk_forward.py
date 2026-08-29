@@ -164,6 +164,18 @@ def correr(
     if df.empty:
         return ResultadoWalkForward([], [], 0.0, 0.0)
 
+    # El descarte de los primeros dias tras el listado se hace UNA VEZ, sobre
+    # el historico entero, antes de partirlo en ventanas. Si se dejara que lo
+    # hiciera el motor en cada tramo, cada ventana perderia sus primeros 30
+    # dias -- tanto las de entrenamiento (contaminando la eleccion del
+    # parametro) como las de prueba (dejando sin medir casi el 9% del periodo
+    # fuera de muestra, y un mes ciego despues de cada costura).
+    df = motor._recortar_inicio(
+        df, cfg_base.get("backtest_motor", {}).get("descartar_dias_iniciales", 0)
+    )
+    if df.empty:
+        return ResultadoWalkForward([], [], 0.0, 0.0)
+
     inicio, fin = df.index[0], df.index[-1]
     capital_inicial = float(cfg_base["capital"]["monto"])
     capital = capital_inicial
@@ -192,7 +204,8 @@ def correr(
             cfg = copy.deepcopy(cfg_base)
             cfg["capital"]["monto"] = capital
             aplicar(cfg, valor)
-            r = motor.correr(entrena, cfg, par, temporalidad, reglas_simbolo)
+            r = motor.correr(entrena, cfg, par, temporalidad, reglas_simbolo,
+                             recortar_inicio=False)
             puntajes[valor] = criterio(r.metricas)
 
         elegido = max(puntajes, key=lambda v: puntajes[v])
@@ -201,7 +214,8 @@ def correr(
         cfg = copy.deepcopy(cfg_base)
         cfg["capital"]["monto"] = capital
         aplicar(cfg, elegido)
-        resultado = motor.correr(prueba, cfg, par, temporalidad, reglas_simbolo)
+        resultado = motor.correr(prueba, cfg, par, temporalidad, reglas_simbolo,
+                                 recortar_inicio=False)
 
         capital += resultado.metricas.resultado_neto
         todas_las_operaciones.extend(resultado.operaciones)

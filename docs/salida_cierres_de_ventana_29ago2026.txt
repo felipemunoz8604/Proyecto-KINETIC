@@ -1,0 +1,47 @@
+============================================================================
+ KINETIC - cuanto cuestan los cierres forzados de ventana
+============================================================================
+
+============================================================================
+ BTCUSDT 15m
+============================================================================
+  V6 entrada 2026-08-17 cortada 2026-08-17:    -0.48  ->  seguia hasta 2026-08-18 (+1d) y daba    +1.55   (+2.02)
+
+  Operaciones cortadas por el borde: 1 de 888
+  Sumadas dieron:          -0.48 USDT
+  De haber seguido:        +1.55 USDT
+  El borde dejo sobre la mesa: +2.02 USDT
+  (resultado del walk-forward: -316.74 USDT)
+
+============================================================================
+ BTCUSDT 1h
+============================================================================
+  V6 entrada 2026-08-17 cortada 2026-08-17:    -1.73  ->  seguia hasta 2026-08-23 (+6d) y daba  +140.66   (+142.39)
+
+  Operaciones cortadas por el borde: 1 de 109
+  Sumadas dieron:          -1.73 USDT
+  De haber seguido:        +140.66 USDT
+  El borde dejo sobre la mesa: +142.39 USDT
+  (resultado del walk-forward: +165.24 USDT)
+
+============================================================================
+ ETHUSDT 15m
+============================================================================
+  V6 entrada 2026-08-17 cortada 2026-08-17:    -1.23  ->  seguia hasta 2026-08-17 (+0d) y daba    -2.68   (-1.45)
+
+  Operaciones cortadas por el borde: 1 de 744
+  Sumadas dieron:          -1.23 USDT
+  De haber seguido:        -2.68 USDT
+  El borde dejo sobre la mesa: -1.45 USDT
+  (resultado del walk-forward: -173.86 USDT)
+
+============================================================================
+ ETHUSDT 1h
+============================================================================
+  V6 entrada 2026-08-17 cortada 2026-08-17:    -1.63  ->  seguia hasta 2026-08-18 (+0d) y daba    -4.23   (-2.61)
+
+  Operaciones cortadas por el borde: 1 de 55
+  Sumadas dieron:          -1.63 USDT
+  De haber seguido:        -4.23 USDT
+  El borde dejo sobre la mesa: -2.61 USDT
+  (resultado del walk-forward: -67.81 USDT)
