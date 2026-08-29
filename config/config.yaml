@@ -85,8 +85,33 @@ costos:
 
 datos:
   carpeta_historico: data/historico
-  # PENDIENTE FASE 1 — cuanto historial se descarga para el backtest.
-  anios_historial: null
+  # Los datos del backtest salen de Binance MAINNET, endpoint publico, sin
+  # llaves. Testnet no se usa como fuente: sigue el precio real de cerca
+  # (comprobado 28-ago-2026: -0,00% en BTC) pero su libro de ordenes es
+  # ficticio, asi que sirve para probar mecanica, no rendimiento.
+  origen: mainnet_publico
+
+backtest:
+  # Confirmado por Felipe el 28-ago-2026.
+  # Empezar angosto: BTC y ETH son los dos pares con mas historial (2017) y
+  # mas liquidez. Si la estrategia no funciona aca, ampliar a monedas mas
+  # chicas rara vez la salva, y multiplica el riesgo de encontrar un buen
+  # resultado por pura casualidad.
+  universo:
+    - BTCUSDT
+    - ETHUSDT
+
+  # Confirmado por Felipe el 28-ago-2026: todo el historial disponible.
+  # Cubre dos ciclos completos (alcistas 2017 y 2021, bajistas 2018 y 2022).
+  # La leccion viene de TITAN: el dataset corto de GOLD daba PF 1,83 y el
+  # completo dio 1,40. La muestra corta miente hacia arriba.
+  desde: "1 Jan 2017"
+
+  # Las tres se descargan y se evaluan; cual gana lo dice el backtest.
+  temporalidades:
+    - 15m
+    - 1h
+    - 4h
 
 registro:
   carpeta_logs: logs
