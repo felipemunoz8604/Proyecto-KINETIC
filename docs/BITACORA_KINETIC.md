@@ -64,12 +64,44 @@ Es **exactamente** el hallazgo de GOLD en TITAN: una ventana aporta el 100%
 del resultado. Un sistema cuyo rendimiento depende de una sola operación no
 tiene ventaja estadística demostrada — tiene suerte documentada.
 
+### El desastre de 15m son los costos, no la estrategia
+
+Se corrió BTCUSDT 15m dos veces, idéntico salvo los costos:
+
+| | PF | Ops | Retorno | Costos pagados |
+|---|---|---|---|---|
+| Con costos reales | **0,756** | 1.496 | **−92,22%** | 718,63 USDT |
+| Sin ningún costo | **1,292** | 1.475 | **+498,68%** | 0 |
+
+Esto **cambia el diagnóstico**. En bruto la lógica de ruptura **sí tiene una
+ventaja real** en 15 minutos: PF 1,292 sobre 1.475 operaciones es una
+muestra grande y no depende de ninguna operación en particular. El problema
+es que **la ventaja por operación es más chica que el peaje**.
+
+Los 718,63 USDT de costos en nueve años son **el 144% del capital inicial**.
+Se pagó de comisiones y slippage una vez y media la cuenta entera. A 0,48
+USDT de costo promedio por operación, con 1.496 operaciones, no hay
+estrategia que sobreviva si su ventaja bruta por operación no supera eso.
+
+(El conteo de operaciones cambia levemente —1.496 contra 1.475— porque sin
+costos la cuenta crece distinto y el tope diario del 3% se dispara en
+momentos distintos. Es esperable, no un error.)
+
+**El replanteo correcto del problema no es "la estrategia no sirve", es "la
+ventaja por operación no paga el peaje".** Y eso apunta a una dirección
+concreta: menos operaciones y más grandes, no más filtros sobre las mismas.
+Pero 1h ya tiene solo 157 operaciones y depende de una sola, y 4h tiene 3.
+
 ### Estado
 
 - Pruebas: **141 pasan**.
 - La estrategia de la sección 7 del MEGAPROMPT, tal como está especificada,
-  **no muestra ventaja** en BTC ni en ETH con este historial.
-- Decisión de qué hacer con eso: **pendiente de Felipe.**
+  **no da un resultado neto defendible** en BTC ni en ETH: en 15m tiene
+  ventaja bruta pero la comen los costos, y en 1h el neto positivo descansa
+  en una sola operación.
+- Decisión de qué hacer con eso: **pendiente de Felipe.** No se barre
+  parámetros hasta que él lo decida — barrer sobre esto es la forma más
+  rápida de fabricar un falso positivo.
 
 ---
 
