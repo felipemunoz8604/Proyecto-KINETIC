@@ -74,6 +74,10 @@ def concentracion(operaciones) -> float:
 
 
 def main() -> int:
+    # Sin esto Python retiene la salida en el bufer y no se ve ningun
+    # avance hasta que termina todo, que son varios minutos.
+    sys.stdout.reconfigure(line_buffering=True)
+
     cfg = base_config()
     carpeta = RAIZ / cfg["datos"]["carpeta_historico"]
 
@@ -88,12 +92,14 @@ def main() -> int:
 
     for par in cfg["backtest"]["universo"]:
         for tf in ("15m", "1h"):
-            print("=" * 76)
+            print("=" * 76, flush=True)
             print(f" {par} {tf}")
             print("=" * 76)
             t0 = time.time()
 
+            print("  calculando indicadores...", flush=True)
             df = ind.agregar_indicadores(data_feed.cargar(par, tf, carpeta=carpeta), cfg)
+            print(f"  {len(df):,} velas. Corriendo ventanas...", flush=True)
 
             resultado = wf.correr(
                 df, cfg, par, tf, CANDIDATOS, aplicar_trailing,

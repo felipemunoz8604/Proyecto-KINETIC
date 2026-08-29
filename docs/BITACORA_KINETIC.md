@@ -5,6 +5,99 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
+## 28 de agosto de 2026 — CIERRE DE SESIÓN. Módulo 5 y qué falta
+
+> **Si estás retomando el proyecto, empezá por acá.**
+
+### Dónde quedó todo
+
+Fase 0 **cerrada**. Fase 1 **abierta y avanzada**: están los cinco módulos
+(datos, indicadores, señal, riesgo, backtest, walk-forward). **155 pruebas
+pasan.** Nada puede operar todavía: los tres cerrojos del día 1 siguen
+puestos y vigilados por pruebas.
+
+### La decisión que tomó Felipe, y que gobierna lo que sigue
+
+Ante la evidencia de que la estrategia no da un resultado neto defendible,
+eligió **atacar el problema de costos con UNA hipótesis validada con
+walk-forward** — explícitamente **no** barrer parámetros hasta encontrar algo
+lindo.
+
+**La hipótesis:** con 24-27% de acierto, el resultado depende de que las
+pocas ganadoras corran mucho. Un trailing a 2×ATR se mueve muy pegado al
+precio, y un retroceso de 2×ATR es ruido normal dentro de una tendencia — así
+que probablemente esté cortando ganadoras que aún tenían recorrido.
+
+**Lo que la sostiene:** `config.yaml` ya declaraba `atr_multiplicador_sl` y
+`trailing_atr_multiplicador` como dos números distintos, pero
+`stop_manager.py` usaba el mismo para ambos. Son trabajos diferentes: el
+inicial define cuánto se arriesga (y por lo tanto cuánto se compra), el
+trailing define cuánto aire tiene una ganadora. **Tocar el trailing no cambia
+el riesgo.** O sea que esto es implementar lo que el config ya pedía, no
+inventar un parámetro para tener algo que barrer. Ya está implementado y
+probado.
+
+### PENDIENTE — lo primero que hay que hacer mañana
+
+**El walk-forward quedó corriendo y no alcanzó a dar resultados.** Hay que
+volver a lanzarlo:
+
+```
+venv\Scripts\python.exe main_walkforward.py
+```
+
+Tarda varios minutos (BTCUSDT 15m son 36 corridas del motor sobre tramos de
+tres años). Ya se le arregló el búfer de salida, así que ahora muestra el
+avance en vivo en vez de quedarse mudo hasta el final.
+
+**Qué mirar cuando termine, en este orden:**
+
+1. **¿El elegido es ESTABLE entre ventanas?** Si cada año gana un valor
+   distinto, no hay óptimo: hay ruido, y el proceso está eligiendo al azar.
+   Eso ya sería una respuesta, y es un "no".
+2. **¿Cuánta CONCENTRACIÓN hay fuera de muestra?** Si el resultado vuelve a
+   depender de una sola operación, no aprendimos nada.
+3. **La distancia contra "el mejor en retrospectiva".** Ese número es,
+   literalmente, cuánto nos habríamos engañado barriendo sin esta disciplina.
+   Vale la pena anotarlo aunque la hipótesis falle.
+4. Recién al final, el resultado neto.
+
+**Si el walk-forward no mejora nada**, la conclusión honesta es que la
+estrategia de la sección 7 no tiene ventaja explotable en BTC ni ETH, y
+corresponde plantearle a Felipe cerrar la Fase 1 con ese hallazgo — como hizo
+con EURUSD en TITAN el 25-ago. **No encadenar una segunda hipótesis sin
+preguntarle:** dos hipótesis seguidas sobre los mismos datos ya son un
+barrido con otro nombre.
+
+### Lo que se agregó en esta sesión (módulo 5)
+
+- `backtesting/walk_forward.py` — entrenar 3 años, probar 1, avanzar 1. El
+  capital se arrastra entre ventanas.
+- **La prueba que sostiene todo:** espía el proceso interceptando cada
+  llamada al motor y verifica que, en las corridas de selección, el último
+  dato visto sea anterior al primer dato del tramo de prueba de esa ventana.
+  Sin eso, un "fuera de muestra" contaminado se ve **exactamente igual** que
+  uno limpio.
+- `signal_engine.mascara_de_senales()` — camino vectorizado, 1,8× más rápido,
+  necesario porque el walk-forward corre el motor decenas de veces. **El
+  camino lento sigue siendo el de referencia**: una prueba compara los dos
+  vela por vela con cuatro juegos de umbrales, otra compara las operaciones
+  que produce el motor por cada camino, y sobre datos reales dan idéntico
+  (157 ops, 549,63 finales).
+- Se sacó del repo la configuración de Obsidian (`.obsidian/`), que se había
+  colado por un `git add -A`. Los archivos siguen en el disco.
+
+### Un detalle de método que conviene no perder
+
+La prueba de equivalencia de las máscaras **se protegió sola** en el primer
+intento: el escenario sintético no generaba ninguna señal, así que habría
+pasado comparando dos series vacías. Ahora exige que haya señales antes de
+dar la comparación por válida. Vale como recordatorio: **una prueba que pasa
+sin haber ejercitado nada es peor que no tenerla**, porque da confianza
+falsa.
+
+---
+
 ## 28 de agosto de 2026 — Módulo 4: el backtest, y las primeras cifras reales
 
 ### Decisiones de modelado, todas medidas antes de tomarlas

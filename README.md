@@ -8,7 +8,7 @@ independiente de la estrategia.
 Proyecto **separado de TITAN** (MetaTrader 5 / forex). Cada uno tiene su
 propio repositorio, su propio entorno y su propio protocolo.
 
-> ⚠️ **Estado: Fase 0 CERRADA (28-ago-2026). Fase 1 sin iniciar.**
+> ⚠️ **Estado: Fase 0 CERRADA. Fase 1 ABIERTA (28-ago-2026).**
 > Hoy este repositorio **no puede operar**. No existe código capaz de enviar
 > una orden a Binance, y hay pruebas automáticas que fallan si alguien lo
 > agrega.
@@ -86,9 +86,9 @@ Binance sin pasar por el portero.
 | Carpeta | Rol | Fase |
 |---|---|---|
 | `core/` | Conexión a Binance y lectura de configuración | 0 ✅ |
-| `strategy/` | Indicadores, filtro de régimen, motor de señal | 1 |
-| `risk/` | Tamaño de posición, stops, límites, guardia de cartera | 1 |
-| `backtesting/` | Motor de backtest neto de comisiones y slippage | 1 |
+| `strategy/` | Indicadores, filtro de régimen, motor de señal | 1 ✅ |
+| `risk/` | Tamaño de posición, stops, límites, guardia de cartera | 1 ✅ |
+| `backtesting/` | Motor de backtest y walk-forward | 1 ✅ |
 | `execution/` | Envío y seguimiento de órdenes reales | 2 |
 | `journal/` | Diario de operaciones | 2 |
 | `tools/` | Utilidades de diagnóstico (solo lectura) | 0 ✅ |
@@ -138,7 +138,8 @@ crearse con **lectura + spot trading, y el permiso de retiro APAGADO**.
   de conexión de solo lectura. ✅ **CERRADA el 28-ago-2026**
 - **Fase 1 — Backtest local.** Señal y riesgo integrados desde el inicio,
   walk-forward, neto de comisiones (0,1 % por lado) y slippage.
-  ⬅️ *siguiente, pendiente de aprobación*
+  ⬅️ *acá estamos — motor y walk-forward construidos; falta la corrida
+  de validación. Ver `docs/BITACORA_KINETIC.md`, entrada del 28-ago*
 - **Fase 2 — Binance Testnet.** Se prueba la mecánica de ejecución, no el
   rendimiento (el Testnet tiene liquidez y datos limitados).
 - **Fase 3 — Micro-testing en Mainnet (5 USD).** Solo tras validar 1 y 2, y
