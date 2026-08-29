@@ -5,6 +5,112 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
+## 29 de agosto de 2026 — El walk-forward corrió. Qué dijo
+
+Corrida completa de `main_walkforward.py` sobre los cuatro tramos
+(BTCUSDT y ETHUSDT, en 15m y 1h). Salida cruda guardada en
+`docs/salida_walkforward_29ago2026.txt`. Duró unos 12 minutos.
+
+La hipótesis era una sola, con razón mecánica: **con 24-27% de acierto el
+resultado depende de que las pocas ganadoras corran, y un trailing a 2xATR
+las corta antes de tiempo.** Se probaron 2/3/4/5/6 xATR, reeligiendo cada
+año con los tres anteriores, sin tocar nunca el stop inicial.
+
+### Los cuatro resultados
+
+| Par / TF | Fuera de muestra | FIJO 2x | Elegidos | Estable | Concentr. |
+|---|---|---|---|---|---|
+| BTC 15m | **−316.74** (−63.35%), PF 0.872, 888 ops | −451.48 | 6.0 en las 7 | SÍ | −31% |
+| **BTC 1h** | **+165.24** (+33.05%), PF 1.367, 109 ops | +10.89 | 4,6,5,4,5,5,5 | SÍ | 66% |
+| ETH 15m | **−173.86** (−34.77%), PF 0.934, 744 ops | −421.07 | 6.0 en 6 de 7 | SÍ | −48% |
+| ETH 1h | **−67.81** (−13.56%), PF 0.631, 55 ops | +88.87 | 5,5,2,6,6,6,2 | **NO** | −35% |
+
+### Lo que se aprendió (esto es lo que importa, no la tabla)
+
+**1. El mecanismo es real y se comporta igual en tres de cuatro tramos.**
+Dar aire al trailing mejoró el resultado fuera de muestra en BTC 15m
+(+134.74), BTC 1h (+154.35) y ETH 15m (+247.21) contra no hacer nada. No es
+casualidad de un par: la razón mecánica que motivó la hipótesis era correcta.
+
+**2. Y aun así no salva a los 15m.** Los dos tramos de 15m siguen perdiendo
+fuerte. Es coherente con el hallazgo de costos del 28-ago: la ventaja bruta
+existe, pero con 744-888 operaciones el peaje se la come. Más aire en las
+ganadoras no cambia cuántas veces se paga comisión.
+
+**3. En los 15m eligió 6.0x, el borde del rango probado, casi siempre.**
+Eso no es un óptimo: es una pendiente que se chocó con el límite. El
+entrenamiento pedía "lo más ancho posible" y nunca encontró un punto dulce
+interior. Si algún día se retoma, hay que saber que el rango 2-6 no bastó
+para acorralar el máximo — no que 6 sea la respuesta.
+
+**4. ETH 1h es la refutación, y es la parte más valiosa de la corrida.**
+Es el único tramo donde la hipótesis **perdió plata**: −67.81 contra +88.87
+de no tocar nada, o sea 156.68 USDT peor. Y no fue mala suerte:
+
+- La bandera dijo **«Estable: NO»** *antes* de mirar el resultado. Los
+  elegidos saltan 5 → 2 → 6 → 2. El único tramo con selección inestable es
+  el único donde la selección destruyó valor. La bandera funciona.
+- La causa está a la vista: **55 operaciones en seis años.** La ventana 1
+  tuvo 0 operaciones y la ventana 2 tuvo 1. Con esa muestra el
+  entrenamiento no mide nada, elige al azar, y el azar cobra.
+
+**5. El backtest simple habría elegido justo el peor tramo.** ETH 1h era el
+que mejor se veía el 28-ago (PF 1.675, +27.83%). Fuera de muestra pierde. Es
+la demostración concreta, sobre nuestros propios datos, de para qué sirve
+todo este aparato. Vale más que cualquier PF que hubiéramos conseguido.
+
+**6. BTC 1h mejoró su concentración, pero sigue enferma.** Pasó de 161% a
+**66%**. La diferencia no es cosmética: antes, sacando la mejor operación el
+resultado se daba vuelta y quedaba negativo; ahora sacándola quedan ~56 USDT
+en seis años. Positivo, pero flaco. Sigue siendo un sistema que depende
+demasiado de un puñado de operaciones.
+
+### Una duda abierta que hay que resolver ANTES de creerle a estos números
+
+En BTC 1h el «mejor en retrospectiva» (+393.16) le saca 227.92 USDT al
+walk-forward (+165.24). El script rotulaba eso como «cuánto nos habría
+engañado el barrido tramposo», **y ese rótulo está mal**: el barrido eligió
+**5.0x**, que es el mismo valor que el walk-forward eligió en 4 de 7
+ventanas. Si fuera sobreajuste de parámetro, habría elegido otra cosa.
+
+La explicación probable es otra: **el walk-forward cierra a la fuerza toda
+posición abierta al final de cada ventana anual.** Son 6 cierres forzados en
+una fecha arbitraria del calendario, en una estrategia donde una sola
+operación aporta el 66% del resultado. Si es eso, los +165.24 están
+**subestimando** la estrategia — sería un artefacto del método, no una
+propiedad del sistema.
+
+**No está medido.** Es verificable contando las operaciones con
+`motivo_salida = "fin del periodo"` y cuánto dejaron sobre la mesa. **No se
+hizo, a propósito**, para no encadenar análisis sin que Felipe decida.
+
+Corregido en el código: `main_walkforward.py` ya no rotula la brecha como
+sobreajuste sin más, distingue el signo, y avisa explícitamente cuando el
+valor elegido en retrospectiva coincide con el del walk-forward.
+
+### En qué estado queda la Fase 1
+
+**Abierta.** Nada se decidió: los `null` de `config.yaml` siguen en `null`.
+La hipótesis del trailing quedó contestada — funciona como mecanismo, no
+alcanza como salvación — y hay un solo candidato con vida, **BTCUSDT 1h**,
+con dos reparos serios (66% de concentración y 109 operaciones en seis
+años, que son ~18 por año).
+
+Lo que sigue lo decide Felipe. Las opciones sobre la mesa, sin recomendar
+ninguna todavía:
+
+1. **Medir el artefacto de los cierres forzados de ventana.** No es una
+   hipótesis nueva sobre los datos, es corregir la regla de medición. Barato
+   y aclara si +165 o +393 es el número honesto.
+2. **Cerrar la Fase 1 con el hallazgo**, como se hizo con EURUSD en TITAN el
+   25-ago: dejar escrito que la estrategia de rupturas no paga sus costos en
+   cripto salvo marginalmente en BTC 1h, y no seguir.
+3. **Una segunda hipótesis.** Ojo: dos hipótesis seguidas sobre los mismos
+   datos son un barrido con otro nombre. Si se hace, tiene que tener razón
+   mecánica propia y saberse de antemano que el riesgo de engañarse sube.
+
+---
+
 ## 28 de agosto de 2026 — CIERRE DE SESIÓN. Módulo 5 y qué falta
 
 > **Si estás retomando el proyecto, empezá por acá.**

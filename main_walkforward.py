@@ -142,8 +142,25 @@ def main() -> int:
                     mejor_valor, mejor_neto = valor, r.metricas.resultado_neto
             print(f"  Referencia MEJOR EN RETROSPECTIVA ({mejor_valor}x): "
                   f"{mejor_neto:+.2f} USDT")
-            print(f"  -> el barrido tramposo se veria "
-                  f"{mejor_neto - m.resultado_neto:+.2f} USDT mejor que la realidad")
+
+            # OJO CON ESTA BRECHA: no es "cuanto nos habria enganado el
+            # barrido" a secas. Solo es atribuible a sobreajuste si el valor
+            # elegido en retrospectiva es DISTINTO del que eligio el
+            # walk-forward. Si es el mismo, la diferencia viene de otro lado
+            # -- sobre todo de que el walk-forward cierra a la fuerza toda
+            # posicion abierta en cada borde de ventana, y esos cierres en
+            # una fecha arbitraria del calendario cortan ganadoras.
+            brecha = mejor_neto - m.resultado_neto
+            dominante = max(set(resultado.elegidos), key=resultado.elegidos.count)
+            if brecha >= 0:
+                print(f"  -> un barrido sobre todo el periodo se veria "
+                      f"{brecha:.2f} USDT MEJOR de lo que el walk-forward capturo")
+            else:
+                print(f"  -> un barrido sobre todo el periodo se veria "
+                      f"{-brecha:.2f} USDT PEOR: no hubo premio por mirar el futuro")
+            if mejor_valor == dominante:
+                print(f"     (mismo valor que eligio el walk-forward: {dominante}x "
+                      f"-- la brecha NO es sobreajuste de parametro)")
             print(f"\n  ({time.time() - t0:.0f} s)")
 
     return 0

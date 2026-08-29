@@ -1,0 +1,112 @@
+============================================================================
+ KINETIC - WALK-FORWARD: hipotesis del trailing
+============================================================================
+  Candidatos:  trailing en [2.0, 3.0, 4.0, 5.0, 6.0] x ATR
+  Stop inicial fijo en 2xATR (no se toca: define el riesgo)
+  Entrenar 3 anios -> probar 1 anio -> avanzar 1 anio
+  Filtros: ADX >= 20.0, consolidacion <= 0.75%
+
+============================================================================
+ BTCUSDT 15m
+============================================================================
+  calculando indicadores...
+  316,139 velas. Corriendo ventanas...
+  Ventana  Entrenamiento          Prueba                 Elegido   Resultado
+        1  2017-08-17 a 2020-08-17  2020-08-17 a 2021-08-17      6.0     +107.71 (84 ops)
+        2  2018-08-17 a 2021-08-17  2021-08-17 a 2022-08-17      6.0     -128.68 (116 ops)
+        3  2019-08-17 a 2022-08-17  2022-08-17 a 2023-08-17      6.0      -13.41 (162 ops)
+        4  2020-08-17 a 2023-08-17  2023-08-17 a 2024-08-17      6.0      +24.35 (176 ops)
+        5  2021-08-17 a 2024-08-17  2024-08-17 a 2025-08-17      6.0     -110.07 (166 ops)
+        6  2022-08-17 a 2025-08-17  2025-08-17 a 2026-08-17      6.0     -196.64 (184 ops)
+        7  2023-08-17 a 2026-08-17  2026-08-17 a 2026-08-29      6.0       +0.00 (0 ops)
+
+  --- FUERA DE MUESTRA (lo unico que cuenta) ---
+  Operaciones:   888   PF 0.872   acierto 20.5%
+  Capital:       500.00 -> 183.26 USDT (-63.35%)
+  Elegidos:      [6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0]
+  Estable:       SI
+  Concentracion: la mejor operacion aporta -31% del neto
+
+  Referencia FIJO 2x sobre el mismo tramo: -451.48 USDT (1147 ops)
+  Referencia MEJOR EN RETROSPECTIVA (6.0x): -351.20 USDT
+  -> el barrido tramposo se veria -34.46 USDT mejor que la realidad
+
+  (433 s)
+============================================================================
+ BTCUSDT 1h
+============================================================================
+  calculando indicadores...
+  79,048 velas. Corriendo ventanas...
+  Ventana  Entrenamiento          Prueba                 Elegido   Resultado
+        1  2017-08-17 a 2020-08-17  2020-08-17 a 2021-08-17      4.0      +56.72 (8 ops)
+        2  2018-08-17 a 2021-08-17  2021-08-17 a 2022-08-17      6.0       -6.65 (6 ops)
+        3  2019-08-17 a 2022-08-17  2022-08-17 a 2023-08-17      5.0      +31.20 (20 ops)
+        4  2020-08-17 a 2023-08-17  2023-08-17 a 2024-08-17      4.0      +42.06 (29 ops)
+        5  2021-08-17 a 2024-08-17  2024-08-17 a 2025-08-17      5.0      +50.56 (22 ops)
+        6  2022-08-17 a 2025-08-17  2025-08-17 a 2026-08-17      5.0       -8.64 (24 ops)
+        7  2023-08-17 a 2026-08-17  2026-08-17 a 2026-08-29      5.0       +0.00 (0 ops)
+
+  --- FUERA DE MUESTRA (lo unico que cuenta) ---
+  Operaciones:   109   PF 1.367   acierto 24.8%
+  Capital:       500.00 -> 665.24 USDT (+33.05%)
+  Elegidos:      [4.0, 6.0, 5.0, 4.0, 5.0, 5.0, 5.0]
+  Estable:       SI
+  Concentracion: la mejor operacion aporta 66% del neto
+
+  Referencia FIJO 2x sobre el mismo tramo: +10.89 USDT (126 ops)
+  Referencia MEJOR EN RETROSPECTIVA (5.0x): +393.16 USDT
+  -> el barrido tramposo se veria +227.92 USDT mejor que la realidad
+
+  (106 s)
+============================================================================
+ ETHUSDT 15m
+============================================================================
+  calculando indicadores...
+  316,139 velas. Corriendo ventanas...
+  Ventana  Entrenamiento          Prueba                 Elegido   Resultado
+        1  2017-08-17 a 2020-08-17  2020-08-17 a 2021-08-17      6.0     +268.55 (57 ops)
+        2  2018-08-17 a 2021-08-17  2021-08-17 a 2022-08-17      6.0      -58.82 (74 ops)
+        3  2019-08-17 a 2022-08-17  2022-08-17 a 2023-08-17      6.0     -116.85 (169 ops)
+        4  2020-08-17 a 2023-08-17  2023-08-17 a 2024-08-17      6.0     -133.18 (161 ops)
+        5  2021-08-17 a 2024-08-17  2024-08-17 a 2025-08-17      5.0      -27.65 (136 ops)
+        6  2022-08-17 a 2025-08-17  2025-08-17 a 2026-08-17      6.0     -105.92 (147 ops)
+        7  2023-08-17 a 2026-08-17  2026-08-17 a 2026-08-29      6.0       +0.00 (0 ops)
+
+  --- FUERA DE MUESTRA (lo unico que cuenta) ---
+  Operaciones:   744   PF 0.934   acierto 22.6%
+  Capital:       500.00 -> 326.14 USDT (-34.77%)
+  Elegidos:      [6.0, 6.0, 6.0, 6.0, 5.0, 6.0, 6.0]
+  Estable:       SI
+  Concentracion: la mejor operacion aporta -48% del neto
+
+  Referencia FIJO 2x sobre el mismo tramo: -421.07 USDT (922 ops)
+  Referencia MEJOR EN RETROSPECTIVA (6.0x): -206.54 USDT
+  -> el barrido tramposo se veria -32.67 USDT mejor que la realidad
+
+  (410 s)
+============================================================================
+ ETHUSDT 1h
+============================================================================
+  calculando indicadores...
+  79,048 velas. Corriendo ventanas...
+  Ventana  Entrenamiento          Prueba                 Elegido   Resultado
+        1  2017-08-17 a 2020-08-17  2020-08-17 a 2021-08-17      5.0       +0.00 (0 ops)
+        2  2018-08-17 a 2021-08-17  2021-08-17 a 2022-08-17      5.0       -5.12 (1 ops)
+        3  2019-08-17 a 2022-08-17  2022-08-17 a 2023-08-17      2.0      +22.41 (15 ops)
+        4  2020-08-17 a 2023-08-17  2023-08-17 a 2024-08-17      6.0      -11.30 (8 ops)
+        5  2021-08-17 a 2024-08-17  2024-08-17 a 2025-08-17      6.0      -25.20 (10 ops)
+        6  2022-08-17 a 2025-08-17  2025-08-17 a 2026-08-17      6.0      -48.60 (21 ops)
+        7  2023-08-17 a 2026-08-17  2026-08-17 a 2026-08-29      2.0       +0.00 (0 ops)
+
+  --- FUERA DE MUESTRA (lo unico que cuenta) ---
+  Operaciones:   55   PF 0.631   acierto 23.6%
+  Capital:       500.00 -> 432.19 USDT (-13.56%)
+  Elegidos:      [5.0, 5.0, 2.0, 6.0, 6.0, 6.0, 2.0]
+  Estable:       NO
+  Concentracion: la mejor operacion aporta -35% del neto
+
+  Referencia FIJO 2x sobre el mismo tramo: +88.87 USDT (61 ops)
+  Referencia MEJOR EN RETROSPECTIVA (2.0x): +88.87 USDT
+  -> el barrido tramposo se veria +156.68 USDT mejor que la realidad
+
+  (107 s)
