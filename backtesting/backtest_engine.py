@@ -191,6 +191,7 @@ def correr(
     par: str,
     temporalidad: str,
     reglas_simbolo: position_sizing.ReglasSimbolo | None = None,
+    rapido: bool = True,
 ) -> Resultado:
     """
     Recorre el DataFrame y devuelve el resultado neto.
@@ -208,6 +209,7 @@ def correr(
     comision = float(cfg["costos"]["comision_por_lado_pct"]) / 100.0
     slippage = float(cfg["costos"]["slippage_pct_por_lado"]) / 100.0
     mult_atr = float(cfg["stops"]["atr_multiplicador_sl"])
+    mult_trailing = float(cfg["stops"].get("trailing_atr_multiplicador", mult_atr))
     compuesto = bool(motor.get("capital_compuesto", True))
     reglas_simbolo = reglas_simbolo or position_sizing.ReglasSimbolo()
 
@@ -222,10 +224,16 @@ def correr(
     curva: list[float] = []
     momentos: list[pd.Timestamp] = []
 
+    # Se precalcula la senal de todas las velas de una sola vez. El camino
+    # lento (evaluar_vela) sigue disponible y es el de referencia; una
+    # prueba exige que los dos coincidan.
+    if rapido:
+        mascara = signal_engine.mascara_de_senales(df, cfg)
+        atr_col = df["atr"]
     posicion: dict | None = None
     entrada_pendiente: dict | None = None
 
-    for momento, fila in df.iterrows():
+    for indice, (momento, fila) in enumerate(df.iterrows()):
         # --- 1. Abrir lo que quedo pendiente de la vela anterior ----------
         if entrada_pendiente is not None and posicion is None:
             precio_bruto = float(fila["open"])
@@ -233,7 +241,9 @@ def correr(
             atr_entrada = entrada_pendiente["atr"]
 
             try:
-                estado_stop = stop_manager.abrir(precio_entrada, atr_entrada, mult_atr)
+                estado_stop = stop_manager.abrir(
+                    precio_entrada, atr_entrada, mult_atr, mult_trailing
+                )
             except ValueError:
                 estado_stop = None
 
@@ -318,22 +328,33 @@ def correr(
 
         # --- 4. La senal de esta vela, para ejecutar en la siguiente ------
         if posicion is None and entrada_pendiente is None:
-            senal = signal_engine.evaluar_vela(fila, cfg)
-            clave = senal.fallo_en or "ENTRADA"
-            rechazos[clave] = rechazos.get(clave, 0) + 1
+            if rapido:
+                hay = bool(mascara.iloc[indice])
+                precio_senal = float(fila["close"])
+                atr_senal = float(atr_col.iloc[indice]) if hay else 0.0
+                rechazos["ENTRADA" if hay else "otro"] = (
+                    rechazos.get("ENTRADA" if hay else "otro", 0) + 1
+                )
+            else:
+                senal = signal_engine.evaluar_vela(fila, cfg)
+                clave = senal.fallo_en or "ENTRADA"
+                rechazos[clave] = rechazos.get(clave, 0) + 1
+                hay = senal.hay_entrada
+                precio_senal = senal.precio
+                atr_senal = senal.datos.get("atr", 0.0)
 
-            if senal.hay_entrada:
+            if hay:
                 veredicto = control.puede_abrir(posiciones_abiertas=0, momento=momento)
                 if not veredicto.permitido:
                     rechazos[f"riesgo:{veredicto.limite_alcanzado}"] = (
                         rechazos.get(f"riesgo:{veredicto.limite_alcanzado}", 0) + 1
                     )
                 elif usar_guardia and not guardia.revisar_macro(
-                    senal.precio, fila.get("sma_macro")
+                    precio_senal, fila.get("sma_macro")
                 ).permitido:
                     rechazos["guardia_macro"] = rechazos.get("guardia_macro", 0) + 1
                 else:
-                    entrada_pendiente = {"atr": senal.datos["atr"]}
+                    entrada_pendiente = {"atr": atr_senal}
 
         curva.append(capital)
         momentos.append(momento)

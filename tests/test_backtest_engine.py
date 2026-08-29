@@ -82,8 +82,9 @@ REGLAS = position_sizing.ReglasSimbolo(
 )
 
 
-def correr(df, cfg):
-    return motor.correr(df, cfg, par="TESTUSDT", temporalidad="1h", reglas_simbolo=REGLAS)
+def correr(df, cfg, rapido=True):
+    return motor.correr(df, cfg, par="TESTUSDT", temporalidad="1h",
+                        reglas_simbolo=REGLAS, rapido=rapido)
 
 
 # ===========================================================================
@@ -338,8 +339,13 @@ def test_el_drawdown_mide_la_peor_caida_desde_un_pico():
 
 
 def test_sin_operaciones_el_informe_dice_donde_se_cayo_todo(cfg):
+    """
+    El diagnostico detallado solo existe en el camino lento: el rapido
+    trabaja con una mascara booleana y no sabe POR QUE cada vela quedo
+    afuera. Por eso esta prueba pide rapido=False explicitamente.
+    """
     df = construir([vela(100, 101, 99, 100)] * 5)
-    r = correr(df, cfg)
+    r = correr(df, cfg, rapido=False)
     assert r.metricas.operaciones == 0
     assert "regimen" in r.metricas.rechazos
     assert "Sin operaciones" in r.metricas.informe()
@@ -354,3 +360,74 @@ def test_una_posicion_abierta_al_final_se_cierra_y_se_cuenta(cfg):
     r = correr(df, cfg)
     assert len(r.operaciones) == 1
     assert r.operaciones[0].motivo_salida == "fin del periodo"
+
+
+# ===========================================================================
+# 9. Los dos caminos (rapido y lento) no pueden divergir
+# ===========================================================================
+
+def test_el_camino_rapido_da_exactamente_lo_mismo_que_el_lento(cfg):
+    """
+    El camino rapido existe solo por velocidad. Si alguna vez da un
+    resultado distinto al de referencia, el backtest deja de decir algo
+    sobre el bot que corre en vivo.
+    """
+    filas = []
+    for i in range(12):
+        filas += [
+            vela(100, 101, 99, 110, senal=(i % 2 == 0)),
+            vela(100, 108, 99, 107),
+            vela(107, 130, 100, 128),
+            vela(128, 130, 70, 75),
+        ]
+    df = construir(filas)
+
+    rapido = correr(df, cfg, rapido=True)
+    lento = correr(df, cfg, rapido=False)
+
+    assert len(rapido.operaciones) == len(lento.operaciones) > 0
+    for a, b in zip(rapido.operaciones, lento.operaciones):
+        assert a.entrada_momento == b.entrada_momento
+        assert a.entrada_precio == pytest.approx(b.entrada_precio)
+        assert a.salida_precio == pytest.approx(b.salida_precio)
+        assert a.resultado_neto == pytest.approx(b.resultado_neto)
+    assert rapido.metricas.capital_final == pytest.approx(lento.metricas.capital_final)
+
+
+# ===========================================================================
+# 10. Los dos multiplicadores de ATR hacen trabajos distintos
+# ===========================================================================
+
+def test_un_trailing_mas_ancho_deja_correr_mas_a_la_ganadora(cfg):
+    """
+    El stop inicial define el riesgo; el trailing define cuanto aire tiene
+    una ganadora. Con el trailing mas ancho, un retroceso normal no cierra
+    la posicion y la ganancia final es mayor.
+    """
+    filas = [
+        vela(100, 101, 99, 110, senal=True),
+        vela(100, 102, 99, 101),
+        vela(101, 141, 100, 140),    # sube fuerte
+        vela(140, 141, 121, 138),    # retrocede: con 2xATR muere, con 5x no
+        vela(138, 200, 137, 195),    # sigue subiendo
+        vela(195, 196, 100, 105),    # ahora si se cierra
+    ]
+    df = construir(filas)
+
+    cfg["stops"]["trailing_atr_multiplicador"] = 2.0
+    ajustado = correr(df, cfg).operaciones[0]
+
+    cfg["stops"]["trailing_atr_multiplicador"] = 5.0
+    ancho = correr(df, cfg).operaciones[0]
+
+    assert ancho.resultado_neto > ajustado.resultado_neto
+    assert ancho.velas_abierta > ajustado.velas_abierta
+    # El riesgo inicial no cambio: es el otro multiplicador.
+    assert ancho.stop_inicial == pytest.approx(ajustado.stop_inicial)
+
+
+def test_el_stop_inicial_no_depende_del_multiplicador_de_trailing(cfg):
+    from risk import stop_manager
+    a = stop_manager.abrir(100.0, 5.0, multiplicador=2.0, multiplicador_trailing=2.0)
+    b = stop_manager.abrir(100.0, 5.0, multiplicador=2.0, multiplicador_trailing=6.0)
+    assert a.stop_inicial == pytest.approx(b.stop_inicial) == pytest.approx(90.0)

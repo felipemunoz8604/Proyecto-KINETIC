@@ -218,3 +218,96 @@ def test_la_senal_registra_el_porque_de_cada_rechazo(cfg):
     assert "consolidacion" in texto  # la consolidacion paso, y quedo anotada
     assert "ruptura" in texto        # la ruptura paso, y quedo anotada
     assert "volumen flojo" in texto  # y aca se cayo
+
+
+# --- El camino rapido no puede divergir del lento --------------------------
+
+def test_la_mascara_vectorizada_coincide_vela_por_vela_con_evaluar_vela(cfg):
+    """
+    LA prueba que sostiene el camino rapido.
+
+    `mascara_de_senales` recalcula las cuatro condiciones de forma
+    vectorizada por velocidad. Si alguna vez difiere de `evaluar_vela`, el
+    backtest deja de describir al bot que corre en vivo.
+
+    Se comparan sobre 800 velas y con CUATRO juegos de umbrales distintos,
+    de muy flojos a muy exigentes, para que la comparacion recorra los dos
+    lados de cada condicion y no solo el camino facil. Al final se exige que
+    en total haya habido senales: si no, la prueba no probaria nada.
+    """
+    import numpy as np
+
+    from strategy import indicators as ind
+    from strategy.signal_engine import mascara_de_senales
+
+    generador = np.random.default_rng(28082026)
+    n = 800
+    cierre = 100 + np.cumsum(generador.normal(0.12, 1.5, n))
+    df = pd.DataFrame(
+        {
+            "open": np.concatenate([[cierre[0]], cierre[:-1]]),
+            "high": cierre + np.abs(generador.normal(1.0, 0.5, n)),
+            "low": cierre - np.abs(generador.normal(1.0, 0.5, n)),
+            "close": cierre,
+            "volume": np.abs(generador.normal(1000, 600, n)),
+        },
+        index=pd.date_range("2024-01-01", periods=n, freq="1h", tz="UTC"),
+    )
+    cfg["estrategia"]["portfolio_guard"]["sma_periodo"] = 100
+    cfg["estrategia"]["consolidacion"]["velas"] = 20
+    con_indicadores = ind.agregar_indicadores(df, cfg)
+
+    combinaciones = [
+        (0.0, 100.0, 1.0),    # todo flojo: casi todas las rupturas pasan
+        (0.0, 5.0, 1.3),
+        (15.0, 3.0, 1.5),
+        (30.0, 1.0, 2.0),     # muy exigente: casi ninguna pasa
+    ]
+    total = 0
+    for adx_min, umbral_cons, mult_vol in combinaciones:
+        cfg["estrategia"]["regimen"]["adx_minimo"] = adx_min
+        cfg["estrategia"]["consolidacion"]["umbral_desviacion_pct"] = umbral_cons
+        cfg["estrategia"]["volumen"]["multiplicador_minimo"] = mult_vol
+
+        rapida = mascara_de_senales(con_indicadores, cfg)
+        lenta = pd.Series(
+            [s.hay_entrada for s in evaluar_serie(con_indicadores, cfg)],
+            index=con_indicadores.index,
+        )
+        discrepantes = con_indicadores.index[rapida != lenta]
+        assert len(discrepantes) == 0, (
+            f"con ADX>={adx_min}, cons<={umbral_cons}, vol>={mult_vol}x los dos "
+            f"caminos difieren en {len(discrepantes)} velas: {list(discrepantes[:5])}"
+        )
+        total += int(rapida.sum())
+
+    assert total > 0, "ninguna combinacion genero senales: la prueba no probaria nada"
+
+
+def test_la_mascara_tambien_coincide_con_el_filtro_por_pendiente(cfg):
+    import numpy as np
+
+    from strategy import indicators as ind, regime_filter
+    from strategy.signal_engine import mascara_de_senales
+
+    generador = np.random.default_rng(1234)
+    n = 600
+    cierre = 100 + np.cumsum(generador.normal(0.08, 1.2, n))
+    df = pd.DataFrame(
+        {
+            "open": np.concatenate([[cierre[0]], cierre[:-1]]),
+            "high": cierre + 1.0, "low": cierre - 1.0, "close": cierre,
+            "volume": np.abs(generador.normal(1000, 600, n)),
+        },
+        index=pd.date_range("2024-01-01", periods=n, freq="1h", tz="UTC"),
+    )
+    cfg["estrategia"]["portfolio_guard"]["sma_periodo"] = 100
+    cfg["estrategia"]["regimen"]["metodo"] = "pendiente_sma"
+    cfg["estrategia"]["regimen"]["pendiente_minima_pct"] = 0.0
+    cfg["estrategia"]["regimen"]["pendiente_ventana"] = 20
+
+    d = regime_filter.agregar_pendiente(ind.agregar_indicadores(df, cfg), cfg)
+
+    rapida = mascara_de_senales(d, cfg)
+    lenta = pd.Series([s.hay_entrada for s in evaluar_serie(d, cfg)], index=d.index)
+    assert (rapida == lenta).all()

@@ -38,13 +38,26 @@ from dataclasses import dataclass
 
 @dataclass
 class EstadoStop:
-    """El stop de una posicion abierta, y de donde salio."""
+    """
+    El stop de una posicion abierta, y de donde salio.
+
+    Hay DOS multiplicadores y hacen trabajos distintos:
+
+      - `multiplicador_atr` (el inicial) define cuanto se arriesga, y por lo
+        tanto cuanto se compra. Tocarlo cambia el tamano de la posicion.
+      - `multiplicador_trailing` define cuanto aire se le da a una ganadora
+        para que corra. Tocarlo NO cambia el riesgo de la operacion.
+
+    No hay ninguna razon para que sean el mismo numero, y config.yaml ya los
+    declaraba por separado.
+    """
 
     precio_entrada: float
     stop_actual: float
     stop_inicial: float
     mayor_cierre: float
     multiplicador_atr: float
+    multiplicador_trailing: float
     veces_movido: int = 0
 
     @property
@@ -77,8 +90,18 @@ def stop_inicial(precio_entrada: float, atr: float, multiplicador: float = 2.0) 
     return stop
 
 
-def abrir(precio_entrada: float, atr: float, multiplicador: float = 2.0) -> EstadoStop:
-    """Crea el estado del stop al abrir una posicion."""
+def abrir(
+    precio_entrada: float,
+    atr: float,
+    multiplicador: float = 2.0,
+    multiplicador_trailing: float | None = None,
+) -> EstadoStop:
+    """
+    Crea el estado del stop al abrir una posicion.
+
+    Si no se pasa `multiplicador_trailing`, el trailing usa el mismo numero
+    que el stop inicial (el comportamiento de siempre).
+    """
     inicial = stop_inicial(precio_entrada, atr, multiplicador)
     return EstadoStop(
         precio_entrada=precio_entrada,
@@ -86,6 +109,9 @@ def abrir(precio_entrada: float, atr: float, multiplicador: float = 2.0) -> Esta
         stop_inicial=inicial,
         mayor_cierre=precio_entrada,
         multiplicador_atr=multiplicador,
+        multiplicador_trailing=(
+            multiplicador if multiplicador_trailing is None else multiplicador_trailing
+        ),
     )
 
 
@@ -102,7 +128,7 @@ def actualizar(estado: EstadoStop, cierre: float, atr: float) -> EstadoStop:
         return estado
 
     mayor_cierre = max(estado.mayor_cierre, cierre)
-    candidato = mayor_cierre - estado.multiplicador_atr * atr
+    candidato = mayor_cierre - estado.multiplicador_trailing * atr
 
     # El maximo() es la linea que hace que el stop nunca retroceda.
     nuevo_stop = max(estado.stop_actual, candidato)
@@ -114,6 +140,7 @@ def actualizar(estado: EstadoStop, cierre: float, atr: float) -> EstadoStop:
         stop_inicial=estado.stop_inicial,
         mayor_cierre=mayor_cierre,
         multiplicador_atr=estado.multiplicador_atr,
+        multiplicador_trailing=estado.multiplicador_trailing,
         veces_movido=movido,
     )
 

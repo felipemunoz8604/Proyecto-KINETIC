@@ -183,6 +183,56 @@ def evaluar_serie(df: pd.DataFrame, cfg: dict) -> list[Senal]:
     return [evaluar_vela(fila, cfg) for _, fila in df.iterrows()]
 
 
+def mascara_de_senales(df: pd.DataFrame, cfg: dict) -> pd.Series:
+    """
+    Version rapida: devuelve un booleano por vela diciendo si hay COMPRAR.
+
+    Por que existe: `evaluar_vela` construye objetos por cada vela, y sobre
+    316.000 velas eso son minutos. El walk-forward necesita correr el
+    backtest decenas de veces, y con el camino lento no termina nunca.
+
+    EL CAMINO LENTO SIGUE SIENDO EL DE REFERENCIA. Esta funcion no puede
+    divergir de el: `tests/test_signal_engine.py` compara las dos sobre
+    datos reales y exige que coincidan vela por vela. Si alguien cambia una
+    condicion en un lado y se olvida del otro, esa prueba se pone roja.
+
+    Lo que se pierde aca es el `motivos` de cada vela. Cuando hace falta el
+    diagnostico, se usa `evaluar_serie`.
+    """
+    est = cfg["estrategia"]
+
+    calentado = (
+        df["techo"].notna() & df["vol_promedio"].notna() & df["ema_rapida"].notna()
+        & df["ema_lenta"].notna() & df["desv_pct"].notna() & df["atr"].notna()
+    )
+
+    metodo = est["regimen"].get("metodo", "adx")
+    if metodo == "adx":
+        umbral = est["regimen"].get("adx_minimo")
+        if umbral is None:
+            raise ValueError("estrategia.regimen.adx_minimo esta sin definir.")
+        regimen = df["adx"].notna() & (df["adx"] >= umbral)
+    elif metodo == "pendiente_sma":
+        umbral = est["regimen"].get("pendiente_minima_pct")
+        if umbral is None:
+            raise ValueError("estrategia.regimen.pendiente_minima_pct esta sin definir.")
+        regimen = df["pendiente_sma"].notna() & (df["pendiente_sma"] >= umbral)
+    else:
+        raise ValueError(f"Metodo de regimen desconocido: {metodo!r}")
+
+    umbral_cons = est["consolidacion"]["umbral_desviacion_pct"]
+    if umbral_cons is None:
+        raise ValueError("estrategia.consolidacion.umbral_desviacion_pct esta sin definir.")
+
+    consolidacion = df["desv_pct"] <= umbral_cons
+    ruptura = df["close"] > df["techo"]
+    multiplicador = est["volumen"]["multiplicador_minimo"]
+    volumen = (df["vol_promedio"] > 0) & (df["volume"] >= multiplicador * df["vol_promedio"])
+    direccion = df["ema_rapida"] > df["ema_lenta"]
+
+    return calentado & regimen & consolidacion & ruptura & volumen & direccion
+
+
 def resumen_de_rechazos(senales: list[Senal]) -> dict[str, int]:
     """
     Cuenta en que condicion se cayo cada senal.
