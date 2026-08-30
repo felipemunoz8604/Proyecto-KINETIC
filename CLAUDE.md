@@ -96,6 +96,19 @@ cuenta. Está todo probado, no lo desarmes:
 - **Git:** commits nuevos siempre (nunca `--amend` salvo pedido explícito),
   mensajes que expliquen el **porqué**. Ojo con `git add -A`: ya se coló una
   vez la configuración de Obsidian.
+- **Nunca encadenes comandos destructivos de git** (`checkout --`, `reset`,
+  `clean`) en una línea que hace otra cosa. El 29-ago-2026 un
+  `git checkout -- .` colado en un comando que solo debía copiar un archivo
+  descartó trabajo sin commitear. Si algo no está commiteado, se commitea
+  **antes** de tocar el índice.
+- **Decisión de gobernanza (29 de agosto de 2026):** Felipe aprueba **cada**
+  operación de git a mano, una por una — igual que en TITAN. **No marques
+  `git commit` ni `git push` como «no preguntar de nuevo»**, ni le sugieras
+  agregar reglas de permiso para ellos. Quiere seguir viendo cada operación,
+  no solo la primera vez que aparece el diálogo.
+- **El remoto es privado:** `origin` apunta a
+  `github.com/felipemunoz8604/Proyecto-KINETIC`, privado a propósito — el
+  repo tiene la lógica de la estrategia y los resultados completos.
 
 ## Dónde está parado el proyecto (29-ago-2026)
 
