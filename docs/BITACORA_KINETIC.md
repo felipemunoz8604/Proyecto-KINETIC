@@ -97,6 +97,32 @@ resultó ser un mecanismo real que no alcanzó. La segunda es «temporalidades
 más altas pagan el peaje». Cada intento adicional aumenta la chance de
 encontrar algo lindo por azar.
 
+### CIERRE DE SESIÓN — lo primero de mañana
+
+**Correr el walk-forward sobre 4h en modo relativo.** No está hecho: hoy solo
+se arregló la herramienta de medición, todavía no se midió nada con ella.
+
+Antes de correrlo hay que resolver una cosa de diseño, y **no la decidas por
+tu cuenta**: `main_walkforward.py` hoy fija `UMBRAL_CONSOLIDACION = 0.75` como
+constante y barre el multiplicador del trailing. Para esta hipótesis el
+candidato a elegir por ventana es el **umbral relativo**, no el trailing. Hay
+que decidir con Felipe si se barre uno, el otro, o los dos — y ojo, barrer
+dos parámetros a la vez multiplica las combinaciones y con eso la chance de
+encontrar algo por azar.
+
+**Qué exigirle al resultado cuando salga**, más que la vez pasada:
+
+1. **Cantidad de operaciones.** Si 4h da menos de ~15 por año, ya sabemos
+   cómo termina: es el problema de ETH 1h otra vez.
+2. **Concentración.** Si vuelve a depender de una sola operación, no
+   aprendimos nada.
+3. **Estabilidad y respaldo por ventana**, que ahora el informe muestra solos.
+4. **Recién al final, el resultado neto.**
+
+**Si 4h tampoco pasa, la respuesta es cerrar de nuevo y en serio.** Sería la
+segunda hipótesis fallida sobre los mismos datos, y una tercera ya sería un
+barrido con otro nombre. No encadenes sin preguntarle a Felipe.
+
 ---
 
 ## 29 de agosto de 2026 — FASE 1 CERRADA (y reabierta más tarde el mismo día)
