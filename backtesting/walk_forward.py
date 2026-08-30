@@ -261,6 +261,50 @@ class ResultadoWalkForward:
             return None
         return min(v.respaldo for v in self.ventanas)
 
+    def informe_de_candidatos(self) -> str:
+        """
+        Que puntaje sacó CADA candidato en CADA tramo de entrenamiento.
+
+        POR QUE UNA MATRIZ Y NO UNA COMPARACION ENTRE DOS GRUPOS
+        --------------------------------------------------------
+        La pregunta que motivo esto era "cuanta distancia hay entre el grupo
+        4-6 y el grupo 2-3". Partir el menu en esos dos grupos habria sido
+        elegir la particion mirando los resultados que ya conocemos, que es
+        exactamente el error que este proyecto trata de no cometer. La matriz
+        no impone ninguna agrupacion: si los de arriba se agrupan, se ve; y si
+        se agrupan de otra forma, tambien.
+
+        El `*` marca el que gano. La ultima columna es la distancia entre el
+        mejor y el peor candidato de esa ventana: si es chica, el parametro
+        casi no cambia nada y elegirlo importa poco -- que es una respuesta
+        distinta de "la eleccion fue un volado".
+        """
+        if not self.ventanas:
+            return "  Sin ventanas."
+
+        candidatos = self.candidatos or sorted(
+            {c for v in self.ventanas for c in v.candidatos_evaluados}
+        )
+        ancho = 11
+        cabecera = "  Ventana" + "".join(f"{str(c) + 'x':>{ancho}}" for c in candidatos)
+        lineas = [cabecera + f"{'mejor-peor':>13}"]
+
+        for v in self.ventanas:
+            celdas = ""
+            for c in candidatos:
+                puntaje = v.candidatos_evaluados.get(c)
+                if puntaje is None:
+                    celdas += f"{'-':>{ancho}}"
+                    continue
+                marca = "*" if c == v.elegido else " "
+                celdas += f"{puntaje:>{ancho - 1}.1f}{marca}"
+            valores = list(v.candidatos_evaluados.values())
+            recorrido = max(valores) - min(valores) if valores else 0.0
+            lineas.append(f"  {v.numero:>7}" + celdas + f"{recorrido:>13.1f}")
+
+        lineas.append("  (* = el elegido. Puntajes del tramo de ENTRENAMIENTO, en USDT.)")
+        return chr(10).join(lineas)
+
     def informe(self) -> str:
         lineas = [
             "  Ventana  Entrenamiento          Prueba                 "

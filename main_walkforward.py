@@ -149,6 +149,9 @@ def main() -> int:
                 continue
 
             print(resultado.informe())
+            print()
+            print("  Puntaje de cada candidato en el entrenamiento:")
+            print(resultado.informe_de_candidatos())
             m = resultado.metricas
             pf = m.profit_factor
             pf_txt = "inf" if pf == float("inf") else f"{pf:.3f}"

@@ -471,3 +471,60 @@ def test_el_informe_avisa_cuando_una_eleccion_fue_arbitraria():
     )
     assert "ARBITRARIA" in r.informe()
     assert len(r.ventanas_arbitrarias) == 1
+
+
+# ===========================================================================
+# La matriz de candidatos
+# ===========================================================================
+
+def test_la_matriz_muestra_todos_los_candidatos_de_todas_las_ventanas():
+    r = wf.ResultadoWalkForward(
+        [
+            ventana_con_respaldo({2.0: -10.0, 4.0: 30.0, 6.0: 31.0},
+                                 {2.0: 20, 4.0: 15, 6.0: 14}, 6.0),
+            ventana_con_respaldo({2.0: -5.0, 4.0: 40.0, 6.0: 12.0},
+                                 {2.0: 22, 4.0: 16, 6.0: 15}, 4.0),
+        ],
+        [], 500.0, 500.0, [2.0, 4.0, 6.0],
+    )
+    t = r.informe_de_candidatos()
+
+    for c in ("2.0x", "4.0x", "6.0x"):
+        assert c in t
+    assert "-10.0" in t and "31.0" in t and "40.0" in t
+
+
+def test_la_matriz_marca_cual_gano_en_cada_ventana():
+    r = wf.ResultadoWalkForward(
+        [ventana_con_respaldo({2.0: -10.0, 6.0: 31.0}, {2.0: 20, 6.0: 14}, 6.0)],
+        [], 500.0, 500.0, [2.0, 6.0],
+    )
+    t = r.informe_de_candidatos()
+    assert "31.0*" in t, "el ganador lleva asterisco"
+    assert "-10.0*" not in t, "el perdedor no"
+
+
+def test_la_matriz_reporta_la_distancia_entre_el_mejor_y_el_peor():
+    """
+    Es la columna que contesta si el parametro importa. Distancia chica
+    significa que da casi lo mismo cual se elija -- que NO es lo mismo que
+    "la eleccion fue un volado".
+    """
+    r = wf.ResultadoWalkForward(
+        [ventana_con_respaldo({2.0: -10.0, 4.0: 30.0, 6.0: 31.0},
+                              {2.0: 20, 4.0: 15, 6.0: 14}, 6.0)],
+        [], 500.0, 500.0, [2.0, 4.0, 6.0],
+    )
+    assert "41.0" in r.informe_de_candidatos(), "31.0 - (-10.0) = 41.0"
+
+
+def test_la_matriz_no_explota_sin_ventanas():
+    vacio = wf.ResultadoWalkForward([], [], 0.0, 0.0, [2.0])
+    assert "Sin ventanas" in vacio.informe_de_candidatos()
+
+
+def test_la_matriz_sale_del_walk_forward_real(velas, cfg):
+    r = correr(velas, cfg, candidatos=(2.0, 4.0, 6.0), anios_entrenamiento=2)
+    t = r.informe_de_candidatos()
+    assert "6.0x" in t
+    assert t.count("*") >= len(r.ventanas), "cada ventana marca su ganador"
