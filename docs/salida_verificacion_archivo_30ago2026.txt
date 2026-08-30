@@ -1,0 +1,42 @@
+============================================================================
+ KINETIC - verificacion del archivo historico de Binance
+============================================================================
+  De este supuesto cuelga la correccion del sesgo de supervivencia,
+  y con ella la mitad de la etapa 0. Se verifica antes de construir.
+
+  [1/3] Enumerando simbolos del ARCHIVO...
+    1,000 simbolos leidos...
+    2,000 simbolos leidos...
+    3,000 simbolos leidos...
+        3,695 simbolos en el archivo.
+  [2/3] Enumerando simbolos de exchangeInfo por ESTADO...
+        1,358 TRADING, 2,327 detenidos.
+
+  EL TAMAÑO DEL SESGO, POR FIN MEDIBLE
+    Pares USDT operando hoy:           485
+    Pares USDT deslistados:            250
+    La Fase 1 vio solo el              66% del mercado que existio
+    Ejemplos: 1INCHDOWNUSDT, 1INCHUPUSDT, A2ZUSDT, AAVEDOWNUSDT, AAVEUPUSDT, ACAUSDT, ACXUSDT, ADADOWNUSDT
+
+  [3/3] Bajando deslistados de verdad para confirmar que sirven...
+        Simbolo         Meses  Periodo              Checksum
+        1INCHDOWNUSDT       9  2021-04 a 2021-12    OK  (2 velas)
+        1INCHUPUSDT         9  2021-04 a 2021-12    OK  (2 velas)
+        A2ZUSDT            10  2025-07 a 2026-04    OK  (1 velas)
+        AAVEDOWNUSDT       13  2020-11 a 2021-11    OK  (11 velas)
+        AAVEUPUSDT         13  2020-11 a 2021-11    OK  (11 velas)
+        ACAUSDT            50  2022-01 a 2026-02    OK  (13 velas)
+
+============================================================================
+ SUPUESTO CONFIRMADO
+============================================================================
+  6 de 6 deslistados bajaron con checksum valido.
+  El archivo sirve velas de pares que ya no se operan. La etapa 0
+  puede construirse encima.
+
+  MATIZ SOBRE COMO LO DESCRIBE LA ESPECIFICACION: no es que el
+  archivo tenga simbolos que exchangeInfo no tiene -- casi todos
+  los deslistados SIGUEN en exchangeInfo, con estado BREAK. El
+  sesgo de la Fase 1 no entro por usar el endpoint equivocado,
+  entro por filtrar status == TRADING. El arreglo funciona igual,
+  pero conviene saber donde estaba realmente el agujero.

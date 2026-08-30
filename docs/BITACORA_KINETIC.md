@@ -5,9 +5,93 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — FASE 1 CERRADA. La estrategia se descarta
+## 30 de agosto de 2026 — FASE 2 ABIERTA. MEGAPROMPT v2.0 y el sesgo, medido
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+### El MEGAPROMPT pasó a v2.0
+
+Felipe aprobó incorporar las tres decisiones del analista (D1 perpetuos, D2
+cartera con pesos, D3 la vara del Calmar). **Va en su propio commit
+(`0882de5`) a propósito:** el MEGAPROMPT manda sobre todo lo demás y decía
+«Binance Spot, sin apalancamiento». Cambiarlo escondido dentro de un commit
+de infraestructura habría dejado dos documentos de gobernanza en desacuerdo.
+
+**No se relajó ninguna restricción de seguridad — se agregaron dos reglas:**
+
+- **Regla 7:** `k_max = 1,0` es tope duro. Los perpetuos entran para habilitar
+  la pata corta y bajar comisiones, **no para apalancar**.
+- **Regla 8:** los cerrojos cubren futuros igual que Spot. Abrir el alcance
+  sin ampliar la prueba que lee el código fuente dejaría un hueco justo en la
+  garantía de que el bot no puede operar. **Mientras esa prueba no esté verde,
+  no se baja un solo dato de perpetuos.**
+
+Y la llave de API pasa a exigirse sin permiso de futuros habilitado.
+
+### Una colisión de nombres que había que resolver
+
+El documento del analista llama «Fase 2» a la investigación de estrategias,
+pero en la v1.0 **la Fase 2 era Testnet**. Se renumeraron **solo las fases que
+todavía no ocurrieron**: Testnet pasa a Fase 3 y Mainnet a Fase 4. Las
+cerradas quedan como estaban para no romper todo lo ya escrito.
+
+### Se agregó algo que la especificación no traía
+
+**El DSR se reporta siempre**, con el número de configuraciones probadas — no
+solo «si se vuelve a barrer», como decía la especificación. Probar E0, E1,
+E1-R1, E1-R2, E2 y E3 sobre la misma ventana **ya es comparación múltiple**
+aunque cada valor venga de literatura. El riesgo se mudó de la máquina al
+investigador; el holdout lo cubre en parte, el DSR le pone número.
+
+### El supuesto del archivo: CONFIRMADO, y el sesgo por fin medido
+
+Primera tarea de la Fase 2, y a propósito la más barata:
+`tools/verificar_archivo_binance.py`. Evidencia en
+`docs/salida_verificacion_archivo_30ago2026.txt`.
+
+**6 de 6 pares deslistados bajaron con checksum válido.** El archivo sirve
+velas de pares que ya no se operan. La etapa 0 puede construirse encima.
+
+**Y ahora el sesgo de la Fase 1 tiene número:**
+
+| | |
+|---|---|
+| Pares USDT operando hoy | 485 |
+| Pares USDT deslistados | 250 |
+| **La Fase 1 vio solo el** | **66% del mercado que existió** |
+
+### Un matiz sobre dónde estaba realmente el agujero
+
+La especificación dice que el archivo tiene símbolos que `exchangeInfo` no
+tiene. **Eso es casi falso:** comparando contra todo `exchangeInfo` aparecen
+apenas 25 símbolos extra, 1 solo contra USDT.
+
+Lo que pasa de verdad es que **Binance no borra un par deslistado de
+`exchangeInfo` — lo deja con estado `BREAK`**, a veces por años. Hay 2.327
+símbolos en ese estado, 250 de ellos contra USDT.
+
+**El sesgo de la Fase 1 no entró por usar el endpoint equivocado. Entró por
+filtrar `status == "TRADING"`** en `tools/elegir_universo.py`. El arreglo
+funciona igual, pero conviene saber dónde estaba el agujero: si alguien
+«arregla» solo la fuente de datos y sigue filtrando por TRADING, el sesgo
+vuelve entero.
+
+*(La primera versión de este verificador cometió ese mismo error y reportó 25
+deslistados. Queda anotado porque es el tipo de error que se repite.)*
+
+### Lo próximo
+
+**Calcular Calmar(B1)** — comprar BTC el 1-ene-2019 y no hacer nada hasta fin
+de 2024. Es una hora de trabajo y decide si el criterio 1 (Calmar ≥ 1,8 ×
+Calmar(B1)) es alcanzable o imposible. Antes de reescribir `risk/`, que es la
+parte pesada.
+
+Después, en orden: cerrojos de futuros verdes → capa de datos del archivo →
+resto de la etapa 0.
+
+---
+
+## 30 de agosto de 2026 — FASE 1 CERRADA. La estrategia se descarta
 
 ### El veredicto
 
