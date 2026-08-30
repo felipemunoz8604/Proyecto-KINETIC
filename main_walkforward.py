@@ -159,7 +159,10 @@ def main() -> int:
             print(f"  Capital:       {m.capital_inicial:,.2f} -> {m.capital_final:,.2f} "
                   f"USDT ({m.retorno_total_pct:+.2f}%)")
             print(f"  Elegidos:      {resultado.elegidos}")
-            print(f"  Estable:       {'SI' if resultado.el_elegido_es_estable else 'NO'}")
+            dispersion = resultado.dispersion_pct
+            detalle = (f" (las elecciones abarcan el {dispersion:.0f}% del menu "
+                       f"de candidatos)" if dispersion is not None else "")
+            print(f"  Estabilidad:   {resultado.estabilidad}{detalle}")
             print(f"  Concentracion: la mejor operacion aporta "
                   f"{resultado.concentracion_pct:.0f}% del neto")
 

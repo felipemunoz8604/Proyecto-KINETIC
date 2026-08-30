@@ -72,26 +72,106 @@ class Ventana:
     candidatos_evaluados: dict[Any, float] = field(default_factory=dict)
 
 
+ESTABLE = "ESTABLE"
+DUDOSA = "DUDOSA"
+INESTABLE = "INESTABLE"
+
+
 @dataclass
 class ResultadoWalkForward:
     ventanas: list[Ventana]
     operaciones: list[motor.Operacion]
     capital_inicial: float
     capital_final: float
+    # El menu que se le ofrecio a cada ventana. Sin esto no se puede saber si
+    # elegir "4 o 5" fue afinar o fue tirar los dados: depende de que tan
+    # grande era el menu.
+    candidatos: list[Any] = field(default_factory=list)
 
     @property
     def elegidos(self) -> list[Any]:
         return [v.elegido for v in self.ventanas]
 
     @property
-    def el_elegido_es_estable(self) -> bool:
-        """True si el mismo valor gano en al menos la mitad de las ventanas."""
+    def dispersion_pct(self) -> float | None:
+        """
+        Cuanto del menu de candidatos abarcan las elecciones, en porcentaje.
+
+        Con candidatos [2,3,4,5,6], elegir siempre 6 da 0%; elegir entre 4 y 6
+        da 50%; elegir entre 2 y 6 da 100%, o sea que en algun anio el
+        entrenamiento apunto a un extremo y en otro al opuesto.
+
+        Devuelve None si los candidatos no son numeros ordenados (para un
+        parametro categorico la distancia entre dos valores no significa
+        nada).
+        """
+        elegidos = self.elegidos
+        if not elegidos or not self.candidatos:
+            return None
+        try:
+            recorrido = float(max(self.candidatos)) - float(min(self.candidatos))
+            if recorrido <= 0:
+                return 0.0
+            usado = float(max(elegidos)) - float(min(elegidos))
+        except (TypeError, ValueError):
+            return None
+        return usado / recorrido * 100.0
+
+    @property
+    def estabilidad(self) -> str:
+        """
+        ESTABLE / DUDOSA / INESTABLE, segun cuanto se movio la eleccion.
+
+        POR QUE SE MIDE LA DISPERSION Y NO "CUANTAS VECES GANO EL MISMO VALOR"
+        ----------------------------------------------------------------------
+        El criterio anterior era "el mismo valor gano en al menos la mitad de
+        las ventanas". Tiene dos defectos:
+
+        1. Con pocas ventanas, una mayoria minima alcanza. El 29-ago-2026, en
+           ETHUSDT 1h, los elegidos fueron [5, 5, 2, 6, 6, 6] -- van de punta
+           a punta del menu -- y la bandera dijo "estable" porque 6.0 gano
+           exactamente 3 de 6. En la corrida anterior el MISMO tramo daba
+           "inestable"; lo unico que habia cambiado era tener una ventana
+           menos.
+        2. Trata los candidatos como etiquetas sueltas cuando son numeros
+           ORDENADOS. Elegir 4 y despues 5 es casi ponerse de acuerdo. Elegir
+           2 y despues 6 es no haber encontrado nada. Contar apariciones no
+           distingue esos dos casos.
+
+        El umbral: si las elecciones abarcan mas de la mitad del menu, el
+        entrenamiento no esta localizando una region, esta recorriendo la
+        carta. Esa frase vale independientemente de nuestros datos, que es
+        justamente lo que se le pide a un criterio.
+
+        ADVERTENCIA HONESTA: este criterio se escribio el 29-ago-2026 DESPUES
+        de ver los cuatro resultados. Se eligio por el razonamiento de arriba
+        y no por el veredicto que produce, pero el riesgo de haberse
+        acomodado a los datos existe y hay que tenerlo presente. Por eso
+        `dispersion_pct` se reporta siempre en crudo: si el umbral esta mal
+        puesto, el numero de al lado lo delata.
+        """
         if not self.ventanas:
-            return False
-        conteo: dict[Any, int] = {}
-        for valor in self.elegidos:
-            conteo[valor] = conteo.get(valor, 0) + 1
-        return max(conteo.values()) >= len(self.ventanas) / 2
+            return INESTABLE
+
+        dispersion = self.dispersion_pct
+        if dispersion is None:
+            # Candidatos no numericos: no se puede medir distancia. Se cae al
+            # criterio viejo, que al menos agarra el caso extremo.
+            conteo: dict[Any, int] = {}
+            for valor in self.elegidos:
+                conteo[valor] = conteo.get(valor, 0) + 1
+            return ESTABLE if max(conteo.values()) > len(self.ventanas) / 2 else INESTABLE
+
+        if dispersion <= 25.0:
+            return ESTABLE
+        if dispersion <= 50.0:
+            return DUDOSA
+        return INESTABLE
+
+    @property
+    def el_elegido_es_estable(self) -> bool:
+        """Solo ESTABLE cuenta como estable. DUDOSA no es un si tibio."""
+        return self.estabilidad == ESTABLE
 
     @property
     def concentracion_pct(self) -> float:
@@ -234,4 +314,6 @@ def correr(
         )
         corte_entrena = corte_entrena + pd.DateOffset(years=anios_prueba)
 
-    return ResultadoWalkForward(ventanas, todas_las_operaciones, capital_inicial, capital)
+    return ResultadoWalkForward(
+        ventanas, todas_las_operaciones, capital_inicial, capital, list(candidatos)
+    )

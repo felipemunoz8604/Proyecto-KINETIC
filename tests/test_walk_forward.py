@@ -227,6 +227,116 @@ def test_el_elegido_es_el_mejor_del_entrenamiento(velas, cfg):
         assert v.candidatos_evaluados[v.elegido] == pytest.approx(mejor)
 
 
+CANDIDATOS_REALES = [2.0, 3.0, 4.0, 5.0, 6.0]
+
+
+def resultado_falso(elegidos, candidatos=None):
+    """Un ResultadoWalkForward con solo lo que la estabilidad necesita mirar."""
+    t = pd.Timestamp("2020-01-01", tz="UTC")
+    ventanas = [
+        wf.Ventana(
+            numero=i, entrena_desde=t, entrena_hasta=t, prueba_desde=t,
+            prueba_hasta=t, elegido=v, resultado_entrenamiento=0.0,
+            metricas_prueba=wf.motor.Metricas(), operaciones_prueba=[],
+        )
+        for i, v in enumerate(elegidos)
+    ]
+    return wf.ResultadoWalkForward(
+        ventanas, [], 500.0, 500.0,
+        CANDIDATOS_REALES if candidatos is None else candidatos,
+    )
+
+
+# ---------------------------------------------------------------------------
+# La estabilidad, con los cuatro casos reales del 29-ago-2026
+# ---------------------------------------------------------------------------
+
+def test_elegir_siempre_lo_mismo_es_estable():
+    """BTCUSDT 15m: 6.0x en las seis ventanas."""
+    r = resultado_falso([6.0] * 6)
+    assert r.dispersion_pct == 0.0
+    assert r.estabilidad == wf.ESTABLE
+    assert r.el_elegido_es_estable
+
+
+def test_moverse_de_punta_a_punta_del_menu_es_inestable():
+    """
+    ETHUSDT 1h: elegidos [5, 5, 2, 6, 6, 6]. Es el caso que rompio el criterio
+    anterior, que decia "estable" porque 6.0 ganaba exactamente 3 de 6.
+
+    Un anio el entrenamiento apunto a 2 y otro a 6: recorrio el menu entero.
+    """
+    r = resultado_falso([5.0, 5.0, 2.0, 6.0, 6.0, 6.0])
+    assert r.dispersion_pct == 100.0
+    assert r.estabilidad == wf.INESTABLE
+    assert not r.el_elegido_es_estable
+
+
+def test_una_mayoria_minima_ya_no_alcanza_para_declarar_estable():
+    """
+    El defecto exacto del criterio viejo: 6.0 gana 3 de 6 -- "al menos la
+    mitad" -- pero las elecciones van de 2 a 6. Antes daba estable.
+    """
+    elegidos = [5.0, 5.0, 2.0, 6.0, 6.0, 6.0]
+    assert elegidos.count(6.0) == len(elegidos) / 2, "el caso perdio su gracia"
+    assert not resultado_falso(elegidos).el_elegido_es_estable
+
+
+def test_un_grupo_apretado_pero_no_identico_queda_en_duda():
+    """
+    BTCUSDT 1h: elegidos [4, 6, 5, 4, 5, 5]. Nunca toco 2 ni 3, pero abarca
+    la mitad del menu. Ni un si ni un no: DUDOSA.
+    """
+    r = resultado_falso([4.0, 6.0, 5.0, 4.0, 5.0, 5.0])
+    assert r.dispersion_pct == 50.0
+    assert r.estabilidad == wf.DUDOSA
+    assert not r.el_elegido_es_estable, "DUDOSA no es un si tibio"
+
+
+def test_un_solo_paso_de_diferencia_sigue_siendo_estable():
+    """ETHUSDT 15m: [6,6,6,6,5,6]. Un vecino de distancia no es inestabilidad."""
+    r = resultado_falso([6.0, 6.0, 6.0, 6.0, 5.0, 6.0])
+    assert r.dispersion_pct == 25.0
+    assert r.estabilidad == wf.ESTABLE
+
+
+def test_la_dispersion_se_mide_contra_el_menu_no_contra_lo_elegido():
+    """
+    Elegir entre 4 y 5 es afinar si el menu iba de 2 a 6, y es recorrerlo
+    entero si el menu eran solo 4 y 5. El mismo par de elecciones tiene que
+    dar veredictos distintos.
+    """
+    apretado = resultado_falso([4.0, 5.0, 4.0, 5.0], candidatos=[2.0, 3.0, 4.0, 5.0, 6.0])
+    suelto = resultado_falso([4.0, 5.0, 4.0, 5.0], candidatos=[4.0, 5.0])
+
+    assert apretado.dispersion_pct == 25.0
+    assert apretado.estabilidad == wf.ESTABLE
+    assert suelto.dispersion_pct == 100.0
+    assert suelto.estabilidad == wf.INESTABLE
+
+
+def test_sin_candidatos_numericos_se_cae_al_criterio_por_conteo():
+    """
+    Para un parametro categorico la distancia entre dos valores no significa
+    nada, asi que no se puede medir dispersion. No tiene que explotar.
+    """
+    r = resultado_falso(["adx", "adx", "adx", "pendiente"],
+                        candidatos=["adx", "pendiente"])
+    assert r.dispersion_pct is None
+    assert r.estabilidad == wf.ESTABLE   # 3 de 4 es mayoria estricta
+
+    disparejo = resultado_falso(["adx", "adx", "pendiente", "pendiente"],
+                                candidatos=["adx", "pendiente"])
+    assert disparejo.estabilidad == wf.INESTABLE, "un empate no es una eleccion"
+
+
+def test_el_walk_forward_de_verdad_recuerda_su_menu(velas, cfg):
+    """Si no guardara los candidatos, la dispersion no se podria calcular."""
+    r = correr(velas, cfg, candidatos=(2.0, 4.0, 6.0), anios_entrenamiento=2)
+    assert r.candidatos == [2.0, 4.0, 6.0]
+    assert r.dispersion_pct is not None
+
+
 def test_detecta_cuando_el_elegido_no_es_estable():
     """Si cada ventana elige un valor distinto, no hay optimo: hay ruido."""
     def ventana_falsa(n, elegido):

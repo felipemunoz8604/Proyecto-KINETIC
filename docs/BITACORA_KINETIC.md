@@ -5,9 +5,93 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 29 de agosto de 2026 (cierre 2) — La brecha de 126 USDT, y un error mío de lectura
+## 29 de agosto de 2026 (cierre 3) — La bandera de estabilidad, rehecha
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+### Qué estaba mal
+
+El criterio era «el mismo valor ganó en al menos la mitad de las ventanas».
+Dos defectos:
+
+1. **Con pocas ventanas, una mayoría mínima alcanza.** En ETHUSDT 1h los
+   elegidos fueron `[5, 5, 2, 6, 6, 6]` — de punta a punta del menú — y decía
+   «estable», porque 6.0 ganó exactamente 3 de 6. En la corrida anterior el
+   MISMO tramo daba «inestable»; lo único que había cambiado era tener una
+   ventana menos.
+2. **Trataba los candidatos como etiquetas sueltas cuando son números
+   ordenados.** Elegir 4 y después 5 es casi ponerse de acuerdo; elegir 2 y
+   después 6 es no haber encontrado nada. Contar apariciones no los
+   distingue.
+
+### El criterio nuevo
+
+Se mide **dispersión**: cuánto del menú de candidatos abarcan las elecciones.
+
+| Dispersión | Veredicto |
+|---|---|
+| ≤ 25% | ESTABLE |
+| ≤ 50% | DUDOSA |
+| > 50% | INESTABLE |
+
+El umbral tiene una razón que no depende de nuestros datos: **si las
+elecciones abarcan más de la mitad del menú, el entrenamiento no está
+localizando una región, está recorriendo la carta.**
+
+Para candidatos no numéricos (un parámetro categórico, donde la distancia
+entre dos valores no significa nada) se cae al criterio por conteo, ahora con
+mayoría **estricta** — un empate no es una elección.
+
+`dispersion_pct` **se reporta siempre en crudo** junto al veredicto. Si el
+umbral está mal puesto, el número de al lado lo delata.
+
+### Los cuatro tramos con el criterio nuevo
+
+| Par / TF | Elegidos | Dispersión | Antes | Ahora |
+|---|---|---|---|---|
+| BTC 15m | 6,6,6,6,6,6 | 0% | SÍ | **ESTABLE** |
+| **BTC 1h** | 4,6,5,4,5,5 | 50% | SÍ | **DUDOSA** |
+| ETH 15m | 6,6,6,6,5,6 | 25% | SÍ | **ESTABLE** |
+| ETH 1h | 5,5,2,6,6,6 | 100% | SÍ | **INESTABLE** |
+
+**BTC 1h bajó de «SÍ» a DUDOSA.** Es el único candidato que quedaba vivo, así
+que el criterio nuevo le pega justamente al resultado que nos convenía
+sostener. Eso es evidencia de que no se acomodó la vara.
+
+### La advertencia que corresponde dejar escrita
+
+**Este criterio se escribió DESPUÉS de ver los cuatro resultados.** Se eligió
+por el razonamiento de arriba y no por el veredicto que produce, y el hecho
+de que degrade nuestro mejor tramo respalda eso — pero el riesgo existe y
+queda registrado, acá y en el docstring de `estabilidad`.
+
+No se pudo verificar que las pruebas nuevas fallen con el criterio viejo
+(fallarían por `ImportError`, no por la aserción). En su lugar, la prueba del
+caso límite lleva adentro `assert elegidos.count(6.0) == len(elegidos) / 2`,
+que fija la condición exacta que hacía pasar al criterio anterior: si alguien
+cambia el ejemplo, la prueba avisa que dejó de probar lo que dice.
+
+### Lo que NO se hizo, y por qué importa
+
+La verdadera razón para desconfiar de ETH 1h no es la dispersión: es que
+**tuvo 59 operaciones en seis años, con ventanas de 0 y 2 operaciones**. Una
+elección hecha sobre esa muestra no es una elección. La dispersión lo detecta
+de rebote — el criterio no mide cantidad de evidencia, y no se le agregó esa
+medición para no seguir tocando el juicio en la misma sesión en que se lo
+reescribió. **Queda anotado como pendiente.**
+
+### Estado
+
+**Fase 1 sigue ABIERTA.** Los `null` de `config.yaml` siguen en `null`.
+172 pruebas. Único candidato vivo: **BTCUSDT 1h**, ahora con estabilidad
+**DUDOSA**, 50% de concentración y ~19 operaciones por año.
+
+Pendiente anotado: medir el respaldo de cada elección (cuántas operaciones
+tenía el tramo de entrenamiento), que es lo que de verdad invalida a ETH 1h.
+
+---
+
+## 29 de agosto de 2026 (cierre 2) — La brecha de 126 USDT, y un error mío de lectura
 
 Felipe pidió medir de dónde salían los 126.01 USDT de brecha que quedaban en
 BTCUSDT 1h contra el «mejor en retrospectiva». Salida cruda en
