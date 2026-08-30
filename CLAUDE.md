@@ -110,17 +110,30 @@ cuenta. Está todo probado, no lo desarmes:
   `github.com/felipemunoz8604/Proyecto-KINETIC`, privado a propósito — el
   repo tiene la lógica de la estrategia y los resultados completos.
 
-## Dónde está parado el proyecto (29-ago-2026)
+## Dónde está parado el proyecto (30-ago-2026)
 
 **Fases 0 y 1 CERRADAS. Ninguna fase abierta.** La Fase 1 cerró con hallazgo
-negativo: la estrategia de rupturas no paga sus costos en cripto. El informe
-formal es **`docs/FASE_1_informe.md`** — leelo antes de proponer nada.
+negativo **sobre muestra suficiente**: la estrategia de rupturas no tiene
+ventaja explotable en Spot después de costos. El informe formal es
+**`docs/FASE_1_informe.md`** — leelo antes de proponer nada. Está escrito para
+sostenerse fuera del repo, y su **sección 6 tiene las seis restricciones
+medidas** que condicionan cualquier estrategia nueva.
+
+La evidencia final: 500 operaciones fuera de muestra en 15 pares en 4h, seis
+años, +193 USDT sobre 7.500 de capital (2,6% total), mediana de los pares
+negativa, y **una sola operación aportando el 36% del neto agregado**.
+
+**Decisión de Felipe del 30-ago-2026: la estrategia de rupturas se descarta y
+se busca otra.** Va a llevar el informe a una consulta externa con perfil de
+analista de cripto. **No propongas una estrategia nueva por tu cuenta ni
+empieces a escribir `strategy/` hasta que Felipe traiga esa definición.**
+
+Cambiar de estrategia significa reescribir `strategy/`. Todo lo demás —datos,
+indicadores, riesgo, backtest, walk-forward, cerrojos— se reusa tal cual, con
+194 pruebas.
 
 Cerrar la Fase 1 **no abre la Fase 2.** No hay estrategia validada que llevar
 a Testnet, y avanzar de fase necesita decisión explícita de Felipe.
-
-Lo construido queda sano y sirve para cualquier estrategia futura: datos,
-indicadores, señal, riesgo, backtest y walk-forward, con 185 pruebas.
 
 ## El error que este proyecto tiene que evitar
 
@@ -136,3 +149,18 @@ Por eso: **una hipótesis por vez, con razón mecánica, validada con
 walk-forward.** Si una hipótesis falla, **preguntale a Felipe antes de
 encadenar la siguiente** — dos hipótesis seguidas sobre los mismos datos son
 un barrido con otro nombre.
+
+**Lo que funcionó para no engañarnos, y conviene repetir:**
+
+1. **Escribir los criterios y commitearlos ANTES de bajar los datos.** Se hizo
+   en la corrida de 15 pares (commit `d52a127`, anterior a la ejecución). Se
+   falló un criterio por un solo par y no se tocó. Un criterio escrito después
+   de ver el resultado no es un criterio, es una justificación.
+2. **Elegir el universo con una regla mecánica** (`tools/elegir_universo.py`),
+   no con una lista escrita a mano — una lista a mano viene teñida por lo que
+   uno sabe de cada moneda.
+3. **Mirar concentración, estabilidad y respaldo antes que el resultado.** La
+   concentración detectó el problema en las tres corridas; el profit factor no.
+4. **Desconfiar de una conclusión sacada de cuatro mediciones.** Con dos pares
+   concluimos que el filtro de consolidación no aportaba información; con
+   quince se dio vuelta. Está corregido en el informe a propósito, no borrado.

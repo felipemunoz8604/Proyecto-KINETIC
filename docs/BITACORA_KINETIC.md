@@ -5,9 +5,73 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — COMPROMISO PREVIO: 15 pares en 4h
+## 30 de agosto de 2026 — FASE 1 CERRADA. La estrategia se descarta
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+### El veredicto
+
+Corrieron los 15 pares en 4h. **De los cuatro criterios commiteados antes de
+bajar los datos, fallan dos:**
+
+| Criterio | Resultado | |
+|---|---|---|
+| 1. Al menos 8 de 15 en positivo | **7 de 15** | NO PASA |
+| 2. Ningún par aporta >50% | BTC aporta 49% | PASA |
+| 3. Ninguna operación aporta >20% | **la mejor aporta 36%** | NO PASA |
+| 4. Neto agregado positivo | +193.39 | PASA |
+
+El criterio 1 se falló **por un solo par**. No se tocó — para eso se escribió
+antes. El criterio 3 no se falló por poco: una operación explica más de un
+tercio de seis años de resultado sobre quince mercados.
+
+### Y ahora sí había muestra, que era todo el punto
+
+**500 operaciones fuera de muestra.** Ya no se puede decir «no sabemos porque
+son pocas». Se sabe: **+193 USDT sobre 7.500 de capital en seis años, 2,6%
+total, ~0,4% anual** — y antes de descontar el sesgo de supervivencia. La
+mediana de los pares es negativa. La ventaja de 4h era real en BTC y ETH y
+**no se generaliza**.
+
+### Corrección de una conclusión anterior
+
+Con dos pares se concluyó que **el filtro de consolidación no aportaba
+información y solo sacaba operaciones**. Con quince se da vuelta: en agregado
+convierte **−69 en +193**.
+
+Lo que hace es **limitar daño**, no generar señal: recorta las pérdidas de los
+pares malos (NEO −139 → −14, ONT −124 → −23, ICX −86 → −12) a costa de los
+buenos (ADA +108 → +78, BNB +76 → +27).
+
+**Queda como lección, no borrada:** aquella conclusión estaba armada sobre
+cuatro mediciones, y cuatro no alcanzaron. Está escrita en el informe.
+
+### La decisión
+
+**Felipe cerró la Fase 1 y descartó la estrategia de rupturas.** Va a llevar
+el informe a una consulta externa con perfil de analista de cripto para
+definir qué estrategia probar después.
+
+`docs/FASE_1_informe.md` se reescribió entero para eso: **está escrito para
+sostenerse fuera del repo**, sin suponer conocimiento del proyecto. Su
+**sección 6 son las seis restricciones medidas** —el peaje del 0,30% contra la
+ventaja por operación, que acertar la dirección no es ganar, que los umbrales
+absolutos no son comparables entre temporalidades, que la concentración
+detecta lo que el PF no, cuánto infla un barrido en retrospectiva, y que un
+filtro puede valer por reducir varianza— que es lo que sobrevive al cierre.
+
+### Lo próximo
+
+**Nada, hasta que Felipe traiga la definición de la estrategia nueva.** No
+propongas una por tu cuenta ni empieces a escribir `strategy/`.
+
+Cuando llegue: cambiar de estrategia significa reescribir **solo**
+`strategy/`. Datos, indicadores, riesgo, backtest, walk-forward y los tres
+cerrojos se reusan tal cual, con 194 pruebas.
+
+---
+
+## 30 de agosto de 2026 — COMPROMISO PREVIO: 15 pares en 4h
 
 **Esta entrada se escribió y se commiteó ANTES de bajar los datos y ANTES de
 correr nada.** Ese es todo el punto: un criterio escrito después de ver el
