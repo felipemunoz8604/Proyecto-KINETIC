@@ -5,11 +5,86 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
+## 29 de agosto de 2026 (cierre 2) — La brecha de 126 USDT, y un error mío de lectura
+
+> **Si estás retomando el proyecto, empezá por acá.**
+
+Felipe pidió medir de dónde salían los 126.01 USDT de brecha que quedaban en
+BTCUSDT 1h contra el «mejor en retrospectiva». Salida cruda en
+`docs/salida_cierres_de_ventana_29ago2026_corregida.txt`.
+
+### La respuesta: no eran cierres forzados
+
+| Par / TF | Cortadas por el borde |
+|---|---|
+| BTC 15m | **0** de 976 |
+| **BTC 1h** | **0** de 117 |
+| ETH 15m | **0** de 811 |
+| ETH 1h | 1 de 59 (−1.59 USDT) |
+
+Antes del arreglo del recorte, **los cuatro tramos** tenían una operación
+cortada, todas el mismo día. Ahora prácticamente ninguno. El artefacto de las
+costuras, que ayer parecía el problema central, **era en buena medida un
+efecto del propio bug**: el mes ciego después de cada costura empujaba las
+entradas a agolparse contra el borde siguiente. Arreglado el recorte, el
+artefacto se disolvió solo.
+
+### El error: se buscó la causa donde no estaba
+
+La brecha de BTC 1h **sí es el precio de no conocer el futuro**, que es lo
+que el rótulo original decía. Los elegidos son `[4.0, 6.0, 5.0, 4.0, 5.0,
+5.0]` y el mejor en retrospectiva fue 5.0x: **el walk-forward eligió 5.0x en
+solo 3 de las 6 ventanas.** En las otras tres eligió 4x y 6x, y esa
+diferencia es exactamente lo que el método cobra.
+
+Se había afirmado lo contrario — «es el mismo parámetro en ambos, así que la
+brecha no es sobreajuste» — apoyándose en una nota del script que comparaba
+contra el valor **dominante**, no contra todas las ventanas. La nota se había
+escrito ese mismo día. Costó una corrida de 12 minutos persiguiendo cierres
+forzados que resultaron ser cero.
+
+**Es útil que haya quedado registrado**: el número crudo (126.01) siempre
+estuvo bien; lo que falló fue la frase que lo interpretaba. Una nota
+equivocada es peor que ninguna, porque ahorra el trabajo de pensar.
+
+### Qué significa entonces el +267.15 de BTC 1h
+
+Un barrido sobre los seis años habría mostrado **+393.16**; la realidad
+captura **+267.15**. Son **32% de inflación**, medidos sobre nuestros propios
+datos. Ese es el número concreto de cuánto engaña un barrido.
+
+Y deja el resultado de BTC 1h **más creíble que antes de medirlo**, no menos:
++267.15 es lo que sobrevive después de descontar el autoengaño, y ya no queda
+ninguna brecha sin explicar.
+
+### Arreglado en el código
+
+`nota_de_brecha()` en `main_walkforward.py`: cuenta ventana por ventana, dice
+«TODAS» solo cuando de verdad fueron todas, y si no, informa en cuántas
+coincidió y qué eligió en el resto. Se sacó de adentro de `main()` y tiene
+**6 pruebas** (164 en total), la primera de ellas el caso exacto que engañó.
+
+### Estado
+
+**Fase 1 sigue ABIERTA. Los `null` de `config.yaml` siguen en `null`.**
+
+Ya no quedan pendientes de medición: todo lo que se sabía dudoso está medido.
+Los números de la entrada siguiente (cierre) son los vigentes y ahora están
+completamente explicados.
+
+Queda **una sola decisión pendiente, y es de Felipe**: qué hacer con la
+Fase 1. El único candidato vivo es BTCUSDT 1h — +267.15 USDT (+53.43%) en
+seis años, PF 1.560, pero **50% de concentración y ~19 operaciones por año**.
+
+Y queda anotado, sin resolver, el defecto de la bandera de estabilidad
+(declara «SÍ» con una mayoría mínima; ver la entrada siguiente).
+
+---
+
 ## 29 de agosto de 2026 (cierre) — La re-corrida limpia. Estos son los números vigentes
 
-> **Si estás retomando el proyecto, empezá por acá.** Las dos entradas de
-> más abajo del 29-ago cuentan cómo se llegó hasta este punto; las cifras que
-> valen son las de esta.
+> Las cifras de esta entrada siguen siendo las vigentes. La entrada de arriba
+> (cierre 2) explica la única brecha que quedaba sin justificar.
 
 Walk-forward re-corrido con el arreglo del recorte. Salida cruda en
 `docs/salida_walkforward_29ago2026_corregida.txt`. **Estas cifras reemplazan

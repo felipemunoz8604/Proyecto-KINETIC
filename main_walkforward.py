@@ -64,6 +64,45 @@ def base_config() -> dict:
     return cfg
 
 
+def nota_de_brecha(elegidos, mejor_valor, brecha) -> list[str]:
+    """
+    Explica la distancia entre el walk-forward y el mejor en retrospectiva.
+
+    La brecha solo es "el precio de no conocer el futuro" en la medida en que
+    el walk-forward haya elegido algo DISTINTO del valor que gano mirando
+    todo el periodo. Si eligio el mismo valor en TODAS las ventanas, la
+    diferencia viene de otro lado -- cierres forzados en los bordes, por
+    ejemplo -- y llamarla sobreajuste seria mentir.
+
+    La cuenta va ventana por ventana. El 29-ago-2026 esta nota comparaba
+    contra el valor DOMINANTE y dijo "mismo valor que eligio el walk-forward:
+    5.0x" cuando 5.0x habia ganado 3 de 6 ventanas y las otras 3 eligieron 4x
+    y 6x. Mando a buscar la causa a donde no estaba: se gasto una corrida
+    entera persiguiendo cierres forzados que resultaron ser cero.
+    """
+    if brecha >= 0:
+        lineas = [f"  -> un barrido sobre todo el periodo se veria "
+                  f"{brecha:.2f} USDT MEJOR de lo que el walk-forward capturo"]
+    else:
+        lineas = [f"  -> un barrido sobre todo el periodo se veria "
+                  f"{-brecha:.2f} USDT PEOR: no hubo premio por mirar el futuro"]
+
+    iguales = elegidos.count(mejor_valor)
+    if iguales == len(elegidos):
+        lineas.append(
+            f"     (el walk-forward eligio {mejor_valor}x en TODAS las ventanas: "
+            f"la brecha NO es sobreajuste de parametro, buscar la causa en otro lado)"
+        )
+    else:
+        otros = sorted(set(elegidos) - {mejor_valor})
+        lineas.append(
+            f"     (el walk-forward eligio {mejor_valor}x en solo {iguales} de "
+            f"{len(elegidos)} ventanas; en el resto eligio {otros} -- esa "
+            f"diferencia SI es el precio de no conocer el futuro)"
+        )
+    return lineas
+
+
 def concentracion(operaciones) -> float:
     if not operaciones:
         return 0.0
@@ -147,24 +186,10 @@ def main() -> int:
             print(f"  Referencia MEJOR EN RETROSPECTIVA ({mejor_valor}x): "
                   f"{mejor_neto:+.2f} USDT")
 
-            # OJO CON ESTA BRECHA: no es "cuanto nos habria enganado el
-            # barrido" a secas. Solo es atribuible a sobreajuste si el valor
-            # elegido en retrospectiva es DISTINTO del que eligio el
-            # walk-forward. Si es el mismo, la diferencia viene de otro lado
-            # -- sobre todo de que el walk-forward cierra a la fuerza toda
-            # posicion abierta en cada borde de ventana, y esos cierres en
-            # una fecha arbitraria del calendario cortan ganadoras.
-            brecha = mejor_neto - m.resultado_neto
-            dominante = max(set(resultado.elegidos), key=resultado.elegidos.count)
-            if brecha >= 0:
-                print(f"  -> un barrido sobre todo el periodo se veria "
-                      f"{brecha:.2f} USDT MEJOR de lo que el walk-forward capturo")
-            else:
-                print(f"  -> un barrido sobre todo el periodo se veria "
-                      f"{-brecha:.2f} USDT PEOR: no hubo premio por mirar el futuro")
-            if mejor_valor == dominante:
-                print(f"     (mismo valor que eligio el walk-forward: {dominante}x "
-                      f"-- la brecha NO es sobreajuste de parametro)")
+            for linea in nota_de_brecha(
+                resultado.elegidos, mejor_valor, mejor_neto - m.resultado_neto
+            ):
+                print(linea)
             print(f"\n  ({time.time() - t0:.0f} s)")
 
     return 0

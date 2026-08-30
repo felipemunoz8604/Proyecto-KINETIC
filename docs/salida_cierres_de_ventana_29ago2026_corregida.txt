@@ -1,0 +1,35 @@
+============================================================================
+ KINETIC - cuanto cuestan los cierres forzados de ventana
+============================================================================
+
+============================================================================
+ BTCUSDT 15m
+============================================================================
+
+  Operaciones cortadas por el borde: 0 de 976
+  Ninguna. El borde no cambio nada en este tramo.
+
+============================================================================
+ BTCUSDT 1h
+============================================================================
+
+  Operaciones cortadas por el borde: 0 de 117
+  Ninguna. El borde no cambio nada en este tramo.
+
+============================================================================
+ ETHUSDT 15m
+============================================================================
+
+  Operaciones cortadas por el borde: 0 de 811
+  Ninguna. El borde no cambio nada en este tramo.
+
+============================================================================
+ ETHUSDT 1h
+============================================================================
+  V3 entrada 2023-09-15 cortada 2023-09-16:    -3.40  ->  seguia hasta 2023-09-16 (+0d) y daba    -5.00   (-1.59)
+
+  Operaciones cortadas por el borde: 1 de 59
+  Sumadas dieron:          -3.40 USDT
+  De haber seguido:        -5.00 USDT
+  El borde dejo sobre la mesa: -1.59 USDT
+  (resultado del walk-forward: +10.00 USDT)
