@@ -5,9 +5,48 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 29 de agosto de 2026 (cierre 5) — La matriz de candidatos. Último pendiente, resuelto
+## 29 de agosto de 2026 — FASE 1 CERRADA
 
 > **Si estás retomando el proyecto, empezá por acá.**
+> El informe formal del cierre está en **`docs/FASE_1_informe.md`**. Esta
+> entrada es el resumen; ese documento es la fuente.
+
+**Decisión explícita de Felipe: cerrar la Fase 1 con el hallazgo.**
+
+### El hallazgo
+
+**La estrategia de rupturas con confirmación de volumen no paga sus costos en
+cripto.** Sobrevive un solo caso marginal —BTCUSDT 1h— y descansa en
+demasiado pocas operaciones para confiarle dinero: ~19 por año, con el 50%
+del resultado en una sola.
+
+**Ningún parámetro se promovió a `config.yaml`. Los `null` siguen en `null`,
+y eso es el resultado, no un pendiente.** Ninguna configuración se ganó el
+derecho a quedar escrita. Se actualizaron los comentarios del archivo para
+que no digan «PENDIENTE FASE 1», que ya sería mentira.
+
+### Esto NO abre la Fase 2
+
+El repositorio sigue sin poder operar. Los tres cerrojos siguen puestos y
+vigilados por pruebas. **No hay una estrategia validada que llevar a
+Testnet**, y cualquier avance de fase necesita decisión explícita de Felipe.
+
+### Estado final
+
+- **Fase 0:** CERRADA (28-ago)
+- **Fase 1:** CERRADA (29-ago), hallazgo negativo calificado
+- **Fases 2 y 3:** sin abrir
+- **185 pruebas** en verde
+- Cinco módulos construidos y probados: datos, indicadores, señal, riesgo,
+  backtest y walk-forward
+
+Lo construido queda sano y sirve para cualquier estrategia futura. Lo que no
+sirvió fue la estrategia, y saberlo con evidencia costó dos días en vez de
+descubrirlo con dinero real.
+
+---
+
+## 29 de agosto de 2026 (cierre 5) — La matriz de candidatos. Último pendiente, resuelto
 
 Se imprimió el puntaje de **cada candidato en cada tramo de entrenamiento**.
 Salida cruda en `docs/salida_walkforward_29ago2026_con_matriz.txt`. Los

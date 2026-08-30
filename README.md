@@ -8,7 +8,7 @@ independiente de la estrategia.
 Proyecto **separado de TITAN** (MetaTrader 5 / forex). Cada uno tiene su
 propio repositorio, su propio entorno y su propio protocolo.
 
-> ⚠️ **Estado: Fase 0 CERRADA. Fase 1 ABIERTA (28-ago-2026).**
+> ⚠️ **Estado: Fases 0 y 1 CERRADAS (29-ago-2026). Ninguna fase abierta.**
 > Hoy este repositorio **no puede operar**. No existe código capaz de enviar
 > una orden a Binance, y hay pruebas automáticas que fallan si alguien lo
 > agrega.
@@ -107,8 +107,9 @@ Confirmados por Felipe el 28 de agosto de 2026:
 - **Modo:** `TESTNET`
 
 Hay 8 parámetros más en `null` dentro de `config.yaml` (par, temporalidad,
-umbrales). **Están en blanco a propósito:** se deciden con el backtest de la
-Fase 1, no por intuición.
+umbrales). **Siguen en blanco porque la Fase 1 cerró sin promover ninguno:**
+ninguna configuración pasó su propio criterio. Eso es el resultado, no un
+pendiente.
 
 ---
 
@@ -138,9 +139,8 @@ crearse con **lectura + spot trading, y el permiso de retiro APAGADO**.
   de conexión de solo lectura. ✅ **CERRADA el 28-ago-2026**
 - **Fase 1 — Backtest local.** Señal y riesgo integrados desde el inicio,
   walk-forward, neto de comisiones (0,1 % por lado) y slippage.
-  ⬅️ *acá estamos — walk-forward corrido y validado. Sobrevive un solo
-  candidato, BTCUSDT 1h, y con reparos. Ver `docs/BITACORA_KINETIC.md`,
-  entrada del 29-ago (cierre)*
+  ✅ **CERRADA el 29-ago-2026 con hallazgo negativo:** la estrategia no paga
+  sus costos en cripto. Ver [`docs/FASE_1_informe.md`](docs/FASE_1_informe.md)
 - **Fase 2 — Binance Testnet.** Se prueba la mecánica de ejecución, no el
   rendimiento (el Testnet tiene liquidez y datos limitados).
 - **Fase 3 — Micro-testing en Mainnet (5 USD).** Solo tras validar 1 y 2, y

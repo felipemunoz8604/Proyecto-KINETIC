@@ -35,9 +35,9 @@ en qué carpeta estás.
 
 1. **Cero suposiciones.** No inventes parámetros, capital, pares ni
    resultados. Si falta un dato crítico, **pará y preguntá**.
-2. **Los `null` de `config.yaml` están en blanco a propósito.** Son las
-   decisiones que el MEGAPROMPT prohíbe asumir. Se resuelven con evidencia,
-   no por intuición y no por tu cuenta.
+2. **Los `null` de `config.yaml` están en blanco a propósito, y ahora
+   además son un resultado.** La Fase 1 cerró sin promover ninguno porque
+   ninguna configuración pasó su propio criterio. **No los completes.**
 3. **La estrategia y el riesgo nunca viven en el mismo archivo.** La
    estrategia dice qué señal hay; `risk/` decide si se ejecuta y con cuánto.
 4. **Ninguna orden a Mainnet, nunca, por ningún motivo.** El paso a dinero
@@ -96,6 +96,18 @@ cuenta. Está todo probado, no lo desarmes:
 - **Git:** commits nuevos siempre (nunca `--amend` salvo pedido explícito),
   mensajes que expliquen el **porqué**. Ojo con `git add -A`: ya se coló una
   vez la configuración de Obsidian.
+
+## Dónde está parado el proyecto (29-ago-2026)
+
+**Fases 0 y 1 CERRADAS. Ninguna fase abierta.** La Fase 1 cerró con hallazgo
+negativo: la estrategia de rupturas no paga sus costos en cripto. El informe
+formal es **`docs/FASE_1_informe.md`** — leelo antes de proponer nada.
+
+Cerrar la Fase 1 **no abre la Fase 2.** No hay estrategia validada que llevar
+a Testnet, y avanzar de fase necesita decisión explícita de Felipe.
+
+Lo construido queda sano y sirve para cualquier estrategia futura: datos,
+indicadores, señal, riesgo, backtest y walk-forward, con 185 pruebas.
 
 ## El error que este proyecto tiene que evitar
 

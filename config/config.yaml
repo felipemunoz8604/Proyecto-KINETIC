@@ -5,7 +5,10 @@
 # del codigo Python. Todo vive aca. Si un numero no esta en este archivo, el
 # codigo no deberia conocerlo.
 #
-# Los valores en  null  son PENDIENTES: se deciden con evidencia en la fase
+# Los valores en  null  siguen en null porque la FASE 1 CERRO sin promover
+# ninguno: ninguna configuracion paso su propio criterio. Ver
+# docs/FASE_1_informe.md. No los completes por intuicion.
+# (texto original) Los valores en null son PENDIENTES: se deciden en la fase
 # indicada en el comentario, no por intuicion y no por Claude por su cuenta.
 # ===========================================================================
 
@@ -34,7 +37,8 @@ riesgo:
   # Las posiciones ya abiertas se siguen gestionando con su stop.
   perdida_diaria_max_pct: 3.0
 
-  # PENDIENTE FASE 1 — depende de cuantos pares sobrevivan al backtest.
+  # sin decidir: dependia de cuantos pares sobrevivieran al backtest, y no
+  # sobrevivio ninguno con holgura. Fase 1 cerro sin promoverlo.
   max_posiciones_simultaneas: null
 
   # Kill switch: en true, el bot NO abre nada nuevo. Las posiciones abiertas
@@ -50,14 +54,15 @@ stops:
   trailing_atr_multiplicador: 2.0
 
 estrategia:
-  # PENDIENTE FASE 1 — el par y la temporalidad se eligen con el backtest.
+  # sin decidir: el par y la temporalidad se elegian con el backtest, y el
+  # backtest no promovio ninguno. Fase 1 cerro asi, a proposito.
   # El MEGAPROMPT (seccion 7) prohibe explicitamente asumirlos aca.
   par: null
   temporalidad: null          # candidatos a evaluar: 15m / 1h / 4h
 
   consolidacion:
     velas: 50
-    umbral_desviacion_pct: null      # PENDIENTE FASE 1 (barrido empirico)
+    umbral_desviacion_pct: null      # sin decidir: Fase 1 cerro sin promoverlo
 
   volumen:
     periodo_promedio: 50
@@ -77,17 +82,17 @@ estrategia:
     metodo: adx               # adx | pendiente_sma
 
     adx_periodo: 14
-    adx_minimo: null          # PENDIENTE FASE 1
+    adx_minimo: null          # sin decidir: Fase 1 cerro sin promoverlo
 
     # Solo se usan si metodo = pendiente_sma. Miden hacia donde apunta el
     # mercado EN GRANDE, que no se pelea con una pausa local de 50 velas.
     pendiente_ventana: 20
-    pendiente_minima_pct: null   # PENDIENTE FASE 1
+    pendiente_minima_pct: null   # sin decidir: Fase 1 cerro sin promoverlo
 
   portfolio_guard:
     # No abrir largos si el precio esta muy por debajo de su SMA200.
     sma_periodo: 200
-    distancia_maxima_bajo_sma_pct: null   # PENDIENTE FASE 1
+    distancia_maxima_bajo_sma_pct: null   # sin decidir: Fase 1 cerro sin promoverlo
 
     # Una sola posicion por grupo de correlacion. En cripto casi todo se
     # mueve con Bitcoin: comprar BTC y ETH a la vez no es diversificar, es
