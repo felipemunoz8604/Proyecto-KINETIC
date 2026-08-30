@@ -1,0 +1,96 @@
+============================================================================
+ KINETIC - reconstruccion del universo mes a mes
+============================================================================
+  Ventana de diseño: 2019-01-01 a 2024-12-31
+  Top 20 por mediana de volumen cotizado de 30 dias
+  Antigüedad minima: 180 dias
+
+  Cargando panel...
+    3,271 dias x 650 simbolos (0 s)
+    72 fechas de rebalanceo en la ventana de diseño
+
+  Reconstruyendo...
+
+============================================================================
+ EL UNIVERSO A LO LARGO DEL TIEMPO
+============================================================================
+  Si en 2019 aparecieran los mismos nombres que hoy, la
+  reconstruccion no estaria funcionando.
+
+  2019-01-01  BTC, ETH, EOS, XRP, TRX, BNB, ADA, XLM, LTC, NEO
+  2020-01-01  BTC, ETH, BNB, TRX, MATIC, XRP, EOS, LTC, VET, LINK
+  2021-01-01  BTC, ETH, XRP, LTC, BCH, LINK, ADA, BNB, XLM, EOS
+  2022-01-01  BTC, ETH, LUNA, BNB, MATIC, SAND, SOL, SHIB, AVAX, XRP
+  2023-01-01  BTC, ETH, XRP, DOGE, BNB, LTC, MATIC, SOL, LINK, ADA
+  2024-01-01  BTC, ETH, SOL, XRP, AVAX, BNB, ADA, DOGE, OP, MATIC
+
+============================================================================
+ MEDICION 5.3 - ROTACION DEL UNIVERSO
+============================================================================
+  Mensual:  mediana 15.0%   media 16.5%   maxima 40.0%
+  Anual (punta a punta):  mediana 41%   media 43%
+
+  OJO: las dos NO son comparables entre si. La mensual sumada doce
+  veces cuenta varias veces al simbolo que entra y sale; la anual
+  mira solo las dos puntas. La literatura (Grobys) reporta 37%
+  anual sobre las 30 mayores por capitalizacion, asi que la que hay
+  que comparar contra ese numero es la anual.
+
+  Esto se paga SIEMPRE, aunque la estrategia no cambie de opinion:
+  si un simbolo sale del top 20, hay que venderlo.
+  Con el peaje de 0,25% ida y vuelta: ~0.49% anual antes
+  de que la señal haga absolutamente nada.
+
+  Por año:
+    2019     8.3% mensual
+    2020    11.7% mensual
+    2021    21.2% mensual
+    2022    14.6% mensual
+    2023    21.7% mensual
+    2024    20.8% mensual
+
+============================================================================
+ MEDICION 5.5 - DESLISTADOS QUE ATRAVIESA LA CARTERA
+============================================================================
+  Simbolos distintos que pasaron por el universo: 116
+  Desaparecieron del archivo:                     22
+    de los cuales solo se RENOMBRARON:            5  <- no son una perdida
+    y MURIERON de verdad:                         17
+  Proporcion:                                     15%
+
+
+  RENOMBRADOS (el ticker cambio, el tenedor no perdio nada).
+  Castigarlos con -20% o -50% no seria conservador, seria un error:
+    BCHABCUSDT     -> BCHUSDT
+    BTTUSDT        -> BTTCUSDT
+    FTMUSDT        -> SUSDT
+    MATICUSDT      -> POLUSDT
+    RNDRUSDT       -> RENDERUSDT
+
+  MUERTOS DE VERDAD. Es la cuenta que la Fase 1 no pudo hacer, y
+  cada uno habria sido invisible con el universo de la lista de hoy:
+    ERDUSDT        ultima vela 2020-08-31
+    XMRUSDT        ultima vela 2024-02-20
+    WAVESUSDT      ultima vela 2024-06-17
+    OMGUSDT        ultima vela 2024-06-17
+    LOOMUSDT       ultima vela 2024-08-26
+    UNFIUSDT       ultima vela 2024-11-06
+    RENUSDT        ultima vela 2024-12-10
+    BLZUSDT        ultima vela 2024-12-25
+    LINAUSDT       ultima vela 2025-03-28
+    NULSUSDT       ultima vela 2025-04-16
+    EOSUSDT        ultima vela 2025-05-26
+    MKRUSDT        ultima vela 2025-09-15
+    HIFIUSDT       ultima vela 2025-09-17
+    FLMUSDT        ultima vela 2025-11-12
+    SXPUSDT        ultima vela 2026-04-01
+    ... y 2 mas
+
+============================================================================
+ TAMAÑO EFECTIVO DEL UNIVERSO
+============================================================================
+  Fechas con los 20 completos: 65 de 72
+  Fechas con menos:  7  (de 15 a 18 simbolos)
+  La primera: 2019-01-01 con 15 simbolos
+
+  (32 s)

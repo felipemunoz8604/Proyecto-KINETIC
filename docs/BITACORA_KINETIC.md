@@ -5,9 +5,111 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — 650 pares en disco, 190 de ellos muertos
+## 30 de agosto de 2026 — El universo reconstruido, y LUNA está adentro
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`core/universo.py` con 19 pruebas propias. **289 en total, en verde.**
+Evidencia en `docs/salida_universo_30ago2026.txt`.
+
+### La prueba visible de que funciona
+
+El top 10 por liquidez, reconstruido en cada enero mirando **solo el pasado**:
+
+```
+2019-01-01  BTC, ETH, EOS, XRP, TRX, BNB, ADA, XLM, LTC, NEO
+2020-01-01  BTC, ETH, BNB, TRX, MATIC, XRP, EOS, LTC, VET, LINK
+2022-01-01  BTC, ETH, LUNA, BNB, MATIC, SAND, SOL, SHIB, AVAX, XRP
+2024-01-01  BTC, ETH, SOL, XRP, AVAX, BNB, ADA, DOGE, OP, MATIC
+```
+
+**LUNA está en el universo de enero de 2022** — la moneda que se fue a cero en
+mayo de ese año. Con el universo de la Fase 1 nunca habría aparecido, y ese es
+exactamente el tipo de posición que un backtest optimista no toma nunca.
+
+Si en 2019 aparecieran los mismos nombres que hoy, la reconstrucción no
+estaría funcionando.
+
+### Medición 5.3 — Rotación del universo
+
+| | |
+|---|---|
+| Mensual | mediana 15,0%, media 16,5%, máxima 40% |
+| **Anual punta a punta** | **mediana 41%, media 43%** |
+
+**Las dos no son comparables entre sí**, y confundirlas era fácil: la mensual
+sumada doce veces cuenta varias veces al símbolo que entra y sale. La
+literatura (Grobys) reporta **37% anual** sobre las 30 mayores por
+capitalización, así que la que hay que comparar contra ese número es la anual
+— y **41% contra 37% es un encaje muy bueno**, lo cual también valida que el
+volumen cotizado no es un sustituto disparatado de la capitalización.
+
+**Costo forzado: ~0,49% anual** antes de que la señal haga absolutamente nada.
+Si un símbolo sale del top 20 hay que venderlo, opine lo que opine la
+estrategia.
+
+La rotación casi se duplica de 2019-2020 (8-12% mensual) a 2021-2024 (15-22%).
+
+### Medición 5.5 — Y un hallazgo que la especificación no contempla
+
+De 116 símbolos que pasaron por el universo, **22 desaparecieron del archivo.
+Pero cinco de esos no murieron: se cambiaron de nombre.**
+
+| Viejo | Nuevo | Días entre la última y la primera vela |
+|---|---|---|
+| MATICUSDT | POLUSDT | +3 |
+| RNDRUSDT | RENDERUSDT | +4 |
+| FTMUSDT | SUSDT | +3 |
+| BTTUSDT | BTTCUSDT | +8 |
+| BCHABCUSDT | BCHUSDT | +0 |
+
+**Importa porque la especificación pide castigar cada deslistado con −20% y
+−50% de sensibilidad.** Aplicarle eso a un cambio de nombre no es ser
+conservador: es estar equivocado, y encima empujando el resultado hacia el
+lado que uno cree seguro, que es la peor forma de equivocarse.
+
+Quedan **17 muertes de verdad**, y son muertes en serio: LUNA −100% desde su
+pico, LINA −99,8%, REN −97,6%, UNFI −96,8%.
+
+**La lista de renombramientos es a mano y a propósito.** Detectarlos por
+heurística —«murió uno y nació otro cerca»— daría falsos positivos todo el
+tiempo, porque en cripto nacen monedas todas las semanas.
+`detectar_renombramientos_candidatos()` **propone**; una persona confirma y
+agrega la línea con su evidencia.
+
+### La regla que gobierna el módulo
+
+**En la fecha t solo se mira información anterior a t.** Está escrito una sola
+vez, en `_hasta(panel, fecha)`, porque es el tipo de regla que se rompe en el
+segundo lugar donde se reimplementa.
+
+Hay dos pruebas que lo verifican de frente: una corre el mismo universo sobre
+dos paneles idénticos salvo por lo que viene *después* y exige que la decisión
+no cambie; la otra exige que un símbolo que muere en 2022 aparezca en el
+universo de 2020.
+
+Se agregó un filtro que la especificación no traía: **un par tiene que haber
+operado en los últimos 7 días** para entrar. Sin eso, uno que murió en 2021
+seguiría entrando al universo de 2023 con el volumen de su mejor momento. No
+es mirar al futuro: que un par no tenga velas recientes se sabe en t.
+
+### Tamaño efectivo
+
+65 de 72 fechas tienen los 20 completos. Las 7 que no son de 2019, cuando
+todavía no había 20 pares USDT con 180 días de historia — la primera arranca
+con 15.
+
+### Lo próximo
+
+1. **Costos v2** — por venue, maker/taker, financiación, slippage por rango de
+   liquidez, y los filtros de `LOT_SIZE`/`minNotional`.
+2. **Riesgo v2** — la reescritura de `risk/`, el pedazo más grande de la fase.
+3. Mediciones 5.2 (dispersión transversal) y 5.4 (frecuencia de la compuerta).
+4. Recién ahí, E0.
+
+---
+
+## 30 de agosto de 2026 — 650 pares en disco, 190 de ellos muertos
 
 **270 pruebas en verde.** Etapa 0 avanzada: compromiso previo commiteado,
 cerrojos de futuros verdes, y la capa de datos del archivo funcionando.
