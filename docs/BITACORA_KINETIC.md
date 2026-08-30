@@ -5,9 +5,101 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — FASE 2 ABIERTA. MEGAPROMPT v2.0 y el sesgo, medido
+## 30 de agosto de 2026 — Calmar(B1) = 0,921, y el criterio 1 tiene un problema
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+Módulo `metrics/` nuevo (métricas, benchmarks y la barrera del holdout), con
+20 pruebas propias. **214 pruebas en total, todas en verde.** Evidencia en
+`docs/salida_benchmarks_30ago2026.txt`.
+
+### El número que faltaba
+
+**B1 — comprar BTCUSDT el 1-ene-2019 y no hacer nada hasta fin de 2024:**
+
+| | |
+|---|---|
+| CAGR | **+70,55%** |
+| Caída máxima | **−76,6%** (847 días sin recuperarse, nov-2021 a mar-2024) |
+| **Calmar** | **0,921** |
+| Volatilidad | 65,6% anualizada |
+
+De ahí salen las dos varas: **criterio 1 pide Calmar ≥ 1,657** y **criterio 2
+pide caída ≤ 46,0%**.
+
+### Los criterios 1 y 2 no son independientes, y eso cambia la lectura
+
+El Calmar tiene la caída en el denominador, así que cortar más la caída afloja
+lo que el criterio 1 pide de retorno:
+
+| Su caída | = × B1 | CAGR que necesita | = % de B1 |
+|---|---|---|---|
+| 46,0% | 0,60 | 76,2% | **108%** |
+| 38,3% | 0,50 | 63,5% | 90% |
+| 30,6% | 0,40 | 50,8% | 72% |
+| 23,0% | 0,30 | 38,1% | 54% |
+| 15,3% | 0,20 | 25,4% | 36% |
+
+**En el tope de caída permitido hay que superar a comprar y esperar** — que es
+justo la formulación literal que el analista advirtió que era casi con
+seguridad inalcanzable. No se vuelve razonable hasta cortar la caída bastante
+más abajo del tope.
+
+**La restricción que manda es la caída, no el retorno.** Eso reordena el
+trabajo: la compuerta de régimen y el escalar de volatilidad son la parte que
+decide si algo pasa, no la selección de activos.
+
+### El problema serio: la vara depende de una fecha arbitraria
+
+Se midió Calmar(B1) arrancando cada mes entre ene-2019 y ene-2021, todos
+terminando el 31-dic-2024:
+
+| | |
+|---|---|
+| Calmar(B1) más bajo | **0,439** (arrancando ene-2021) |
+| Calmar(B1) más alto | **0,973** (arrancando feb-2019) |
+| Lo que exige el criterio 1 | entre **0,79 y 1,75** |
+
+**El criterio 1 exige más del doble según de qué día arranque la ventana**, y
+el 1-ene-2019 no se eligió por ninguna razón de fondo. Tal como está, ese
+criterio mide en parte la estrategia y en parte el calendario.
+
+**Propuesta, todavía sin decidir:** en vez de comparar contra un Calmar(B1)
+fijo, comparar **por pares** — para cada fecha de arranque, el Calmar de la
+estrategia contra el Calmar de B1 **sobre esa misma ventana**, y exigir que el
+cociente supere 1,8 en la mediana de los arranques. La especificación ya pide
+20 fechas de arranque para robustez (sección 7.2); esto es aplicarle lo mismo
+al benchmark, y así la fecha arbitraria se cancela.
+
+**Decisión de Felipe pendiente.** Importa resolverlo ahora: los criterios de
+la Fase 2 todavía no se commitearon como compromiso previo, y una vez
+commiteados no se tocan.
+
+### Lo que se construyó
+
+- **`metrics/ventana.py`** — la barrera del holdout, como candado y no como
+  acuerdo. Cualquier función que reciba datos posteriores al 31-dic-2024
+  levanta `HoldoutBloqueado` salvo `permitir_holdout=True` explícito. Un
+  holdout que se puede mirar sin querer no protege de nada.
+- **`metrics/metricas.py`** — CAGR, volatilidad, caída máxima con su duración,
+  Calmar, Sortino, tiempo en mercado. Todo sobre **curva de patrimonio
+  diaria**, no sobre operaciones: la decisión D2 cambia la contabilidad a
+  pesos, y una métrica atada al concepto de operación habría que reescribirla
+  de nuevo. Anualiza con 365, no 252 — cripto opera todos los días.
+- **`metrics/benchmarks.py`** — B1. B2 y B0 entran cuando existan el universo
+  reconstruido y E0.
+
+### Lo próximo
+
+1. **Resolver el criterio 1** (decisión de Felipe).
+2. Cerrojos de futuros verdes — el MEGAPROMPT lo exige antes de bajar un solo
+   dato de perpetuos.
+3. Capa de datos desde el archivo, con el universo reconstruido mes a mes.
+4. Resto de la etapa 0: costos v2, riesgo v2, robustez (bootstrap, top-k, DSR).
+
+---
+
+## 30 de agosto de 2026 — FASE 2 ABIERTA. MEGAPROMPT v2.0 y el sesgo, medido
 
 ### El MEGAPROMPT pasó a v2.0
 

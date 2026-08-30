@@ -1,0 +1,88 @@
+============================================================================
+ KINETIC - benchmarks de la Fase 2
+============================================================================
+  Ventana de diseño: 2019-01-01 a 2024-12-31
+  Capital: 500.00 USDT
+  B1 paga 0.125% una sola vez, al entrar.
+
+  Historico en disco: 3,299 velas diarias, 2017-08-17 a 2026-08-28
+  Recortado a diseño: 2,192 velas, 2019-01-01 a 2024-12-31
+
+  B1 — comprar BTCUSDT y no hacer nada
+    Periodo:          2,191 dias
+    Patrimonio:       499.38 -> 12,306.50  (+2364.4%)
+    CAGR:             +70.55%
+    Volatilidad:      65.6% anualizada
+    Caida maxima:     -76.6%   (847 dias sin recuperarse)
+    CALMAR:           0.921
+    Sortino:          1.185
+    La caida:         de 2021-11-08 a 2024-03-04
+
+============================================================================
+ LO QUE ESTO LE EXIGE A UNA ESTRATEGIA
+============================================================================
+  Criterio 1 — Calmar >= 1.8 x 0.921  =  1.657
+  Criterio 2 — caida maxima <= 0.6 x 76.6%  =  46.0%
+
+  Traducido: para pasar, una estrategia tiene que quedarse con al
+  menos el 108% del CAGR de comprar y esperar, si cae exactamente el maximo permitido.
+
+============================================================================
+ QUE COMBINACIONES PASAN LOS DOS CRITERIOS A LA VEZ
+============================================================================
+  Los criterios 1 y 2 no son independientes. Si una estrategia cae
+  menos, el criterio 1 le pide menos retorno -- porque el Calmar
+  tiene la caida en el denominador. La cuenta:
+
+    Su caida   = x B1    CAGR que necesita   = % de B1
+       46.0%     0.60                76.2%        108%
+       38.3%     0.50                63.5%         90%
+       30.7%     0.40                50.8%         72%
+       23.0%     0.30                38.1%         54%
+       15.3%     0.20                25.4%         36%
+
+  Leelo asi: en el TOPE de caida permitido hay que superar a comprar
+  y esperar. Recien cortando la caida bastante mas abajo del tope, la
+  vara se vuelve razonable. **La restriccion que manda es la caida,
+  no el retorno.**
+
+============================================================================
+ CUANTO DEPENDE LA VARA DE LA FECHA DE ARRANQUE
+============================================================================
+  El 1-ene-2019 es una fecha arbitraria. Si Calmar(B1) cambia mucho
+  segun donde se empiece, entonces el criterio 1 no mide la
+  estrategia: mide de que dia arranco la ventana.
+
+  Arranque       CAGR B1   Caida B1   Calmar B1  Exige Calmar
+  2019-01-01       70.5%     -76.6%       0.921         1.657
+  2019-02-01       74.6%     -76.6%       0.973         1.751
+  2019-03-01       72.9%     -76.6%       0.951         1.712
+  2019-04-01       71.9%     -76.6%       0.938         1.688
+  2019-05-01       65.4%     -76.6%       0.854         1.536
+  2019-06-01       53.5%     -76.6%       0.698         1.256
+  2019-07-01       48.4%     -76.6%       0.632         1.138
+  2019-08-01       50.0%     -76.6%       0.653         1.175
+  2019-09-01       52.8%     -76.6%       0.690         1.241
+  2019-10-01       58.6%     -76.6%       0.765         1.376
+  2019-11-01       56.5%     -76.6%       0.738         1.328
+  2019-12-01       64.7%     -76.6%       0.844         1.520
+  2020-01-01       67.0%     -76.6%       0.874         1.573
+  2020-02-01       59.6%     -76.6%       0.778         1.400
+  2020-03-01       64.0%     -76.6%       0.836         1.504
+  2020-04-01       74.5%     -76.6%       0.972         1.749
+  2020-05-01       65.8%     -76.6%       0.858         1.545
+  2020-06-01       62.1%     -76.6%       0.811         1.459
+  2020-07-01       67.2%     -76.6%       0.877         1.579
+  2020-08-01       59.8%     -76.6%       0.780         1.404
+  2020-09-01       60.9%     -76.6%       0.794         1.430
+  2020-10-01       66.8%     -76.6%       0.872         1.570
+  2020-11-01       58.4%     -76.6%       0.762         1.372
+  2020-12-01       48.2%     -76.6%       0.629         1.132
+  2021-01-01       33.6%     -76.6%       0.439         0.790
+
+  Calmar(B1) va de 0.439 a 0.973 segun el mes de arranque.
+  O sea que el criterio 1 exige entre 0.79 y 1.75, dependiendo
+  de una fecha que nadie eligio por una razon de fondo.
+
+  (B2 y B0 todavia no existen: B2 necesita el universo reconstruido
+   desde el archivo, y B0 necesita la estrategia E0 escrita.)
