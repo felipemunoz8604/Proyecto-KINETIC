@@ -5,9 +5,107 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — El criterio 1 se arregla por pares. Robustez lista
+## 30 de agosto de 2026 — 650 pares en disco, 190 de ellos muertos
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+**270 pruebas en verde.** Etapa 0 avanzada: compromiso previo commiteado,
+cerrojos de futuros verdes, y la capa de datos del archivo funcionando.
+
+### Los datos
+
+| | |
+|---|---|
+| Símbolos | **650** |
+| Velas diarias | **762.914** |
+| **Deslistados** | **190 (29% del universo)** |
+| Vivos hoy | 460 |
+| Rango | 2017-08-17 a 2026-07-31 |
+| Problemas de integridad | **0** |
+
+**Ese 29% es exactamente lo que la Fase 1 no vio.** Y con universo
+equiponderado, la literatura estima el sesgo en 62% anualizado.
+
+### El compromiso previo y los cerrojos
+
+`docs/FASE_2_criterios.md`, commiteado **antes** de bajar un solo dato. Con
+dos correcciones sobre la especificación: **criterio 1 por pares** (decisión
+tuya) y **criterio 3 con piso** en `max(Calmar(B0), Calmar(B1))`, porque si E0
+sale malo superarlo por 15% es trivial y el criterio se queda sin dientes.
+
+Los cerrojos ahora cubren futuros y **se verificaron en rojo**: se metió un
+archivo temporal con `futures_change_leverage` y `futures_create_order`, los
+dos dieron rojo, y se borró. Un cerrojo que nunca se vio fallar no es un
+cerrojo. Se agregaron además dos pruebas sobre **la lista blanca en sí
+misma** — el código de hoy puede no llamar a nada peligroso, pero si la lista
+blanca lo permite, `llamar_solo_lectura()` es una puerta abierta a una línea
+de distancia.
+
+### Tres bugs propios, los tres del mismo tipo: fallan en silencio
+
+**1. `.values` sobre un índice con zona horaria la descarta.** El código no
+falla; el índice queda ingenuo y después no se puede comparar contra las
+fechas de la ventana de diseño. Lo atrapó una prueba.
+
+**2. Un símbolo con caracteres no ASCII rompía la descarga.** `urllib` no
+puede ni armar la petición. Se perdió un símbolo entero en la primera corrida.
+El primer arreglo fue peor: escapé en `Mercado.ruta_simbolo`, pero `_listar`
+ya escapaba, así que el prefijo se escapaba **dos veces** y el listado
+devolvía cero meses sin ningún error visible. El escapado va en el punto de
+uso, una sola vez.
+
+**3. El grave: las dos unidades de tiempo conviven en el mismo archivo.**
+
+Binance cambió `open_time` de milisegundos a microsegundos a mitad de camino,
+y **en el mes del cambio las dos están en el mismo mensual**. KLAYUSDT
+2024-10:
+
+```
+1727740800000,0.13450000,...       <- 13 dígitos, milisegundos
+1730246400000000,0.12550000,...    <- 16 dígitos, microsegundos
+```
+
+Mi detección miraba el máximo del archivo entero, así que mandaba a leer todo
+como microsegundos y las 30 filas en milisegundos **caían en 1970**. El código
+no fallaba. La serie quedaba con fechas imposibles y nadie se enteraba.
+
+**Solo se descubrió auditando las 650 descargadas**, no revisando el código.
+Ahora la conversión es fila por fila, con las cuatro bandas (segundos,
+milisegundos, microsegundos, nanosegundos), y hay tres pruebas nuevas.
+
+De 650 símbolos, **uno solo** estaba afectado. Se rehizo.
+
+### La decisión de diseño que no hay que romper
+
+`simbolos_disponibles()` **no filtra por estado**, y hay una prueba que exige
+que el filtro estático no consulte `TRADING`, `BREAK`, `status` ni
+`exchange_info`.
+
+El sesgo de la Fase 1 no entró por usar el endpoint equivocado, entró por
+filtrar `status == "TRADING"`. **Si alguien cambia la fuente de datos y
+mantiene ese filtro, el sesgo vuelve entero.**
+
+Los filtros que sí se aplican al descargar son **estáticos** —dependen solo
+del nombre— y los que dependen de la fecha (antigüedad mínima, ranking por
+liquidez, top 20) van aparte: decidir hoy quién estaba en el universo en 2020
+sería filtrar el futuro hacia el pasado.
+
+### Lo próximo
+
+1. **Reconstrucción del universo mes a mes** — matriz de disponibilidad
+   símbolo × mes, ranking por mediana del volumen cotizado de 30 días, top 20
+   en cada fecha de rebalanceo.
+2. Costos v2 (por venue, maker/taker, financiación, slippage por rango).
+3. Riesgo v2 — la reescritura de `risk/`, el cambio más grande de la fase.
+4. Las cinco mediciones previas, y recién ahí E0.
+
+Perpetuos y tasas de financiación quedan para cuando haga falta E2/E3: los
+cerrojos ya están listos, pero **no se baja nada de eso hasta que E0 y E1
+justifiquen el trabajo**.
+
+---
+
+## 30 de agosto de 2026 — El criterio 1 se arregla por pares. Robustez lista
 
 **229 pruebas en verde.** `metrics/robustez.py` nuevo, con las cuatro
 herramientas que la especificación pide en la sección 3.2.

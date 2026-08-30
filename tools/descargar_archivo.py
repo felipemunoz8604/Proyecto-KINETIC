@@ -95,7 +95,11 @@ def bajar_uno(simbolo: str, tf: str, rehacer: bool, contador: Contador) -> None:
 
 
 def main() -> int:
-    sys.stdout.reconfigure(line_buffering=True)
+    # `errors="replace"` porque la consola de Windows es cp1252 y revienta
+    # al imprimir un nombre de simbolo no ASCII. La descarga del
+    # 30-ago-2026 termino con UnicodeEncodeError DESPUES de haber bajado
+    # las 753.407 velas: el trabajo estaba hecho y el resumen se perdio.
+    sys.stdout.reconfigure(line_buffering=True, errors="replace")
     parser = argparse.ArgumentParser(description="Descarga desde data.binance.vision")
     parser.add_argument("--tf", default="1d", help="temporalidad (la Fase 2 usa 1d)")
     parser.add_argument("--hilos", type=int, default=12)

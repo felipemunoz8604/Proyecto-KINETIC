@@ -56,6 +56,59 @@ def test_detecta_milisegundos():
     assert df.index[0] == pd.Timestamp("2020-01-01", tz="UTC")
 
 
+def test_las_dos_unidades_pueden_convivir_en_el_mismo_archivo():
+    """
+    El caso real que rompio la primera version, y el mas caro de encontrar.
+
+    Binance cambio la unidad de `open_time` a mitad de camino, y en el mes del
+    cambio **las dos conviven en el mismo mensual**. Caso concreto: KLAYUSDT
+    2024-10, donde la primera fila tiene 13 digitos y la ultima 16.
+
+    La deteccion original miraba el maximo del archivo entero, asi que el
+    maximo mandaba a leer todo como microsegundos y las 30 filas en
+    milisegundos caian en **1970**. El codigo no fallaba: la serie quedaba con
+    fechas imposibles y solo se descubrio auditando las 650 descargadas.
+
+    Por eso la conversion es fila por fila.
+    """
+    crudo = pd.DataFrame(
+        [
+            [1727740800000, 1, 2, 3, 4, 5, 0, 6, 7, 8, 9, 0],      # ms
+            [1730246400000000, 1, 2, 3, 4, 5, 0, 6, 7, 8, 9, 0],   # us
+        ],
+        columns=arch.COLUMNAS,
+    )
+    df = arch._a_indice_temporal(crudo)
+    assert df.index[0] == pd.Timestamp("2024-10-01", tz="UTC")
+    assert df.index[1] == pd.Timestamp("2024-10-30", tz="UTC")
+    assert (df.index.year == 2024).all()
+
+
+def test_tambien_entiende_segundos_y_nanosegundos():
+    """
+    Las cuatro bandas, por las dudas. Estan muy separadas: para cualquier
+    fecha entre 2001 y 2286 no hay ambiguedad posible entre ellas.
+    """
+    esperado = pd.Timestamp("2020-01-01", tz="UTC")
+    for valor in (1577836800, 1577836800000, 1577836800000000,
+                  1577836800000000000):
+        crudo = pd.DataFrame([[valor, 1, 2, 3, 4, 5, 0, 6, 7, 8, 9, 0]],
+                             columns=arch.COLUMNAS)
+        assert arch._a_indice_temporal(crudo).index[0] == esperado, valor
+
+
+def test_una_fila_con_timestamp_ilegible_se_descarta():
+    """Mejor perder una vela que arrastrar un NaT hasta el backtest."""
+    crudo = pd.DataFrame(
+        [[1577836800000, 1, 2, 3, 4, 5, 0, 6, 7, 8, 9, 0],
+         ["basura", 1, 2, 3, 4, 5, 0, 6, 7, 8, 9, 0]],
+        columns=arch.COLUMNAS,
+    )
+    df = arch._a_indice_temporal(crudo)
+    assert len(df) == 1
+    assert not df.index.isna().any()
+
+
 def test_detecta_microsegundos():
     """
     Binance cambio la unidad de `open_time` a mitad de camino.
@@ -277,3 +330,39 @@ def test_el_filtro_no_mira_si_el_par_sigue_vivo():
             "de que el par siga vivo, que es exactamente como entro el sesgo de "
             "supervivencia en la Fase 1."
         )
+
+
+# --- Escapado de URLs -----------------------------------------------------
+
+def test_la_ruta_del_simbolo_queda_cruda():
+    """
+    Sin escapar, a proposito. `_listar` escapa lo que recibe, asi que una
+    ruta ya escapada se escaparia dos veces -- el `%` pasa a `%25` -- y el
+    listado devuelve cero meses SIN ningun error visible. Paso el
+    30-ago-2026.
+    """
+    assert arch.SPOT.ruta_simbolo("ABCUSDT", "1d") == \
+        "data/spot/monthly/klines/ABCUSDT/1d/"
+
+
+def test_la_url_de_descarga_escapa_los_nombres_no_ascii():
+    """
+    Binance lista pares con caracteres no ASCII. Sin escapar, `urllib` ni
+    siquiera puede armar la peticion, y la descarga del 30-ago-2026 perdio un
+    simbolo entero por eso.
+
+    Un modulo que existe para no dejar simbolos afuera no puede dejarlos
+    afuera por como se escriben.
+    """
+    url = arch._url_de(arch.SPOT, "币安人生USDT", "1d", "x.zip")
+    assert url.isascii(), "la URL quedo con caracteres que urllib no puede enviar"
+    assert "%E5%B8%81" in url
+    assert url.endswith("/1d/x.zip")
+
+
+def test_la_url_no_rompe_los_nombres_normales():
+    url = arch._url_de(arch.SPOT, "BTCUSDT", "1d", "BTCUSDT-1d-2020-01.zip")
+    assert url == (
+        "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1d/"
+        "BTCUSDT-1d-2020-01.zip"
+    )

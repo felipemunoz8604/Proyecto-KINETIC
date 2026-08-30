@@ -53,6 +53,7 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 log = logging.getLogger(__name__)
@@ -95,6 +96,15 @@ class Mercado:
     prefijo: str
 
     def ruta_simbolo(self, simbolo: str, tf: str) -> str:
+        """
+        La ruta CRUDA del simbolo dentro del bucket, sin escapar.
+
+        El escapado se hace en el punto de uso -- `_listar` y `_url_de` -- y no
+        aca. Hacerlo aca fue un intento fallido el 30-ago-2026: `_listar` ya
+        escapa lo que recibe, asi que el prefijo llegaba escapado dos veces
+        (el `%` se convertia en `%25`) y el listado devolvia cero meses sin
+        ningun error visible.
+        """
         return f"{self.prefijo}{simbolo}/{tf}/"
 
 
@@ -164,6 +174,20 @@ def meses_disponibles(simbolo: str, tf: str = "1d",
     return sorted(n for n in nombres if n.endswith(".zip"))
 
 
+def _url_de(mercado: Mercado, simbolo: str, tf: str, archivo: str) -> str:
+    """
+    La URL de descarga, con la ruta escapada una sola vez.
+
+    Binance lista pares con caracteres no ASCII en el nombre. Sin escapar,
+    `urllib` no puede ni armar la peticion: falla con "'ascii' codec can't
+    encode characters", y la descarga del 30-ago-2026 perdio un simbolo
+    entero asi. Un modulo que existe para no dejar simbolos afuera no puede
+    dejarlos afuera por como se escriben.
+    """
+    ruta = mercado.ruta_simbolo(simbolo, tf) + archivo
+    return f"{BASE}/{urllib.parse.quote(ruta, safe='/')}"
+
+
 def bajar_mes(simbolo: str, archivo: str, tf: str = "1d",
               mercado: Mercado = SPOT, verificar: bool = True) -> pd.DataFrame:
     """
@@ -173,7 +197,7 @@ def bajar_mes(simbolo: str, archivo: str, tf: str = "1d",
     en una descarga de verdad: un zip truncado se descomprime igual y mete
     datos falsos sin avisar, y despues aparece como un "hallazgo" raro.
     """
-    url = f"{BASE}/{mercado.ruta_simbolo(simbolo, tf)}{archivo}"
+    url = _url_de(mercado, simbolo, tf, archivo)
     crudo = _leer(url)
 
     if verificar:
@@ -198,19 +222,46 @@ def bajar_mes(simbolo: str, archivo: str, tf: str = "1d",
     return _a_indice_temporal(df)
 
 
+def _a_milisegundos(tiempos: pd.Series) -> pd.Series:
+    """
+    Normaliza los `open_time` a milisegundos, FILA POR FILA.
+
+    Binance cambio la unidad de los timestamps del archivo a mitad de camino,
+    y la primera version de esto lo resolvia mirando el maximo del archivo
+    entero. Estaba mal, y el caso que lo demostro es KLAYUSDT 2024-10 -- el
+    mes exacto del cambio, donde **las dos unidades conviven en el mismo
+    archivo**:
+
+        1727740800000,0.13450000,...       <- 13 digitos, milisegundos
+        1730246400000000,0.12550000,...    <- 16 digitos, microsegundos
+
+    Con la deteccion por archivo, el maximo mandaba a interpretar todo como
+    microsegundos y las 30 filas en milisegundos caian en **1970**. El codigo
+    no fallaba: simplemente la serie quedaba con fechas imposibles.
+
+    Por eso la conversion es por fila y por magnitud. Las bandas estan muy
+    separadas -- para cualquier fecha entre 2001 y 2286 no hay ambiguedad
+    posible entre segundos, milisegundos, microsegundos y nanosegundos.
+    """
+    valores = pd.to_numeric(tiempos, errors="coerce").to_numpy(dtype="float64")
+    factor = np.select(
+        [valores < 1e11, valores < 1e14, valores < 1e17],
+        [1_000.0, 1.0, 1e-3],          # segundos, milisegundos, microsegundos
+        default=1e-6,                   # nanosegundos
+    )
+    return pd.Series(valores * factor, index=tiempos.index)
+
+
 def _a_indice_temporal(df: pd.DataFrame) -> pd.DataFrame:
     """
     Deja el DataFrame con indice UTC en milisegundos y solo las columnas utiles.
 
-    El `open_time` del archivo viene en milisegundos en los meses viejos y en
-    MICROsegundos en los nuevos -- Binance lo cambio a mitad de camino. Si no
-    se detecta, las fechas nuevas caen en el año 56.000 y la serie queda
-    inutilizable de una forma que no salta a la vista.
+    La unidad de `open_time` la resuelve `_a_milisegundos`, fila por fila --
+    ver ahi por que no alcanza con mirarla una vez por archivo.
     """
-    tiempos = pd.to_numeric(df["open_time"])
-    # Un timestamp en milisegundos de una fecha real tiene 13 digitos; en
-    # microsegundos, 16. El corte esta muy lejos de cualquier fecha plausible.
-    unidad = "us" if tiempos.max() > 1e15 else "ms"
+    tiempos = _a_milisegundos(df["open_time"])
+    validos = tiempos.notna()
+    df, tiempos = df[validos], tiempos[validos]
 
     salida = df[UTILES].apply(pd.to_numeric, errors="coerce")
     # OJO: nada de `.values` aca. Sobre un indice con zona horaria, `.values`
@@ -219,7 +270,7 @@ def _a_indice_temporal(df: pd.DataFrame) -> pd.DataFrame:
     # comparar contra las fechas de la ventana de diseño, que si tienen zona.
     # Lo atrapo `test_el_indice_queda_ordenado_y_en_utc`.
     salida.index = pd.DatetimeIndex(
-        pd.to_datetime(tiempos.to_numpy(), unit=unidad, utc=True)
+        pd.to_datetime(tiempos.to_numpy(), unit="ms", utc=True)
     ).as_unit("ms")
     salida.index.name = "open_time"
     return salida.sort_index()
