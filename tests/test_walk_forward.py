@@ -385,3 +385,89 @@ def test_sin_datos_no_explota(cfg):
     r = wf.correr(vacio, cfg, "X", "1h", [2.0], aplicar_trailing)
     assert r.ventanas == []
     assert r.metricas.operaciones == 0
+
+
+# ===========================================================================
+# El respaldo: cuanta evidencia habia detras de cada eleccion
+# ===========================================================================
+
+def ventana_con_respaldo(puntajes, ops, elegido):
+    t = pd.Timestamp("2020-01-01", tz="UTC")
+    return wf.Ventana(
+        numero=1, entrena_desde=t, entrena_hasta=t, prueba_desde=t,
+        prueba_hasta=t, elegido=elegido, resultado_entrenamiento=puntajes[elegido],
+        metricas_prueba=wf.motor.Metricas(), operaciones_prueba=[],
+        candidatos_evaluados=puntajes, operaciones_entrenamiento=ops,
+    )
+
+
+def test_el_respaldo_son_las_operaciones_del_valor_elegido():
+    v = ventana_con_respaldo({2.0: 10.0, 6.0: 50.0}, {2.0: 80, 6.0: 31}, 6.0)
+    assert v.respaldo == 31, "cuenta las del elegido, no las del que mas opero"
+
+
+def test_sin_operaciones_detras_la_eleccion_es_arbitraria():
+    """
+    Un candidato que no opero nunca puede ganar igual: si todos dan 0.00, el
+    max() devuelve el primero de la lista. Eso no es haber elegido.
+    """
+    v = ventana_con_respaldo({2.0: 0.0, 6.0: 0.0}, {2.0: 0, 6.0: 0}, 2.0)
+    assert v.respaldo == 0
+    assert v.la_eleccion_fue_arbitraria
+
+
+def test_un_empate_perfecto_tambien_es_arbitrario():
+    """Con operaciones pero puntajes identicos, gano el orden de la lista."""
+    v = ventana_con_respaldo({2.0: 25.0, 6.0: 25.0}, {2.0: 40, 6.0: 40}, 2.0)
+    assert v.margen == 0.0
+    assert v.la_eleccion_fue_arbitraria
+
+
+def test_con_margen_y_operaciones_la_eleccion_no_es_arbitraria():
+    v = ventana_con_respaldo({2.0: 10.0, 6.0: 50.0}, {2.0: 80, 6.0: 31}, 6.0)
+    assert v.margen == 40.0
+    assert not v.la_eleccion_fue_arbitraria
+
+
+def test_el_margen_se_mide_contra_el_segundo_no_contra_el_peor():
+    """Contra el peor siempre parece holgado y esconde un empate arriba."""
+    v = ventana_con_respaldo(
+        {2.0: -100.0, 4.0: 49.9, 6.0: 50.0}, {2.0: 5, 4.0: 30, 6.0: 31}, 6.0
+    )
+    assert v.margen == pytest.approx(0.1)
+
+
+def test_la_bandera_de_arbitraria_NO_agarra_una_muestra_diminuta():
+    """
+    Deja constancia de una limitacion, no de una virtud.
+
+    El 29-ago-2026 una ventana de ETHUSDT 1h eligio 2.0x -- el extremo
+    opuesto del menu -- sobre NUEVE operaciones de entrenamiento. Elegir
+    sobre nueve operaciones es basura, y esta bandera dice que no pasa nada,
+    porque hay operaciones y hay margen.
+
+    Es a proposito: poner un umbral ("menos de N operaciones") habria sido
+    inventar un numero mirando estos mismos datos. El precio es que la
+    bandera casi nunca sirve y hay que leer la columna cruda de respaldo.
+    Si algun dia se le agrega un umbral, esta prueba tiene que cambiar --
+    y esa discusion es justamente la que no hay que saltearse.
+    """
+    v = ventana_con_respaldo({2.0: 18.0, 6.0: 10.7}, {2.0: 9, 6.0: 11}, 2.0)
+    assert v.respaldo == 9
+    assert not v.la_eleccion_fue_arbitraria
+
+
+def test_el_resultado_reporta_la_ventana_peor_respaldada(velas, cfg):
+    r = correr(velas, cfg, candidatos=(2.0, 4.0), anios_entrenamiento=2)
+    assert r.respaldo_minimo == min(v.respaldo for v in r.ventanas)
+    for v in r.ventanas:
+        assert v.operaciones_entrenamiento.keys() == {2.0, 4.0}
+
+
+def test_el_informe_avisa_cuando_una_eleccion_fue_arbitraria():
+    r = wf.ResultadoWalkForward(
+        [ventana_con_respaldo({2.0: 0.0, 6.0: 0.0}, {2.0: 0, 6.0: 0}, 2.0)],
+        [], 500.0, 500.0, [2.0, 6.0],
+    )
+    assert "ARBITRARIA" in r.informe()
+    assert len(r.ventanas_arbitrarias) == 1

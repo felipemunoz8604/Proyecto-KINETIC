@@ -70,6 +70,51 @@ class Ventana:
     metricas_prueba: motor.Metricas
     operaciones_prueba: list[motor.Operacion]
     candidatos_evaluados: dict[Any, float] = field(default_factory=dict)
+    # Cuantas operaciones tuvo cada candidato en el tramo de ENTRENAMIENTO.
+    # Sin esto no se sabe si la eleccion se hizo con evidencia o a los dados.
+    operaciones_entrenamiento: dict[Any, int] = field(default_factory=dict)
+
+    @property
+    def respaldo(self) -> int:
+        """Operaciones de entrenamiento detras del valor que se eligio."""
+        return self.operaciones_entrenamiento.get(self.elegido, 0)
+
+    @property
+    def margen(self) -> float | None:
+        """
+        Cuanto le saco el elegido al segundo mejor, en el entrenamiento.
+
+        Se mide contra el SEGUNDO, no contra el peor: contra el peor siempre
+        parece holgado y esconde un empate arriba. Un margen de casi cero
+        significa que el entrenamiento no distinguio entre los dos mejores;
+        gano uno por redondeo, no por ser mejor.
+        """
+        if len(self.candidatos_evaluados) < 2:
+            return None
+        ordenados = sorted(self.candidatos_evaluados.values(), reverse=True)
+        return ordenados[0] - ordenados[1]
+
+    @property
+    def la_eleccion_fue_arbitraria(self) -> bool:
+        """
+        True si el tramo de entrenamiento directamente no daba con que elegir.
+
+        Dos condiciones objetivas, sin umbrales inventados:
+          - el valor elegido no produjo ninguna operacion, o
+          - los dos mejores empataron exactamente.
+        En ambos casos `max()` devolvio el primero de la lista y eso no es una
+        decision.
+
+        OJO CON ESTA BANDERA: es deliberadamente estricta y por eso casi nunca
+        se activa. El 29-ago-2026 dio CERO en los cuatro tramos, incluida una
+        ventana de ETHUSDT 1h que eligio sobre NUEVE operaciones. Elegir sobre
+        nueve operaciones es basura y la bandera no lo ve. El dato que sirve
+        es la columna cruda de `respaldo`, no esta bandera.
+        """
+        if self.respaldo == 0:
+            return True
+        margen = self.margen
+        return margen is not None and margen == 0.0
 
 
 ESTABLE = "ESTABLE"
@@ -204,16 +249,34 @@ class ResultadoWalkForward:
             hasta=self.ventanas[-1].prueba_hasta if self.ventanas else None,
         )
 
+    @property
+    def ventanas_arbitrarias(self) -> list["Ventana"]:
+        """Las ventanas donde el entrenamiento no daba con que elegir."""
+        return [v for v in self.ventanas if v.la_eleccion_fue_arbitraria]
+
+    @property
+    def respaldo_minimo(self) -> int | None:
+        """Operaciones de entrenamiento de la ventana peor respaldada."""
+        if not self.ventanas:
+            return None
+        return min(v.respaldo for v in self.ventanas)
+
     def informe(self) -> str:
-        lineas = ["  Ventana  Entrenamiento          Prueba                 Elegido   Resultado"]
+        lineas = [
+            "  Ventana  Entrenamiento          Prueba                 "
+            "Elegido   Resultado          Respaldo"
+        ]
         for v in self.ventanas:
+            margen = "" if v.margen is None else f", +{v.margen:.2f} al 2do"
+            aviso = "  <-- ARBITRARIA" if v.la_eleccion_fue_arbitraria else ""
             lineas.append(
                 f"  {v.numero:>7}  {v.entrena_desde.date()} a {v.entrena_hasta.date()}  "
                 f"{v.prueba_desde.date()} a {v.prueba_hasta.date()}  "
                 f"{str(v.elegido):>7}   {v.metricas_prueba.resultado_neto:>+9.2f} "
                 f"({v.metricas_prueba.operaciones} ops)"
+                f"   {v.respaldo} ops{margen}{aviso}"
             )
-        return "\n".join(lineas)
+        return chr(10).join(lineas)
 
 
 def _por_resultado_neto(metricas: motor.Metricas) -> float:
@@ -280,6 +343,7 @@ def correr(
 
         # --- Eleccion: SOLO con el tramo de entrenamiento -----------------
         puntajes: dict[Any, float] = {}
+        ops_entrena: dict[Any, int] = {}
         for valor in candidatos:
             cfg = copy.deepcopy(cfg_base)
             cfg["capital"]["monto"] = capital
@@ -287,6 +351,7 @@ def correr(
             r = motor.correr(entrena, cfg, par, temporalidad, reglas_simbolo,
                              recortar_inicio=False)
             puntajes[valor] = criterio(r.metricas)
+            ops_entrena[valor] = r.metricas.operaciones
 
         elegido = max(puntajes, key=lambda v: puntajes[v])
 
@@ -310,6 +375,7 @@ def correr(
                 metricas_prueba=resultado.metricas,
                 operaciones_prueba=resultado.operaciones,
                 candidatos_evaluados=puntajes,
+                operaciones_entrenamiento=ops_entrena,
             )
         )
         corte_entrena = corte_entrena + pd.DateOffset(years=anios_prueba)

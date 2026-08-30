@@ -5,9 +5,109 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 29 de agosto de 2026 (cierre 3) — La bandera de estabilidad, rehecha
+## 29 de agosto de 2026 (cierre 4) — El respaldo de cada elección. La respuesta de fondo
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+Se midió lo que quedaba pendiente: **cuánta evidencia había detrás de cada
+elección de parámetro.** Salida cruda en
+`docs/salida_walkforward_29ago2026_con_respaldo.txt`.
+
+Cada ventana ahora registra cuántas operaciones tuvo **cada candidato** en el
+tramo de entrenamiento, y el informe muestra por ventana el `respaldo`
+(operaciones detrás del valor elegido) y el `margen` contra el segundo mejor.
+El margen va contra el segundo y no contra el peor: contra el peor siempre
+parece holgado y esconde un empate arriba.
+
+### La comparación que contesta todo
+
+| Par / TF | Respaldo por ventana | Márgenes | Qué dice |
+|---|---|---|---|
+| BTC 15m | **300–562 ops** | hasta +216 | evidencia sólida, y dice que NO funciona |
+| **BTC 1h** | **30–77 ops** | **5 de 6 por debajo de +7** | decisiones al borde del ruido |
+| ETH 15m | ~300–500 ops | amplios | evidencia sólida, y dice que NO funciona |
+| ETH 1h | **9–33 ops** | mezclados | no había con qué elegir |
+
+**La diferencia entre los tramos no es la estrategia: es cuánta evidencia
+hay.** Donde sobra evidencia, dice que no. Donde parece decir que sí, la
+evidencia es delgada. Ese es el resultado de fondo de toda la Fase 1.
+
+### BTCUSDT 1h, ventana por ventana
+
+```
+Ventana   Elegido   Resultado            Respaldo
+   1        4.0     +53.62  (9 ops)      31 ops,  +4.00 al 2do
+   2        6.0      -6.61  (6 ops)      35 ops,  +1.02 al 2do
+   3        5.0     +19.04 (22 ops)      30 ops,  +3.04 al 2do
+   4        4.0     +41.01 (29 ops)      37 ops,  +6.92 al 2do
+   5        5.0     +33.04 (27 ops)      56 ops, +25.56 al 2do
+   6        5.0    +127.06 (24 ops)      77 ops,  +2.83 al 2do
+```
+
+Cinco de seis ventanas eligieron con menos de 7 USDT de margen; una con
+**1.02**. Sobre tres años de entrenamiento y 500 USDT de cuenta, eso no es
+una preferencia.
+
+**Hay dos lecturas y este dato NO las distingue:**
+
+- **Pesimista:** la elección del multiplicador fue un volado, y el +53%
+  descansa en decisiones que el entrenamiento no respaldaba.
+- **Benigna:** si 4x, 5x y 6x rinden casi igual, el margen chico entre ellos
+  no importa — la decisión que sí importaba (no elegir 2x ni 3x) pudo
+  tomarse con holgura, y el aporte de +256 contra FIJO 2x sigue en pie.
+
+Lo que las separaría es **la distancia entre el grupo de arriba (4-6) y el de
+abajo (2-3)**, que está guardada en `candidatos_evaluados` pero no se
+imprime. **Pendiente, no resuelto.**
+
+### ETHUSDT 1h: la causa raíz de su 100% de dispersión
+
+Entre 9 y 33 operaciones de entrenamiento. **La ventana 3 eligió 2.0x — el
+extremo opuesto del menú — sobre NUEVE operaciones.** No es que la estrategia
+sea errática: es que no había con qué elegir. Confirma lo que la bandera de
+estabilidad detectaba de rebote.
+
+### La bandera `ARBITRARIA` no sirvió, y queda dicho
+
+**Dio CERO en los cuatro tramos.** Se definió estricta a propósito (solo
+dispara con 0 operaciones o empate exacto) para no inventar un umbral del
+tipo «menos de N operaciones es poco» mirando estos mismos datos. El precio
+fue que **el caso que había que detectar — elegir sobre nueve operaciones —
+no la activa.**
+
+Lo que funcionó fue la **columna cruda de respaldo**. Se deja la bandera
+porque agarra el caso degenerado, pero hay una prueba
+(`test_la_bandera_de_arbitraria_NO_agarra_una_muestra_diminuta`) que deja
+constancia de la limitación en vez de disimularla. Si algún día se le agrega
+un umbral, esa prueba obliga a discutirlo en vez de saltearlo.
+
+### Un error de esta sesión, y su verificación
+
+Se ejecutó un `git checkout -- .` innecesario encadenado en un comando que
+solo debía copiar un archivo, y descartó la instrumentación y sus pruebas
+antes de commitearlas. Se rehizo a mano.
+
+**Para no commitear evidencia generada por código que ya no existía**, se
+volvió a correr BTCUSDT 1h con el código rehecho y se comparó con `diff`
+contra la tabla guardada: **idénticas, sin una sola diferencia.** La
+evidencia de esta entrada está verificada, no supuesta.
+
+### Estado
+
+**Fase 1 sigue ABIERTA.** Los `null` de `config.yaml` siguen en `null`.
+**180 pruebas.** Ya no queda nada por medir de lo que se sabía dudoso.
+
+El único candidato vivo sigue siendo **BTCUSDT 1h**: +267.15 USDT (+53.43%),
+PF 1.560, estabilidad **DUDOSA**, concentración **50%**, ~19 operaciones por
+año y **elecciones respaldadas por 30-77 operaciones con márgenes de 1 a 7
+USDT**.
+
+Pendiente único: imprimir la distancia entre el grupo 4-6 y el 2-3 en
+entrenamiento, que decide cuál de las dos lecturas de BTC 1h es la correcta.
+
+---
+
+## 29 de agosto de 2026 (cierre 3) — La bandera de estabilidad, rehecha
 
 ### Qué estaba mal
 

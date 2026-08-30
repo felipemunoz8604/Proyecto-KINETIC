@@ -1,0 +1,112 @@
+============================================================================
+ KINETIC - WALK-FORWARD: hipotesis del trailing
+============================================================================
+  Candidatos:  trailing en [2.0, 3.0, 4.0, 5.0, 6.0] x ATR
+  Stop inicial fijo en 2xATR (no se toca: define el riesgo)
+  Entrenar 3 anios -> probar 1 anio -> avanzar 1 anio
+  Filtros: ADX >= 20.0, consolidacion <= 0.75%
+
+============================================================================
+ BTCUSDT 15m
+============================================================================
+  calculando indicadores...
+  316,139 velas. Corriendo ventanas...
+  Ventana  Entrenamiento          Prueba                 Elegido   Resultado          Respaldo
+        1  2017-09-16 a 2020-09-16  2020-09-16 a 2021-09-16      6.0      +61.49 (97 ops)   300 ops, +123.58 al 2do
+        2  2018-09-16 a 2021-09-16  2021-09-16 a 2022-09-16      6.0     -114.15 (125 ops)   334 ops, +216.85 al 2do
+        3  2019-09-16 a 2022-09-16  2022-09-16 a 2023-09-16      6.0      -35.78 (180 ops)   346 ops, +3.88 al 2do
+        4  2020-09-16 a 2023-09-16  2023-09-16 a 2024-09-16      6.0      -21.35 (197 ops)   402 ops, +56.38 al 2do
+        5  2021-09-16 a 2024-09-16  2024-09-16 a 2025-09-16      6.0     -115.58 (185 ops)   502 ops, +29.67 al 2do
+        6  2022-09-16 a 2025-09-16  2025-09-16 a 2026-08-29      6.0     -125.83 (192 ops)   562 ops, +39.14 al 2do
+
+  --- FUERA DE MUESTRA (lo unico que cuenta) ---
+  Operaciones:   976   PF 0.854   acierto 20.3%
+  Capital:       500.00 -> 148.80 USDT (-70.24%)
+  Elegidos:      [6.0, 6.0, 6.0, 6.0, 6.0, 6.0]
+  Estabilidad:   ESTABLE (las elecciones abarcan el 0% del menu de candidatos)
+  Concentracion: la mejor operacion aporta -26% del neto
+
+  Referencia FIJO 2x sobre el mismo tramo: -451.48 USDT (1147 ops)
+  Referencia MEJOR EN RETROSPECTIVA (6.0x): -351.20 USDT
+  -> un barrido sobre todo el periodo se veria 0.00 USDT MEJOR de lo que el walk-forward capturo
+     (el walk-forward eligio 6.0x en TODAS las ventanas: la brecha NO es sobreajuste de parametro, buscar la causa en otro lado)
+
+  (385 s)
+============================================================================
+ BTCUSDT 1h
+============================================================================
+  calculando indicadores...
+  79,048 velas. Corriendo ventanas...
+  Ventana  Entrenamiento          Prueba                 Elegido   Resultado          Respaldo
+        1  2017-09-16 a 2020-09-16  2020-09-16 a 2021-09-16      4.0      +53.62 (9 ops)   31 ops, +4.00 al 2do
+        2  2018-09-16 a 2021-09-16  2021-09-16 a 2022-09-16      6.0       -6.61 (6 ops)   35 ops, +1.02 al 2do
+        3  2019-09-16 a 2022-09-16  2022-09-16 a 2023-09-16      5.0      +19.04 (22 ops)   30 ops, +3.04 al 2do
+        4  2020-09-16 a 2023-09-16  2023-09-16 a 2024-09-16      4.0      +41.01 (29 ops)   37 ops, +6.92 al 2do
+        5  2021-09-16 a 2024-09-16  2024-09-16 a 2025-09-16      5.0      +33.04 (27 ops)   56 ops, +25.56 al 2do
+        6  2022-09-16 a 2025-09-16  2025-09-16 a 2026-08-29      5.0     +127.06 (24 ops)   77 ops, +2.83 al 2do
+
+  --- FUERA DE MUESTRA (lo unico que cuenta) ---
+  Operaciones:   117   PF 1.560   acierto 24.8%
+  Capital:       500.00 -> 767.15 USDT (+53.43%)
+  Elegidos:      [4.0, 6.0, 5.0, 4.0, 5.0, 5.0]
+  Estabilidad:   DUDOSA (las elecciones abarcan el 50% del menu de candidatos)
+  Concentracion: la mejor operacion aporta 50% del neto
+
+  Referencia FIJO 2x sobre el mismo tramo: +10.89 USDT (126 ops)
+  Referencia MEJOR EN RETROSPECTIVA (5.0x): +393.16 USDT
+  -> un barrido sobre todo el periodo se veria 126.01 USDT MEJOR de lo que el walk-forward capturo
+     (el walk-forward eligio 5.0x en solo 3 de 6 ventanas; en el resto eligio [4.0, 6.0] -- esa diferencia SI es el precio de no conocer el futuro)
+
+  (94 s)
+============================================================================
+ ETHUSDT 15m
+============================================================================
+  calculando indicadores...
+  316,139 velas. Corriendo ventanas...
+  Ventana  Entrenamiento          Prueba                 Elegido   Resultado          Respaldo
+        1  2017-09-16 a 2020-09-16  2020-09-16 a 2021-09-16      6.0     +210.41 (65 ops)   237 ops, +102.80 al 2do
+        2  2018-09-16 a 2021-09-16  2021-09-16 a 2022-09-16      6.0      -71.10 (83 ops)   262 ops, +451.01 al 2do
+        3  2019-09-16 a 2022-09-16  2022-09-16 a 2023-09-16      6.0     -163.81 (186 ops)   246 ops, +432.76 al 2do
+        4  2020-09-16 a 2023-09-16  2023-09-16 a 2024-09-16      6.0     -130.09 (172 ops)   334 ops, +58.79 al 2do
+        5  2021-09-16 a 2024-09-16  2024-09-16 a 2025-09-16      5.0      -47.51 (154 ops)   453 ops, +4.40 al 2do
+        6  2022-09-16 a 2025-09-16  2025-09-16 a 2026-08-29      6.0      -22.10 (151 ops)   504 ops, +6.08 al 2do
+
+  --- FUERA DE MUESTRA (lo unico que cuenta) ---
+  Operaciones:   811   PF 0.908   acierto 21.5%
+  Capital:       500.00 -> 275.80 USDT (-44.84%)
+  Elegidos:      [6.0, 6.0, 6.0, 6.0, 5.0, 6.0]
+  Estabilidad:   ESTABLE (las elecciones abarcan el 25% del menu de candidatos)
+  Concentracion: la mejor operacion aporta -33% del neto
+
+  Referencia FIJO 2x sobre el mismo tramo: -421.07 USDT (922 ops)
+  Referencia MEJOR EN RETROSPECTIVA (6.0x): -206.54 USDT
+  -> un barrido sobre todo el periodo se veria 17.66 USDT MEJOR de lo que el walk-forward capturo
+     (el walk-forward eligio 6.0x en solo 5 de 6 ventanas; en el resto eligio [5.0] -- esa diferencia SI es el precio de no conocer el futuro)
+
+  (375 s)
+============================================================================
+ ETHUSDT 1h
+============================================================================
+  calculando indicadores...
+  79,048 velas. Corriendo ventanas...
+  Ventana  Entrenamiento          Prueba                 Elegido   Resultado          Respaldo
+        1  2017-09-16 a 2020-09-16  2020-09-16 a 2021-09-16      5.0       +0.00 (0 ops)   14 ops, +6.56 al 2do
+        2  2018-09-16 a 2021-09-16  2021-09-16 a 2022-09-16      5.0      -10.21 (2 ops)   13 ops, +5.69 al 2do
+        3  2019-09-16 a 2022-09-16  2022-09-16 a 2023-09-16      2.0      +18.78 (16 ops)   9 ops, +7.27 al 2do
+        4  2020-09-16 a 2023-09-16  2023-09-16 a 2024-09-16      6.0      -11.11 (8 ops)   16 ops, +21.10 al 2do
+        5  2021-09-16 a 2024-09-16  2024-09-16 a 2025-09-16      6.0      -29.68 (11 ops)   24 ops, +15.64 al 2do
+        6  2022-09-16 a 2025-09-16  2025-09-16 a 2026-08-29      6.0      +42.21 (22 ops)   33 ops, +2.15 al 2do
+
+  --- FUERA DE MUESTRA (lo unico que cuenta) ---
+  Operaciones:   59   PF 1.051   acierto 23.7%
+  Capital:       500.00 -> 510.00 USDT (+2.00%)
+  Elegidos:      [5.0, 5.0, 2.0, 6.0, 6.0, 6.0]
+  Estabilidad:   INESTABLE (las elecciones abarcan el 100% del menu de candidatos)
+  Concentracion: la mejor operacion aporta 920% del neto
+
+  Referencia FIJO 2x sobre el mismo tramo: +88.87 USDT (61 ops)
+  Referencia MEJOR EN RETROSPECTIVA (2.0x): +88.87 USDT
+  -> un barrido sobre todo el periodo se veria 78.87 USDT MEJOR de lo que el walk-forward capturo
+     (el walk-forward eligio 2.0x en solo 1 de 6 ventanas; en el resto eligio [5.0, 6.0] -- esa diferencia SI es el precio de no conocer el futuro)
+
+  (98 s)
