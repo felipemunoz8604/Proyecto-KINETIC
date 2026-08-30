@@ -5,9 +5,75 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — Calmar(B1) = 0,921, y el criterio 1 tiene un problema
+## 30 de agosto de 2026 — El criterio 1 se arregla por pares. Robustez lista
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+**229 pruebas en verde.** `metrics/robustez.py` nuevo, con las cuatro
+herramientas que la especificación pide en la sección 3.2.
+
+### La decisión de Felipe sobre el criterio 1
+
+**Comparación por pares.** Para cada una de las 20 fechas de arranque que la
+especificación ya pedía (sección 7.2), se compara el Calmar de la estrategia
+contra el de B1 **sobre esa misma ventana**, y se exige que el cociente supere
+1,8 en la mediana.
+
+Así la fecha arbitraria se cancela sola, y no agrega trabajo: esas corridas ya
+estaban planificadas para la prueba de robustez. Hay una prueba que lo fija —
+si la estrategia *es* el benchmark, el cociente da 1,000 exacto en todos los
+arranques, sin importar cuál sea la ventana.
+
+### Las cuatro herramientas
+
+- **Comparación por pares** — contesta si el resultado depende del calendario.
+- **Bootstrap por bloques** (30 días, 10.000 remuestreos, semilla fija) —
+  contesta si el CAGR podría ser cero y tuvimos suerte. Por bloques y no día a
+  día porque la volatilidad viene en rachas; remuestrear días sueltos rompe esa
+  estructura y devuelve un intervalo demasiado angosto, o sea optimista.
+- **Curva de retiro top-k** — reemplaza la bandera de concentración de la
+  Fase 1. No pregunta «hay un mes grande» sino **cuánto sobrevive sin él**.
+- **Deflated Sharpe Ratio** — le pone número formal a lo que la Fase 1 midió a
+  mano (el barrido inflaba entre 20% y 200%).
+
+### Dos errores propios, anotados porque valen
+
+**1. Un bug real en la curva de retiro.** Usaba
+`resample("ME").last().pct_change()`, y eso descarta el primer valor: se
+perdía entero el tramo del inicio de la serie al primer fin de mes. Medido
+sobre 1.200 días, el retorno real era **0,461 y la cadena mensual daba
+0,576**. Toda la curva estaba corrida.
+
+Lo atrapó una prueba roja, no una revisión. Y quedó fijado con el invariante
+más barato posible: **con k=0 no se saca nada, así que tiene que dar el CAGR
+exacto.** Ahora coincide a 1e-9.
+
+**2. Una suposición mía que era falsa.** Escribí una prueba dando por sentado
+que media exposición mejora el Calmar. Falló, y al medirlo sobre 20 semillas:
+**mejora en 14 de 20, no siempre.**
+
+No es un detalle de la prueba, importa para el proyecto: **el escalar de
+volatilidad `k_t` por sí solo no compra Calmar.** El que hace el trabajo es la
+compuerta de régimen. Se suma a lo que ya decía la tabla de criterios — la
+restricción que manda es la caída, no el retorno — y las dos apuntan a lo
+mismo: **E0 es más importante de lo que el plan sugiere, y la selección
+transversal de E1 menos.**
+
+### Lo próximo
+
+1. Cerrojos de futuros verdes. El MEGAPROMPT lo exige **antes** de bajar un
+   solo dato de perpetuos.
+2. Capa de datos desde el archivo, universo reconstruido mes a mes.
+3. Costos v2 y riesgo v2.
+4. Las cinco mediciones previas, y recién ahí E0.
+
+Los criterios de la Fase 2 **todavía no se commitearon como compromiso
+previo**. Falta hacerlo, con el criterio 1 ya en su forma por pares, antes de
+bajar datos nuevos.
+
+---
+
+## 30 de agosto de 2026 — Calmar(B1) = 0,921, y el criterio 1 tiene un problema
 
 Módulo `metrics/` nuevo (métricas, benchmarks y la barrera del holdout), con
 20 pruebas propias. **214 pruebas en total, todas en verde.** Evidencia en
