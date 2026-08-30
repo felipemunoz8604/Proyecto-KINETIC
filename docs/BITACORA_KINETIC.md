@@ -5,9 +5,74 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — 4h es mejor de verdad, y aun así no alcanza
+## 30 de agosto de 2026 — COMPROMISO PREVIO: 15 pares en 4h
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+**Esta entrada se escribió y se commiteó ANTES de bajar los datos y ANTES de
+correr nada.** Ese es todo el punto: un criterio escrito después de ver el
+resultado no es un criterio, es una justificación.
+
+### Qué se va a hacer, y por qué no es una tercera hipótesis
+
+La hipótesis de la temporalidad (entrada de abajo) quedó sostenida pero sin
+muestra: 10 y 9 operaciones por año en dos pares. **No se cambia la
+hipótesis ni el método — se le da más mercado a la misma pregunta.** Mismo
+walk-forward, mismo barrido de un solo parámetro, mismos candidatos, mismo
+trailing fijo. Lo único que cambia es cuántos pares se miran.
+
+Decisión de Felipe del 30-ago-2026, después de que se le presentaran las
+cuatro opciones incluida la de cerrar.
+
+### El universo, elegido por una regla ciega al resultado
+
+`tools/elegir_universo.py`. La regla no consulta ningún backtest: par contra
+USDT operable hoy, base que no sea stablecoin ni fiat, que no sea token
+apalancado, y con primera vela anterior al 1-ene-2019 para que tenga el mismo
+período que BTC y ETH. De 476 pares USDT, califican **15**:
+
+```
+BTCUSDT ETHUSDT BNBUSDT NEOUSDT LTCUSDT QTUMUSDT ADAUSDT IOTAUSDT
+XLMUSDT XRPUSDT ETCUSDT ICXUSDT ONTUSDT TRXUSDT VETUSDT
+```
+
+**No los elegí yo.** Si hubiera escrito la lista a mano vendría teñida por lo
+que sé de cada moneda.
+
+### El sesgo que esta regla NO arregla
+
+**Supervivencia.** Binance solo sirve velas de los pares que hoy existen. Las
+monedas que se listaron en 2018 y se murieron no están acá y no hay forma de
+traerlas desde ese endpoint. El universo es «las que sobrevivieron ocho
+años», y eso favorece a cualquier estrategia que compre y aguante.
+
+**Cualquier número que salga de esto está inflado por una cantidad que no se
+puede medir.** La advertencia viaja pegada al resultado, siempre.
+
+### Los cuatro criterios, fijados ahora
+
+Se juzga **el agregado de los 15**, no el mejor. Para dar la hipótesis por
+sostenida tienen que cumplirse los cuatro:
+
+1. **Amplitud.** Al menos **8 de los 15** pares con neto positivo fuera de
+   muestra. Si el efecto es real se ve en la mayoría, no en tres.
+2. **Ningún par domina.** El de mejor resultado aporta **menos del 50%** del
+   neto agregado.
+3. **Ninguna operación domina.** La mejor operación individual aporta **menos
+   del 20%** del neto agregado.
+4. **El neto agregado es positivo**, y se reporta al lado de la referencia
+   SIN FILTRO sobre el mismo universo.
+
+**Si no se cumplen los cuatro, la hipótesis no se sostiene y la Fase 1 se
+cierra.** No se ajusta el criterio, no se saca el par que molesta, no se
+prueba otra temporalidad. Queda escrito acá para que no haya discusión
+después.
+
+Solo 4h: el control de 1h ya se corrió y está en la entrada de abajo.
+
+---
+
+## 30 de agosto de 2026 — 4h es mejor de verdad, y aun así no alcanza
 
 Se corrió el walk-forward de la segunda hipótesis: **«las temporalidades más
 altas pagan el peaje»**. Evidencia completa en
