@@ -1,0 +1,69 @@
+============================================================================
+ KINETIC - la hipotesis de la temporalidad sobre 15 pares en 4h
+============================================================================
+  Mismo metodo que con dos pares: umbral relativo en [1.0, 1.2, 1.4, 1.6, 1.8] x ATR,
+  elegido por ventana mirando solo el pasado. Trailing fijo en 2xATR.
+  Universo por regla ciega al resultado (tools/elegir_universo.py).
+  500 USDT por par, contabilidad independiente. NO es una cartera.
+
+  BTCUSDT    ...   61 ops      +94.42 USDT   ESTABLE
+  ETHUSDT    ...   52 ops      +75.33 USDT   ESTABLE
+  BNBUSDT    ...   25 ops      +27.42 USDT   DUDOSA
+  NEOUSDT    ...   17 ops      -14.14 USDT   ESTABLE
+  LTCUSDT    ...   47 ops      -23.93 USDT   INESTABLE
+  QTUMUSDT   ...   40 ops      -84.76 USDT   INESTABLE
+  ADAUSDT    ...   40 ops      +78.15 USDT   INESTABLE
+  IOTAUSDT   ...   28 ops      -17.66 USDT   INESTABLE
+  XLMUSDT    ...   22 ops      +56.42 USDT   ESTABLE
+  XRPUSDT    ...   25 ops      +65.45 USDT   INESTABLE
+  ETCUSDT    ...   52 ops       -5.79 USDT   INESTABLE
+  ICXUSDT    ...   20 ops      -11.76 USDT   ESTABLE
+  ONTUSDT    ...    7 ops      -22.94 USDT   ESTABLE
+  TRXUSDT    ...   19 ops      -28.14 USDT   INESTABLE
+  VETUSDT    ...   45 ops       +5.31 USDT   INESTABLE
+
+============================================================================
+ DETALLE POR PAR (todo fuera de muestra)
+============================================================================
+  Par          Ops  Ops/anio       Neto  Sin filtro  Mejor op  Estabilidad
+  BTCUSDT       61        10     +94.42     +106.01    +26.17  ESTABLE
+  ADAUSDT       40         7     +78.15     +108.41    +49.57  INESTABLE
+  ETHUSDT       52         9     +75.33     +101.96    +23.08  ESTABLE
+  XRPUSDT       25         4     +65.45      +61.76    +70.06  INESTABLE
+  XLMUSDT       22         4     +56.42      +65.58    +36.26  ESTABLE
+  BNBUSDT       25         4     +27.42      +75.64    +28.58  DUDOSA
+  VETUSDT       45         8      +5.31       -5.99    +48.73  INESTABLE
+  ETCUSDT       52         9      -5.79      -21.46    +49.21  INESTABLE
+  ICXUSDT       20         3     -11.76      -86.35    +11.40  ESTABLE
+  NEOUSDT       17         3     -14.14     -138.96     +8.77  ESTABLE
+  IOTAUSDT      28         5     -17.66      -47.13    +25.49  INESTABLE
+  ONTUSDT        7         1     -22.94     -124.23     +3.89  ESTABLE
+  LTCUSDT       47         8     -23.93      -92.38    +16.00  INESTABLE
+  TRXUSDT       19         3     -28.14       +1.56     +8.24  INESTABLE
+  QTUMUSDT      40         7     -84.76      -73.37    +10.37  INESTABLE
+  ------------------------------------------------------------------------
+  AGREGADO     500         6    +193.39      -68.96
+
+============================================================================
+ LOS CUATRO CRITERIOS (fijados antes de bajar los datos)
+============================================================================
+  1. Amplitud: 7 de 15 pares en positivo (hacen falta 8)            NO PASA
+  2. Ningun par domina: BTCUSDT aporta 49% del neto (tope 50%)      PASA
+  3. Ninguna operacion domina: la mejor aporta 36% (tope 20%)       NO PASA
+  4. Neto agregado positivo: +193.39 USDT sobre 7,500 de capital   PASA
+
+============================================================================
+ HIPOTESIS NO SOSTENIDA
+============================================================================
+  Segun lo commiteado antes de correr, la Fase 1 se cierra.
+  No se ajusta el criterio ni se saca el par que molesta.
+
+  RECORDATORIOS QUE VIAJAN PEGADOS AL NUMERO:
+  - Sesgo de supervivencia: son los pares que llegaron vivos hasta
+    hoy. Los que se murieron no estan y no se pueden traer. El
+    resultado esta inflado por una cantidad que no se puede medir.
+  - No es una cartera: 15 cuentas de 500 corriendo en paralelo. Las
+    criptos contra el dolar se mueven casi todas juntas, asi que
+    esto es una apuesta tomada quince veces, no quince apuestas.
+
+  (289 s)
