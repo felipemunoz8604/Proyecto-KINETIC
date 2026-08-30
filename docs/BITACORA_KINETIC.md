@@ -5,9 +5,98 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — El universo reconstruido, y LUNA está adentro
+## 30 de agosto de 2026 — Costos v2: lo que cuesta operar, por venue
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`execution/costos.py` y `execution/filtros.py`, con 37 pruebas propias.
+**326 en total, en verde.** Evidencia en `docs/salida_filtros_30ago2026.txt`.
+
+Es el punto 4.3 de la especificación de la Fase 2. Reemplaza al modelo de la
+Fase 1, que era un número solo (0,1% + 0,05%, igual para todo) y servía
+porque solo había un venue, un tipo de orden y quince pares parecidos.
+
+### Lo que ahora se distingue
+
+| | |
+|---|---|
+| **Venue** | Spot (0,10% maker y taker) y perpetuo USDT-M (0,02% / 0,05%) |
+| **Tipo de orden** | maker o taker, explícito |
+| **Slippage** | por rango de liquidez: 0,03% / 0,05% / 0,10% por lado |
+| **Financiación** | cada 8 horas (00, 08 y 16 UTC), con su signo |
+| **Filtros** | `stepSize`, `minNotional`, `tickSize` |
+
+Hay una prueba que **reproduce la tabla de peajes de la especificación**
+completa, los cinco escenarios, exactos. Si alguien mueve un tramo de
+slippage, se cae ahí y no seis meses después en un resultado raro.
+
+### Tres decisiones que empujan hacia el lado caro
+
+**El descuento por BNB viene apagado.** Binance descuenta 25% en Spot y 10%
+en futuros, pero **eso todavía no está verificado contra la cuenta real** —
+la especificación lo deja como pendiente de ingeniería. Un backtest que se
+regala un 25% que después no existe miente a favor.
+
+**Una tasa de financiación faltante levanta un error, no vale cero.** Un cero
+silencioso convierte un backtest de perpetuos inválido en uno que se ve
+impecable.
+
+**El redondeo va siempre hacia abajo.** Redondear al más cercano es comprar
+más de lo que el efectivo alcanza: en el backtest el patrimonio absorbe la
+diferencia sin quejarse, y en vivo la orden es rechazada.
+
+### El riesgo de no ejecución NO está modelado, y está declarado
+
+Una orden maker puede no completarse nunca. Suponer que siempre entra es
+quedarse con el ahorro del spread sin pagar su costo, y ese sesgo **se ve
+igual que una estrategia buena**. Quien use órdenes maker tiene que modelar
+el reintento por su cuenta. El módulo cobra lo que se le pide cobrar; no
+averigua si la orden entró.
+
+### Los deslistados SÍ están en exchangeInfo
+
+Suponíamos que no, y por eso `filtros.py` tenía una red de seguridad para
+ellos. Están: `exchangeInfo` devuelve 3.685 símbolos, y LUNAUSDT, LINAUSDT,
+RENUSDT y UNFIUSDT vienen con su `stepSize` real. **Cobertura del 100% sobre
+los 116 símbolos del universo reconstruido.**
+
+Es la misma lección que el archivo de velas: los muertos están ahí si uno no
+filtra por `status == "TRADING"`. Por eso el traductor no filtra por status,
+aunque en ese archivo pareciera inofensivo hacerlo.
+
+### Pero los filtros son de distinta época, y eso no se puede corregir
+
+Binance no versiona `exchangeInfo`. Lo que devuelve hoy es una mezcla, y se
+nota mirando los mínimos de nocional del universo:
+
+| Mínimo | Símbolos | Qué son |
+|---|---|---|
+| 1 USDT | 10 | memecoins de precio muy bajo: SHIB, PEPE, BONK, DOGE, WIF… |
+| 5 USDT | 103 | el mínimo vigente hoy |
+| **10 USDT** | **3** | BCHABC, BTT y ERD — **muertos, congelados en el mínimo viejo** |
+
+Esos tres son la prueba de que el mínimo de Spot **era 10 USDT** y bajó. O
+sea que en la parte vieja de la ventana el backtest deja pasar órdenes de 5
+USDT que en su momento habrían sido rechazadas. Es un sesgo **optimista**,
+chico (con 500 USDT en 5 posiciones cada una ronda los 100), y queda
+**declarado en vez de corregido porque el dato para corregirlo no existe**.
+
+### Lo próximo
+
+1. **Riesgo v2** — la reescritura de `risk/`, el pedazo más grande de la fase.
+2. Mediciones 5.2 (dispersión transversal) y 5.4 (frecuencia de la compuerta).
+3. Recién ahí, E0.
+
+**5.2 puede reordenar el plan.** La especificación misma dice que si la
+correlación media entre pares supera 0,80, E1 y E2 pierden prioridad frente a
+E0. Y hay dos hallazgos previos que apuntan al mismo lado: *la restricción que
+manda es la caída, no el retorno*, y *el escalar de volatilidad `k_t` por sí
+solo no compra Calmar*. Los tres juntos sugieren que **E0 pesa más de lo que
+el plan supone y la selección transversal de E1 menos.**
+
+---
+
+## 30 de agosto de 2026 — El universo reconstruido, y LUNA está adentro
 
 `core/universo.py` con 19 pruebas propias. **289 en total, en verde.**
 Evidencia en `docs/salida_universo_30ago2026.txt`.

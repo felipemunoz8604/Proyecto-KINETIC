@@ -1,0 +1,23 @@
+============================================================================
+ KINETIC - filtros de intercambio de Spot
+============================================================================
+  Endpoint publico, sin llaves: https://api.binance.com/api/v3/exchangeInfo
+
+  3685 simbolos guardados en data\filtros_spot.json
+
+  Reconstruyendo el universo para medir la cobertura...
+
+============================================================================
+ COBERTURA SOBRE EL UNIVERSO RECONSTRUIDO
+============================================================================
+  Simbolos que pasaron por el universo: 116
+  Con filtro REAL de exchangeInfo:      116 (100%)
+  Con filtro GENERICO (supuesto):       0
+
+  Los del generico no redondean al stepSize, o sea que el efecto
+  del redondeo esta SUBESTIMADO en esa parte de la cartera.
+
+  Minimos de nocional presentes en el universo:
+        1.00 USDT   en 10 simbolos
+        5.00 USDT   en 103 simbolos
+       10.00 USDT   en 3 simbolos
