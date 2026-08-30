@@ -5,9 +5,101 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 29 de agosto de 2026 — FASE 1 CERRADA
+## 29 de agosto de 2026 — FASE 1 REABIERTA. Un error de unidades
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+Felipe pidió poner KINETIC a operar con dinero real. Se le respondió que la
+evidencia de hoy dice que eso sería comprar una pérdida, y que además es
+imposible por estado: no existe `execution/`, no hay par ni temporalidad
+configurados, y la Fase 2 nunca se hizo. **Eligió volver a la estrategia.**
+
+### El diagnóstico que faltaba
+
+Se midió la anatomía del peaje (`tools/anatomia_de_costos.py`, descriptivo,
+no prueba hipótesis). El número que ordena todo:
+
+| Par / TF | Movimiento capturado promedio | Peaje | Ratio |
+|---|---|---|---|
+| BTC 15m | +0.024% | 0.30% | **0.08** |
+| BTC 1h | +0.316% | 0.30% | **1.05** |
+| ETH 15m | +0.042% | 0.30% | **0.14** |
+| **ETH 1h** | **+0.656%** | 0.30% | **2.19** |
+
+**El peaje es fijo y la ventaja por operación crece con la temporalidad**: de
+15m a 1h se multiplica por 13 en BTC y por 15 en ETH. En 15m la ventaja es
+doce veces más chica que el costo — eso no lo arregla ningún filtro.
+
+Dato incómodo: **ETH 1h tiene la mejor ventaja por operación de las cuatro.**
+Estuvo bien descartarlo por muestra, pero su problema nunca fue la señal.
+
+Otro síntoma: **entre el 24% y el 29% de las operaciones que acertaron la
+dirección igual perdieron plata**, porque capturaron menos de 0,30%.
+
+### El error de unidades
+
+Todo apunta a temporalidades más altas. Pero 4h nunca se pudo evaluar: daba
+0-3 operaciones, y estaba anotado como «no hay señales». **Estaba mal leído.**
+
+El filtro de consolidación exigía desviación ≤ 0,75%, un umbral **en % del
+precio**. La volatilidad escala con la temporalidad, así que ese número
+significa cosas distintas en cada una. Medido:
+
+| Par / TF | Velas que pasaban ≤0.75% |
+|---|---|
+| BTC 15m | **65.2%** |
+| BTC 1h | 25.5% |
+| BTC 4h | **2.4%** |
+| ETH 15m | 51.2% |
+| ETH 1h | 13.7% |
+| **ETH 4h** | **0.7%** |
+
+**El mismo filtro estaba prácticamente apagado en 15m y bloqueando casi todo
+en 4h.** Los «0-3 operaciones» eran el filtro tapando el 99,3% del mercado.
+
+E implica algo hacia atrás: **en 15m el filtro tampoco filtraba gran cosa**,
+dejaba pasar dos de cada tres velas. Buena parte de las 1.496 operaciones que
+pagaron peaje entraron por ahí.
+
+**Es el mismo error que TITAN tenía con `MAX_SPREAD = 2.0`**: una constante
+pensada para EURUSD que no significa nada para GOLD.
+
+### El arreglo
+
+`indicators.desviacion_relativa()`: dispersión de N velas dividida por el
+ATR%. Sin unidades, causal, y significa lo mismo en cualquier temporalidad.
+Verificado — las medianas quedan entre 1.40 y 1.57 en las seis combinaciones,
+contra un rango de 0.54 a 3.60 en la medida absoluta.
+
+`config.yaml` gana `estrategia.consolidacion.modo`: `absoluto` (como toda la
+Fase 1, se conserva para poder reproducirla) o `relativo`. **El default es
+`absoluto`, así que nada de lo medido antes cambió**, y hay una prueba que lo
+fija. Un `modo` con typo lanza error en vez de caer en un default silencioso.
+
+**Nueve pruebas nuevas** (194 en total), incluidas: que los dos caminos del
+motor de señal siguen coincidiendo vela por vela en modo relativo, y una que
+deja constancia del problema original —que la medida absoluta NO es
+comparable entre temporalidades— para que se vea que el arreglo era necesario
+y no una preferencia estética.
+
+### Estado
+
+**Fase 1 REABIERTA.** Los `null` siguen en `null`. El informe
+`docs/FASE_1_informe.md` sigue siendo válido para lo que midió, pero su
+conclusión queda **en revisión**: se cerró sin haber podido evaluar 4h.
+
+**Lo que sigue, y todavía no se hizo:** evaluar 4h (y quizá 1d) con
+walk-forward, ahora que son comparables. Ojo: elegir el `umbral_relativo` es
+una decisión que debe salir del walk-forward, no de la intuición.
+
+**Cuenta de hipótesis sobre estos datos: van 2.** La primera (trailing ancho)
+resultó ser un mecanismo real que no alcanzó. La segunda es «temporalidades
+más altas pagan el peaje». Cada intento adicional aumenta la chance de
+encontrar algo lindo por azar.
+
+---
+
+## 29 de agosto de 2026 — FASE 1 CERRADA (y reabierta más tarde el mismo día)
 > El informe formal del cierre está en **`docs/FASE_1_informe.md`**. Esta
 > entrada es el resumen; ese documento es la fuente.
 

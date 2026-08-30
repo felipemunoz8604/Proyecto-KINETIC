@@ -84,6 +84,53 @@ def _esperar(momento, precio, motivos, fallo_en, datos) -> Senal:
     )
 
 
+def _regla_de_consolidacion(est: dict) -> tuple[str, float, str]:
+    """
+    Que columna y que umbral usar para medir consolidacion.
+
+    Devuelve `(columna, umbral, unidad)`. Hay dos modos y la eleccion es
+    explicita en `config.yaml`, nunca implicita:
+
+    - `absoluto`  -> `desv_pct`, umbral en % del precio. Es como se midio
+      toda la Fase 1. **Solo es comparable dentro de una misma
+      temporalidad**: la volatilidad escala con la temporalidad, asi que un
+      0,75% pensado para 15m es absurdamente estricto en 4h. Se conserva para
+      poder reproducir las cifras de la Fase 1.
+    - `relativo`  -> `desv_rel`, dispersion dividida por el ATR%. Sin
+      unidades, y por eso significa lo mismo en cualquier temporalidad y en
+      cualquier par. Es el que hay que usar para comparar temporalidades.
+
+    Se lee desde un solo lugar a proposito: `evaluar_vela` y
+    `mascara_de_senales` tienen que aplicar exactamente la misma regla, y hay
+    pruebas que exigen que coincidan vela por vela.
+    """
+    cons = est["consolidacion"]
+    modo = cons.get("modo", "absoluto")
+
+    if modo == "absoluto":
+        umbral = cons.get("umbral_desviacion_pct")
+        if umbral is None:
+            raise ValueError(
+                "estrategia.consolidacion.umbral_desviacion_pct esta sin definir "
+                "en config.yaml. Lo decide el backtest, no la intuicion."
+            )
+        return "desv_pct", float(umbral), "%"
+
+    if modo == "relativo":
+        umbral = cons.get("umbral_relativo")
+        if umbral is None:
+            raise ValueError(
+                "estrategia.consolidacion.umbral_relativo esta sin definir en "
+                "config.yaml, y el modo es 'relativo'. Lo decide el backtest."
+            )
+        return "desv_rel", float(umbral), " ATR"
+
+    raise ValueError(
+        f"estrategia.consolidacion.modo desconocido: {modo!r}. "
+        "Los validos son 'absoluto' y 'relativo'."
+    )
+
+
 def evaluar_vela(fila: pd.Series, cfg: dict) -> Senal:
     """
     Evalua UNA vela ya cerrada, con sus indicadores ya calculados.
@@ -115,20 +162,21 @@ def evaluar_vela(fila: pd.Series, cfg: dict) -> Senal:
         return _esperar(momento, precio, motivos, "regimen", datos)
 
     # --- 2. Consolidacion previa -----------------------------------------
-    umbral_cons = est["consolidacion"]["umbral_desviacion_pct"]
-    if umbral_cons is None:
-        raise ValueError(
-            "estrategia.consolidacion.umbral_desviacion_pct esta sin definir en "
-            "config.yaml. Es un pendiente de la Fase 1: lo decide el backtest."
-        )
-    desviacion = float(fila["desv_pct"])
-    datos["desv_pct"] = desviacion
-    if desviacion > umbral_cons:
+    columna, umbral, unidad = _regla_de_consolidacion(est)
+    desviacion = float(fila[columna])
+    datos[columna] = desviacion
+    if pd.isna(desviacion):
+        motivos.append("sin dato de consolidacion todavia")
+        return _esperar(momento, precio, motivos, "calentamiento", datos)
+    if desviacion > umbral:
         motivos.append(
-            f"no hubo consolidacion: desviacion {desviacion:.2f}% > {umbral_cons}%"
+            f"no hubo consolidacion: dispersion {desviacion:.2f}{unidad} > "
+            f"{umbral}{unidad}"
         )
         return _esperar(momento, precio, motivos, "consolidacion", datos)
-    motivos.append(f"consolidacion previa: desviacion {desviacion:.2f}% <= {umbral_cons}%")
+    motivos.append(
+        f"consolidacion previa: dispersion {desviacion:.2f}{unidad} <= {umbral}{unidad}"
+    )
 
     # --- 3. Ruptura por CIERRE, no por mecha ------------------------------
     techo = float(fila["techo"])
@@ -220,11 +268,11 @@ def mascara_de_senales(df: pd.DataFrame, cfg: dict) -> pd.Series:
     else:
         raise ValueError(f"Metodo de regimen desconocido: {metodo!r}")
 
-    umbral_cons = est["consolidacion"]["umbral_desviacion_pct"]
-    if umbral_cons is None:
-        raise ValueError("estrategia.consolidacion.umbral_desviacion_pct esta sin definir.")
-
-    consolidacion = df["desv_pct"] <= umbral_cons
+    # Misma regla que el camino lento, leida del mismo sitio. Si aca se
+    # eligiera la columna a mano, los dos caminos podrian divergir en
+    # silencio; hay pruebas que exigen que coincidan.
+    columna, umbral_cons, _ = _regla_de_consolidacion(est)
+    consolidacion = df[columna].notna() & (df[columna] <= umbral_cons)
     ruptura = df["close"] > df["techo"]
     multiplicador = est["volumen"]["multiplicador_minimo"]
     volumen = (df["vol_promedio"] > 0) & (df["volume"] >= multiplicador * df["vol_promedio"])

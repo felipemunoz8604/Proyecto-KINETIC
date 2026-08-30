@@ -62,7 +62,18 @@ estrategia:
 
   consolidacion:
     velas: 50
+    # COMO se mide la consolidacion. La eleccion es explicita a proposito.
+    #   absoluto -> umbral_desviacion_pct, en % del precio. Asi se midio toda
+    #               la Fase 1. Solo comparable DENTRO de una temporalidad: la
+    #               volatilidad escala con la temporalidad, asi que un 0,75%
+    #               pensado para 15m es absurdamente estricto en 4h (daba 0-3
+    #               operaciones, y parecia falta de señales).
+    #   relativo -> umbral_relativo, dispersion dividida por el ATR%. Sin
+    #               unidades: significa lo mismo en cualquier temporalidad y
+    #               en cualquier par. Es el que sirve para comparar 15m con 4h.
+    modo: absoluto
     umbral_desviacion_pct: null      # sin decidir: Fase 1 cerro sin promoverlo
+    umbral_relativo: null            # sin decidir: se usa solo si modo=relativo
 
   volumen:
     periodo_promedio: 50

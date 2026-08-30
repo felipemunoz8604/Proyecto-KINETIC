@@ -311,3 +311,109 @@ def test_la_mascara_tambien_coincide_con_el_filtro_por_pendiente(cfg):
     rapida = mascara_de_senales(d, cfg)
     lenta = pd.Series([s.hay_entrada for s in evaluar_serie(d, cfg)], index=d.index)
     assert (rapida == lenta).all()
+
+
+# ===========================================================================
+# El modo relativo de consolidacion (arreglo de unidades, 29-ago-2026)
+# ===========================================================================
+
+def velas_para_comparar(n=800, semilla=29082026):
+    import numpy as np
+    generador = np.random.default_rng(semilla)
+    cierre = 100 + np.cumsum(generador.normal(0.12, 1.5, n))
+    return pd.DataFrame(
+        {
+            "open": np.concatenate([[cierre[0]], cierre[:-1]]),
+            "high": cierre + np.abs(generador.normal(1.0, 0.5, n)),
+            "low": cierre - np.abs(generador.normal(1.0, 0.5, n)),
+            "close": cierre,
+            "volume": np.abs(generador.normal(1000, 600, n)),
+        },
+        index=pd.date_range("2024-01-01", periods=n, freq="1h", tz="UTC"),
+    )
+
+
+def test_en_modo_relativo_los_dos_caminos_siguen_coincidiendo(cfg):
+    """
+    La misma exigencia que en modo absoluto: `mascara_de_senales` y
+    `evaluar_vela` tienen que dar identico. El arreglo de unidades toco los
+    dos caminos, asi que hay que volver a exigirlo, no suponerlo.
+    """
+    from strategy import indicators as ind
+    from strategy.signal_engine import mascara_de_senales
+
+    cfg["estrategia"]["portfolio_guard"]["sma_periodo"] = 100
+    cfg["estrategia"]["consolidacion"]["velas"] = 20
+    cfg["estrategia"]["consolidacion"]["modo"] = "relativo"
+    con_indicadores = ind.agregar_indicadores(velas_para_comparar(), cfg)
+
+    total = 0
+    for adx_min, umbral_rel, mult_vol in [
+        (0.0, 100.0, 1.0),
+        (0.0, 5.0, 1.3),
+        (15.0, 2.0, 1.5),
+        (30.0, 0.5, 2.0),
+    ]:
+        cfg["estrategia"]["regimen"]["adx_minimo"] = adx_min
+        cfg["estrategia"]["consolidacion"]["umbral_relativo"] = umbral_rel
+        cfg["estrategia"]["volumen"]["multiplicador_minimo"] = mult_vol
+
+        rapida = mascara_de_senales(con_indicadores, cfg)
+        lenta = pd.Series(
+            [s.hay_entrada for s in evaluar_serie(con_indicadores, cfg)],
+            index=con_indicadores.index,
+        )
+        discrepantes = con_indicadores.index[rapida != lenta]
+        assert len(discrepantes) == 0, (
+            f"en modo relativo, con cons<={umbral_rel} ATR, los dos caminos "
+            f"difieren en {len(discrepantes)} velas"
+        )
+        total += int(rapida.sum())
+
+    assert total > 0, "ninguna combinacion genero senales: no prueba nada"
+
+
+def test_el_modo_relativo_mira_otra_columna_que_el_absoluto(cfg):
+    """Que no sea el mismo umbral con otro nombre."""
+    from strategy.signal_engine import _regla_de_consolidacion
+
+    cfg["estrategia"]["consolidacion"]["modo"] = "absoluto"
+    cfg["estrategia"]["consolidacion"]["umbral_desviacion_pct"] = 0.75
+    columna, umbral, _ = _regla_de_consolidacion(cfg["estrategia"])
+    assert (columna, umbral) == ("desv_pct", 0.75)
+
+    cfg["estrategia"]["consolidacion"]["modo"] = "relativo"
+    cfg["estrategia"]["consolidacion"]["umbral_relativo"] = 1.5
+    columna, umbral, _ = _regla_de_consolidacion(cfg["estrategia"])
+    assert (columna, umbral) == ("desv_rel", 1.5)
+
+
+def test_sin_modo_declarado_se_comporta_como_antes(cfg):
+    """
+    Compatibilidad: una config vieja, sin la clave `modo`, tiene que seguir
+    midiendo como toda la Fase 1. Si esto se rompiera, las cifras del informe
+    de la Fase 1 dejarian de ser reproducibles sin que nadie se entere.
+    """
+    from strategy.signal_engine import _regla_de_consolidacion
+
+    cfg["estrategia"]["consolidacion"].pop("modo", None)
+    cfg["estrategia"]["consolidacion"]["umbral_desviacion_pct"] = 0.75
+    assert _regla_de_consolidacion(cfg["estrategia"])[0] == "desv_pct"
+
+
+def test_modo_relativo_sin_umbral_falla_claro(cfg):
+    from strategy.signal_engine import _regla_de_consolidacion
+
+    cfg["estrategia"]["consolidacion"]["modo"] = "relativo"
+    cfg["estrategia"]["consolidacion"]["umbral_relativo"] = None
+    with pytest.raises(ValueError, match="umbral_relativo"):
+        _regla_de_consolidacion(cfg["estrategia"])
+
+
+def test_un_modo_inventado_no_pasa_en_silencio(cfg):
+    """Un typo en config.yaml no puede terminar en un default silencioso."""
+    from strategy.signal_engine import _regla_de_consolidacion
+
+    cfg["estrategia"]["consolidacion"]["modo"] = "relativa"   # typo a proposito
+    with pytest.raises(ValueError, match="modo desconocido"):
+        _regla_de_consolidacion(cfg["estrategia"])

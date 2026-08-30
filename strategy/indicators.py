@@ -118,6 +118,41 @@ def desviacion_porcentual(serie: pd.Series, periodo: int) -> pd.Series:
     return serie.rolling(window=periodo, min_periods=periodo).std(ddof=0) / serie * 100.0
 
 
+def desviacion_relativa(
+    df: pd.DataFrame, periodo_cons: int, periodo_atr: int
+) -> pd.Series:
+    """
+    Consolidacion SIN UNIDADES: dispersion de N velas / rango tipico de UNA.
+
+    POR QUE EXISTE ESTA FUNCION
+    ---------------------------
+    `desviacion_porcentual` devuelve un numero en % del precio, y compararlo
+    contra un umbral fijo (0,75%) parece razonable hasta que se cambia de
+    temporalidad. **La volatilidad escala con la temporalidad**: 0,75% es un
+    umbral sensato para velas de 15 minutos y absurdamente estricto para
+    velas de 4 horas, que se mueven mucho mas. Con el umbral absoluto, 4h
+    daba 0-3 operaciones y parecia que no habia señales; en realidad se las
+    estaba midiendo con una regla calibrada para otra escala.
+
+    Dividir por el ATR% cancela las unidades: numerador y denominador escalan
+    juntos. El resultado se lee como "cuantas velas tipicas de ancho tiene la
+    dispersion de la ventana". Un valor bajo es consolidacion de verdad, en
+    cualquier temporalidad y en cualquier par.
+
+    Es causal: los dos ingredientes miran solo hacia atras.
+
+    (Es el mismo error que TITAN tenia con `MAX_SPREAD = 2.0`, una constante
+    pensada para EURUSD que no significa nada para GOLD. Preferir umbrales
+    relativos a la estadistica propia del instrumento sobre constantes
+    absolutas.)
+    """
+    dispersion = desviacion_porcentual(df["close"], periodo_cons)
+    tipico = atr_porcentual(df, periodo_atr)
+    # Sin ATR valido no hay con que normalizar: NaN, que aguas abajo se lee
+    # como "todavia calentando" y no como "consolido".
+    return dispersion / tipico.where(tipico > 0)
+
+
 def bollinger(
     serie: pd.Series, periodo: int = 20, desviaciones: float = 2.0
 ) -> pd.DataFrame:
@@ -242,6 +277,10 @@ def agregar_indicadores(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
 
     velas_cons = est["consolidacion"]["velas"]
     salida["desv_pct"] = desviacion_porcentual(df["close"], velas_cons)
+    # La version sin unidades, que es la que permite comparar temporalidades.
+    # Se calcula siempre: cuesta nada y tenerla al lado de `desv_pct` hace
+    # visible la diferencia entre las dos formas de medir.
+    salida["desv_rel"] = desviacion_relativa(df, velas_cons, periodo_atr)
     rango = rango_previo(df, velas_cons)
     salida["techo"] = rango["techo"]
     salida["piso"] = rango["piso"]

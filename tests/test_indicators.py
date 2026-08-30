@@ -203,6 +203,7 @@ INDICADORES_A_VERIFICAR = {
     "atr_14": lambda d: ind.atr(d, 14),
     "atr_pct_14": lambda d: ind.atr_porcentual(d, 14),
     "desv_pct_50": lambda d: ind.desviacion_porcentual(d["close"], 50),
+    "desv_rel_50": lambda d: ind.desviacion_relativa(d, 50, 14),
     "adx_14": lambda d: ind.adx(d, 14)["adx"],
     "di_mas_14": lambda d: ind.adx(d, 14)["di_mas"],
     "techo_50": lambda d: ind.rango_previo(d, 50)["techo"],
@@ -270,3 +271,85 @@ def test_agregar_indicadores_no_toca_el_dataframe_original(velas):
     assert list(velas.columns) == columnas_antes, "se modifico el DataFrame original"
     for esperada in ("ema_rapida", "ema_lenta", "atr", "techo", "piso", "adx", "sma_macro"):
         assert esperada in salida.columns
+
+
+# ---------------------------------------------------------------------------
+# La medida de consolidacion sin unidades
+# ---------------------------------------------------------------------------
+
+def serie_sintetica(n, paso_pct, semilla):
+    """
+    Velas cuyo movimiento por vela es un % FIJO del precio.
+
+    Sirve para simular "la misma serie mirada en otra temporalidad": una vela
+    de 4h se mueve mas que una de 15m, y eso es exactamente lo que `paso_pct`
+    representa.
+    """
+    generador = np.random.default_rng(semilla)
+    precio = 100.0
+    filas = []
+    for _ in range(n):
+        precio *= 1 + generador.normal(0, paso_pct / 100.0)
+        rango = precio * paso_pct / 100.0
+        filas.append({
+            "open": precio, "high": precio + abs(rango), "low": precio - abs(rango),
+            "close": precio, "volume": 1000.0,
+        })
+    return pd.DataFrame(
+        filas, index=pd.date_range("2024-01-01", periods=n, freq="1h", tz="UTC")
+    )
+
+
+def test_la_desviacion_absoluta_NO_es_comparable_entre_temporalidades():
+    """
+    Deja constancia del problema que motivo el arreglo, para que se vea que
+    el arreglo era necesario y no una preferencia estetica.
+
+    Dos series con la misma FORMA pero distinta escala de movimiento -- que
+    es lo que distingue 15m de 4h -- dan desviaciones absolutas muy
+    distintas. Un umbral fijo en % clasifica a una como consolidada y a la
+    otra no, aunque estructuralmente sean iguales.
+    """
+    tranquila = serie_sintetica(300, paso_pct=0.10, semilla=7)   # tipo 15m
+    agitada = serie_sintetica(300, paso_pct=0.80, semilla=7)     # tipo 4h
+
+    a = ind.desviacion_porcentual(tranquila["close"], 50).iloc[-1]
+    b = ind.desviacion_porcentual(agitada["close"], 50).iloc[-1]
+
+    assert b > a * 3, (
+        "el escenario no reproduce el problema: la serie agitada tendria que "
+        "dar una desviacion absoluta mucho mayor"
+    )
+
+
+def test_la_desviacion_relativa_SI_es_comparable_entre_temporalidades():
+    """
+    La misma forma, medida sin unidades, tiene que dar aproximadamente lo
+    mismo aunque cambie la escala del movimiento. Esa es toda la razon de ser
+    de `desviacion_relativa`.
+    """
+    tranquila = serie_sintetica(300, paso_pct=0.10, semilla=7)
+    agitada = serie_sintetica(300, paso_pct=0.80, semilla=7)
+
+    a = ind.desviacion_relativa(tranquila, 50, 14).iloc[-1]
+    b = ind.desviacion_relativa(agitada, 50, 14).iloc[-1]
+
+    assert a == pytest.approx(b, rel=0.20), (
+        f"la medida sin unidades tendria que dar parecido en las dos escalas, "
+        f"y dio {a:.2f} contra {b:.2f}"
+    )
+
+
+def test_sin_atr_valido_la_relativa_es_nan_y_no_infinito():
+    """
+    Dividir por cero daria infinito, e infinito comparado con un umbral es
+    False silencioso. NaN aguas abajo se lee como "todavia calentando", que
+    es lo correcto.
+    """
+    plano = pd.DataFrame(
+        {"open": [100.0] * 80, "high": [100.0] * 80, "low": [100.0] * 80,
+         "close": [100.0] * 80, "volume": [1.0] * 80},
+        index=pd.date_range("2024-01-01", periods=80, freq="1h", tz="UTC"),
+    )
+    resultado = ind.desviacion_relativa(plano, 50, 14)
+    assert not np.isinf(resultado.to_numpy(dtype=float)).any()
