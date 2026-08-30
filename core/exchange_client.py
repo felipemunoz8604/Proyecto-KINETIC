@@ -27,8 +27,14 @@ from binance.client import Client
 log = logging.getLogger(__name__)
 
 # Endpoints que esta clase tiene permitido tocar. Cualquier otro no pasa.
+# LISTA BLANCA. Todo lo que no este aca lanza PermissionError.
+#
+# La regla para agregar algo: tiene que ser IMPOSIBLE que mueva dinero. Si
+# hay que pensarlo dos veces, no entra. Un endpoint de lectura de mas cuesta
+# una linea; uno de escritura de mas cuesta la garantia entera.
 _METODOS_PERMITIDOS = frozenset(
     {
+        # --- Spot, solo lectura ---
         "ping",
         "get_server_time",
         "get_account",
@@ -38,6 +44,19 @@ _METODOS_PERMITIDOS = frozenset(
         "get_historical_klines",
         "get_symbol_ticker",
         "get_api_key_permission",
+        # --- Futuros USDT-M, solo lectura (MEGAPROMPT v2.0, decision D1) ---
+        # Entran por la pata corta y el carry de financiacion. Ninguno de
+        # estos abre, cierra ni modifica una posicion: son velas, informacion
+        # del mercado y el historico de tasas de financiacion, que es un dato
+        # imprescindible -- sin el, cualquier backtest con perpetuos es
+        # ficcion, porque la financiacion se cobra cada 8 horas y puede
+        # superar largamente el ahorro en comisiones.
+        "futures_klines",
+        "futures_historical_klines",
+        "futures_exchange_info",
+        "futures_funding_rate",
+        "futures_mark_price",
+        "futures_symbol_ticker",
     }
 )
 
