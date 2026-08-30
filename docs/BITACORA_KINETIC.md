@@ -5,9 +5,102 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 29 de agosto de 2026 (cierre 4) — El respaldo de cada elección. La respuesta de fondo
+## 29 de agosto de 2026 (cierre 5) — La matriz de candidatos. Último pendiente, resuelto
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+Se imprimió el puntaje de **cada candidato en cada tramo de entrenamiento**.
+Salida cruda en `docs/salida_walkforward_29ago2026_con_matriz.txt`. Los
+resultados son idénticos a la corrida anterior — verificado con `diff` — la
+matriz es puramente informativa.
+
+**No se implementó como «grupo 4-6 contra grupo 2-3»**, que era como estaba
+planteada la pregunta. Partir el menú en esos dos grupos habría sido elegir
+la partición mirando resultados que ya conocíamos. La matriz no impone
+ninguna agrupación.
+
+### BTCUSDT 1h: gana la lectura benigna
+
+```
+Ventana       2.0x       3.0x       4.0x       5.0x       6.0x   mejor-peor
+      1       37.8       21.3       43.6*      39.6       26.5        22.4
+      2       11.5       93.1      113.7      127.7      128.7*      117.3
+      3       47.6      150.0      174.0      178.6*     175.6       131.1
+      4      -57.6       29.1      104.3*      97.4       93.3       161.9
+      5        4.3       -6.0       89.2      152.2*     126.7       158.2
+      6      -28.8      -53.2      128.8      202.2*     199.4       255.4
+```
+
+Distancia entre el mejor de {2,3} y el peor de {4,5,6}: **−11.3 / +20.6 /
++24.0 / +64.2 / +84.9 / +157.6**. En cinco de las seis ventanas los grupos
+**no se tocan**, y la separación crece con el tiempo.
+
+**Los márgenes de 1 a 7 USDT que preocupaban eran entre miembros casi
+equivalentes del grupo de arriba.** La decisión que importaba — no elegir 2x
+ni 3x — se tomó con holgura. Encaja con los +256 USDT contra FIJO 2x fuera
+de muestra, porque FIJO 2x *es* el grupo de abajo.
+
+**La ventana 1 es la excepción y no se barre bajo la alfombra:** ahí los
+grupos se solapan (2x da 37.8, mejor que 6x con 26.5) y todo cabe en 22 USDT.
+Es la ventana más antigua y la de menos evidencia (31 operaciones).
+
+### ETHUSDT 1h: no hay patrón, y esa es la respuesta
+
+```
+Ventana       2.0x       3.0x       4.0x       5.0x       6.0x   mejor-peor
+      1       42.7       56.6       52.1       89.5*      82.9        46.8
+      2       46.2       58.0       55.2       94.6*      88.9        48.4
+      3       27.8*      16.0       20.5       18.7        9.9        17.9
+      4       17.8       13.9        8.6       -7.9       38.9*       46.9
+      5        8.8       -8.1      -21.2      -18.5       24.4*       45.6
+      6        1.1      -10.7      -28.3      -30.2        3.3*       33.5
+```
+
+La ventana 3 está **invertida** (2x gana y el puntaje baja al ensanchar). Las
+ventanas 4, 5 y 6 tienen forma de **U** — los dos extremos mejor que el
+medio — que es la firma del ruido, no de un mecanismo. Y todo dentro de
+rangos de 17 a 48 USDT.
+
+### La conclusión que cierra la Fase 1
+
+| Par / TF | Forma de la matriz | Ops de entrenamiento |
+|---|---|---|
+| BTC 15m | monótona ↑ en 6 de 6 | 300–562 |
+| BTC 1h | grupo 4-6 arriba en 5 de 6 | 30–77 |
+| ETH 15m | monótona ↑ en 6 de 6 | ~300–500 |
+| **ETH 1h** | **sin patrón: invertida y en U** | **9–33** |
+
+**El mecanismo del trailing es real y aparece en los tres tramos que tienen
+muestra suficiente para verlo.** ETH 15m y ETH 1h son el mismo par y la misma
+estrategia: la única diferencia es cuántas operaciones hay para medir. ETH 1h
+no contradice el mecanismo, simplemente no tiene con qué mostrarlo.
+
+Y una advertencia que sale gratis: ETH 15m marcó **+1257 USDT de
+entrenamiento** en su ventana 2 y fuera de muestra pierde el 45%. Un número
+grande en entrenamiento no significa nada por sí solo.
+
+### Estado
+
+**Fase 1 sigue ABIERTA. Los `null` de `config.yaml` siguen en `null`.**
+**185 pruebas.** **No queda nada pendiente de medición.**
+
+Lo que quedó probado, con evidencia y no con intuición:
+
+1. **El mecanismo del trailing ancho es real.** Monótono en 6 de 6 ventanas
+   en los dos tramos de 15m, y con separación limpia de grupos en 5 de 6 en
+   BTC 1h. Sobrevivió al arreglo de un bug que movió todos los números.
+2. **Los 15m no pagan sus costos.** Con la mejor evidencia de las cuatro, y
+   dicen que no.
+3. **ETH 1h está descartado por falta de muestra**, no por mala suerte.
+4. **BTCUSDT 1h es el único candidato vivo**: +267.15 USDT (+53.43%), PF
+   1.560, con elecciones de parámetro ahora justificadas — pero estabilidad
+   DUDOSA, concentración 50% y ~19 operaciones por año.
+
+**La única decisión pendiente es de Felipe: qué hacer con la Fase 1.**
+
+---
+
+## 29 de agosto de 2026 (cierre 4) — El respaldo de cada elección. La respuesta de fondo
 
 Se midió lo que quedaba pendiente: **cuánta evidencia había detrás de cada
 elección de parámetro.** Salida cruda en
