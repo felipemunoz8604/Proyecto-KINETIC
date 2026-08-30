@@ -5,9 +5,100 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 29 de agosto de 2026 — FASE 1 REABIERTA. Un error de unidades
+## 30 de agosto de 2026 — 4h es mejor de verdad, y aun así no alcanza
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+Se corrió el walk-forward de la segunda hipótesis: **«las temporalidades más
+altas pagan el peaje»**. Evidencia completa en
+`docs/salida_walkforward_umbral_30ago2026.txt`, generada por
+`main_walkforward_umbral.py`. 194 pruebas en verde.
+
+### Qué se barrió, y por qué solo eso
+
+Decisión de Felipe: se barre **un solo parámetro**, el umbral relativo de
+consolidación, con el trailing fijo en 2xATR. Barrer dos a la vez habría dado
+25 combinaciones por ventana en lugar de 5, y con eso cinco veces más chances
+de encontrar algo lindo por azar.
+
+El menú `[1.0, 1.2, 1.4, 1.6, 1.8]` salió de la distribución real de
+`desv_rel` (1.0 ≈ percentil 10 de las velas, 1.8 ≈ percentil 65), no de la
+intuición. Cuál se usa lo eligió el walk-forward ventana por ventana.
+
+**1h fue incluido como control**, para poder distinguir «mejoró la
+temporalidad» de «mejoró el filtro».
+
+### El resultado
+
+| | BTC 1h | BTC 4h | ETH 1h | ETH 4h |
+|---|---|---|---|---|
+| Ops por año | 33 | **10** | 36 | **9** |
+| Estabilidad | INESTABLE (100%) | ESTABLE (25%) | INESTABLE (100%) | ESTABLE (25%) |
+| Concentración | (neto negativo) | **28%** | 49% | **31%** |
+| PF | 0.81 | 1.64 | 1.17 | 1.94 |
+| Capital 6 años | −17.6% | +18.9% | +17.1% | +15.1% |
+| Inflación del barrido tramposo | +57 USDT | +18 | +58 | +24 |
+
+### La hipótesis se sostiene. La forma limpia de verlo
+
+La comparación con el filtro elegido está contaminada por la elección del
+parámetro. La comparación **sin filtro** no: ahí no se elige nada.
+
+| Sin filtro de consolidación | 1h | 4h |
+|---|---|---|
+| BTC | −50.84 (370 ops) | **+106.01** (85 ops) |
+| ETH | +23.81 (364 ops) | **+101.96** (77 ops) |
+
+**4h le gana a 1h en los dos pares, con cero parámetros elegidos.** Es lo que
+predecía la anatomía del peaje del 29-ago. Y los otros tres indicadores
+apuntan al mismo lado: 4h es ESTABLE en los dos pares y 1h INESTABLE en los
+dos; la concentración baja a 28-31% (contra 161% y 82% en la Fase 1); y el
+barrido tramposo infla 18-24 USDT en 4h contra 57-58 en 1h.
+
+**Es el primer resultado del proyecto que no se cae al mirarlo de cerca.**
+
+### Y aun así no alcanza. Dos razones
+
+**1. La cantidad de operaciones**, que era el criterio escrito *antes* de
+correr: 10 y 9 por año contra las ~15 pedidas. **No es culpa del filtro**:
+apagándolo del todo, 4h da 14 y 13 por año. Es el techo estructural de la
+estrategia en esa temporalidad. Seis años fuera de muestra dan 52-61
+operaciones en total — unas 20-25 ganadoras. El margen de error sobre eso es
+enorme.
+
+**2. Anualizado, el resultado es muy chico:** +18.9% en seis años son **2,9%
+anual** (BTC) y +15.1% son **2,4% anual** (ETH). Positivo, pero no paga el
+riesgo de tener capital en cripto, ni se acerca a comprar y esperar.
+
+### Hallazgo aparte: el filtro de consolidación no aporta información
+
+No era la hipótesis; salió de la referencia de control. **En 3 de los 4 casos
+apagar el filtro da mejor que elegirlo con walk-forward** (BTC 4h, ETH 4h,
+BTC 1h; solo en ETH 1h se paga a sí mismo).
+
+Y la matriz de candidatos en 4h es **monótona creciente en las 12 ventanas**:
+el walk-forward eligió 1.8 —el borde de arriba del menú— en 9 de 12. No está
+buscando un óptimo, está caminando hacia la salida. Le preguntamos «cuánto
+filtro querés» y contesta «cada vez menos», hasta donde lo dejamos.
+
+Importa porque la consolidación es **una de las cuatro condiciones de entrada
+de la estrategia**, y resulta que solo saca operaciones.
+
+### Estado
+
+**Fase 1 sigue REABIERTA.** Los `null` siguen en `null`.
+
+**Cuenta de hipótesis sobre estos datos: van 2, y las dos terminaron igual —
+un mecanismo real que no alcanza.** La regla del proyecto es no encadenar una
+tercera sin decisión de Felipe. **Queda pendiente esa decisión.**
+
+Nada de lo medido antes cambió: `main_walkforward.py` (modo absoluto, barrido
+del trailing) quedó intacto para poder reproducir la Fase 1, y el runner nuevo
+es un archivo aparte.
+
+---
+
+## 29 de agosto de 2026 — FASE 1 REABIERTA. Un error de unidades
 
 Felipe pidió poner KINETIC a operar con dinero real. Se le respondió que la
 evidencia de hoy dice que eso sería comprar una pérdida, y que además es
