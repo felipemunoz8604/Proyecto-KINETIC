@@ -5,9 +5,126 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — Costos v2: lo que cuesta operar, por venue
+## 30 de agosto de 2026 — Mediciones 5.2 y 5.4: me equivoqué de dirección
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`metrics/transversal.py` y `risk/compuerta.py`, con 17 pruebas propias.
+**343 en total, en verde.** Evidencia en
+`docs/salida_mediciones_previas_30ago2026.txt`.
+
+### Primero la corrección
+
+En la entrada anterior escribí que 5.2 podía reordenar el plan **a favor de
+E0 y en contra de E1**. La medición dice lo contrario, y con margen amplio.
+Lo dejo escrito acá en vez de borrarlo, igual que con el filtro de
+consolidación de la Fase 1: era una conjetura armada con tres indicios
+indirectos, y para eso están las mediciones.
+
+### Medición 5.2 — Dispersión transversal
+
+1.419 observaciones en 72 rebalanceos. Solo 3 quedaron cortadas por
+deslistado (0,2%).
+
+| | |
+|---|---|
+| Desviación estándar transversal a 28 días | **mediana 17,3%** (p10 9,2%, p90 38,0%) |
+| **Correlación media por pares** (90 días) | **mediana 0,593** |
+| Fechas con correlación sobre 0,80 | **5 de 72 (7%)** |
+
+**El corte de la especificación no se dispara.** El umbral era ~0,80 y la
+mediana está en 0,59. Las veinte monedas del universo **no** se mueven todas
+juntas: la creencia de que sí venía de mirar quince pares grandes y
+parecidos en la Fase 1, y con veinte y seis años no se sostiene.
+
+Los techos, o sea lo que sacaría alguien que adivinara siempre:
+
+| | Cada 28 días |
+|---|---|
+| Solo largo, mejores 5 contra la canasta | **+22,1%** |
+| Largo/corto, mejores 5 menos peores 5 | **+40,9%** |
+
+Contra un peaje de ida y vuelta del 0,33% (promedio de los 20 puestos), el
+techo solo-largo **paga el peaje 67 veces**.
+
+**Cuidado con lo que esto significa y con lo que no.** Dice que para la
+selección transversal **el costo no es la restricción que manda**: hay
+muchísimo espacio entre el peaje y el techo. **No dice que exista señal para
+capturarlo.** Nadie llega ni cerca del techo, y un techo alto es condición
+necesaria, no suficiente. Lo único que queda cerrado es que E1 no se muere
+por comisiones.
+
+Por año, la dispersión es estable (14,7% a 25,9%) y la correlación también
+(0,54 a 0,65). No es un artefacto de 2021.
+
+### Medición 5.4 — Frecuencia de la compuerta
+
+BTC contra su media de 200 días, seis años. Y acá el número no es el
+promedio: es la forma de la distribución.
+
+| | |
+|---|---|
+| Cambios de estado | **43** (7,2 por año) |
+| Fracción del tiempo dentro | 55% |
+| Tramo DENTRO | mediana **6 días**, máximo 385 |
+| Tramo FUERA | mediana **12 días**, máximo 381 |
+
+**La mediana de una entrada son 6 días y el máximo son 385.** La compuerta no
+es "adentro un año, afuera un año": es un par de regímenes largos de verdad
+más una nube de entradas y salidas que no duran nada.
+
+| Tramos que duraron menos de… | Cuántos |
+|---|---|
+| 5 días | **18** |
+| 10 días | 22 |
+| 20 días | 26 |
+| 30 días | 30 |
+
+**30 de los 44 tramos duran menos de un mes.** Y el reparto por año es brutal:
+
+```
+2019   ####                 4
+2020   #####                5
+2021   ###################  19
+2022                        0
+2023   #####                5
+2024   ##########          10
+```
+
+**2022 tiene cero cambios**: BTC estuvo debajo de su media los 365 días. La
+compuerta estuvo apagada todo el año bajista, que es exactamente para lo que
+existe. Eso es una validación fuerte, no un detalle.
+
+Costo: cada cambio mueve la cartera entera por un lado, **0,165%**. Los 43
+cambios cuestan 7,10% del capital en seis años, o sea **1,18% por año solo
+por la compuerta**.
+
+### La decisión que NO tomé
+
+Los 18 tramos de menos de 5 días piden un amortiguador a gritos. **No lo
+implementé.** La especificación dice que si hace falta es un parámetro nuevo
+y se cuenta como tal, y agregar un parámetro es exactamente lo que este
+proyecto tiene que hacer despacio. El número ya está sobre la mesa; la
+decisión es de Felipe.
+
+Lo que sí conviene saber antes de decidir: **el amortiguador no es gratis.**
+Retrasa las salidas, y la salida que importa es la de enero de 2022. Ahorrar
+1,18% al año no sirve de nada si el precio es entrar tarde al único año en
+que la compuerta hizo su trabajo. Eso se mide en E0, no se supone acá.
+
+### Lo próximo
+
+1. **Riesgo v2** — la reescritura de `risk/`. La compuerta ya está hecha y
+   probada; faltan los pesos por inversa de volatilidad con tope del 40%, el
+   escalar `k(t)` con σ objetivo 35% y `k_max = 1,0`, y el stop de catástrofe.
+2. **E0** — la línea base, que además decide lo del amortiguador.
+
+Medición 5.1 (financiación de perpetuos) sigue pendiente y **no bloquea**:
+solo hace falta para E2 y E3.
+
+---
+
+## 30 de agosto de 2026 — Costos v2: lo que cuesta operar, por venue
 
 `execution/costos.py` y `execution/filtros.py`, con 37 pruebas propias.
 **326 en total, en verde.** Evidencia en `docs/salida_filtros_30ago2026.txt`.

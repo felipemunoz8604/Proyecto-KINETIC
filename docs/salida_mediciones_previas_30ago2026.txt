@@ -1,0 +1,74 @@
+============================================================================
+ KINETIC - mediciones previas 5.2 y 5.4
+============================================================================
+  Ventana de diseño: 2019-01-01 a 2024-12-31
+
+  Cargando panel...
+    3,271 dias x 650 simbolos, 72 rebalanceos (16 s)
+
+============================================================================
+ MEDICION 5.2 - DISPERSION TRANSVERSAL DEL UNIVERSO
+============================================================================
+  Horizonte: 28 dias.  1419 observaciones en 72 fechas.
+  De esas, 3 quedaron cortadas por deslistado (0.2%) y se midieron
+  contra su ultimo cierre, sin penalizacion. Es optimista.
+
+  Desviacion estandar transversal de los retornos a 28 dias:
+    mediana   17.3%   media   21.2%   p10    9.2%   p90   38.0%
+
+  Correlacion media por pares (90 dias hacia atras):
+    mediana  0.593   media  0.598   p10  0.435   p90  0.754
+
+  Fechas con correlacion sobre 0,80: 5 de 72 (7%)
+
+  LOS TECHOS. Es lo que sacaria alguien que adivinara siempre:
+    Solo largo, mejores 5 contra la canasta:  mediana  22.06% cada 28 dias
+    Largo/corto, mejores 5 menos peores 5:    mediana  40.89% cada 28 dias
+
+  Contra un peaje de ida y vuelta de 0.33% (promedio de los 20 puestos):
+    El techo solo-largo paga el peaje  66.9 veces.
+    Nadie llega al techo. Si esa relacion es chica, no hay nada
+    abajo que valga la pena buscar.
+
+  Por año (mediana de cada uno):
+    2019   dispersion  16.6%   correlacion  0.64   techo largo 20.48%
+    2020   dispersion  17.3%   correlacion  0.60   techo largo 22.30%
+    2021   dispersion  25.9%   correlacion  0.57   techo largo 31.45%
+    2022   dispersion  14.7%   correlacion  0.65   techo largo 17.59%
+    2023   dispersion  14.8%   correlacion  0.58   techo largo 20.13%
+    2024   dispersion  15.9%   correlacion  0.54   techo largo 22.16%
+
+============================================================================
+ MEDICION 5.4 - FRECUENCIA DE CAMBIO DE LA COMPUERTA
+============================================================================
+  BTCUSDT contra su media de 200 dias, 2192 dias (6.0 años)
+
+  Cambios de estado:        43  (7.2 por año)
+  Fraccion del tiempo dentro: 55%
+
+  Tramos DENTRO:   22   mediana     6 dias   max  385
+  Tramos FUERA:    22   mediana    12 dias   max  381
+
+  Latigazos (tramos que duraron menos de N dias):
+    menos de  5 dias:  18 tramos   (3.0 por año)
+    menos de 10 dias:  22 tramos   (3.7 por año)
+    menos de 20 dias:  26 tramos   (4.3 por año)
+    menos de 30 dias:  30 tramos   (5.0 por año)
+
+  Cada cambio mueve la cartera ENTERA por un lado: 0.165%
+  Los 43 cambios cuestan 7.10% del capital en 6.0 años,
+  o sea 1.18% por año, solo por la compuerta.
+
+  Ese costo es el precio del seguro contra las caidas grandes.
+  El amortiguador NO esta implementado: primero este numero,
+  despues la decision, porque seria un parametro nuevo.
+
+  Cambios por año:
+    2019   ####  4
+    2020   #####  5
+    2021   ###################  19
+    2022     0
+    2023   #####  5
+    2024   ##########  10
+
+  (18 s)
