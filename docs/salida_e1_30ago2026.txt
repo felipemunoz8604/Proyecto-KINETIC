@@ -1,0 +1,123 @@
+============================================================================
+ KINETIC - E1: momentum transversal con volatilidad objetivo
+============================================================================
+  Capital 500 USDT   ventana 2019-01-01 a 2024-12-31
+  Momentum 28d con salto 1d   5 posiciones   costos TAKER
+
+  Cargando panel y universo...
+    72 rebalanceos, 116 simbolos candidatos (37 s)
+  Cargando OHLC de los candidatos...
+    116 simbolos con OHLC (44 s)
+  Armando exposiciones...
+    listo (53 s)
+
+============================================================================
+ RESULTADO
+============================================================================
+  E1
+    Periodo:          2,191 dias
+    Patrimonio:       500.00 -> 990.35  (+98.1%)
+    CAGR:             +12.06%
+    Volatilidad:      28.0% anualizada
+    Caida maxima:     -45.1%   (849 dias sin recuperarse)
+    CALMAR:           0.268
+    Sortino:          0.429
+    Tiempo en mercado: 57%
+    Rotacion anual:   11.72x
+    Costo pagado:     1.57% anual
+
+  B0 = E0
+    Periodo:          2,191 dias
+    Patrimonio:       500.00 -> 3,342.74  (+568.5%)
+    CAGR:             +37.23%
+    Volatilidad:      29.8% anualizada
+    Caida maxima:     -40.2%   (966 dias sin recuperarse)
+    CALMAR:           0.927
+    Sortino:          1.060
+
+  B1 comprar y mantener
+    Periodo:          2,191 dias
+    Patrimonio:       499.38 -> 12,306.50  (+2364.4%)
+    CAGR:             +70.55%
+    Volatilidad:      65.6% anualizada
+    Caida maxima:     -76.6%   (847 dias sin recuperarse)
+    CALMAR:           0.921
+    Sortino:          1.185
+
+  B2 canasta top-10
+    Periodo:          2,191 dias
+    Patrimonio:       515.81 -> 3,128.37  (+506.5%)
+    CAGR:             +35.02%
+    Volatilidad:      86.8% anualizada
+    Caida maxima:     -86.5%   (1,149 dias sin recuperarse)
+    CALMAR:           0.405
+    Sortino:          0.773
+    Rotacion anual:   11.30x
+    Costo pagado:     1.40% anual
+
+  Stops de catastrofe disparados: 10
+  Meses sin ningun candidato positivo: 8
+  Deslistados atravesados: 3
+  Ordenes rechazadas por el minimo de 5 USDT: 4,045
+
+============================================================================
+ LOS SEIS CRITERIOS (docs/FASE_2_criterios.md)
+============================================================================
+  Criterio 1 -- Calmar contra B1, comparado por pares...
+    mediana 0.293   peor 0.278   mejor 0.377   exigido 1,8   NO PASA
+  Criterio 2 -- caida 45.1% vs 46.0% permitido   PASA
+  Criterio 3 -- Calmar 0.268 vs 1.066 exigido (1,15 x E0 = 0.927)   NO PASA
+  Criterio 4 -- IC 95% del CAGR [-9.42%, +44.07%]   NO PASA
+  Criterio 5 -- sin los 3 mejores meses -0.62% vs +35.27% exigido   NO PASA
+  Criterio 6 -- costo 1.57% anual vs 3.41% permitido   PASA
+
+  2 de 6 criterios
+  >>> E1 NO PASA <<<
+  Falla: 1, 3, 4, 5
+
+  Informacion, no filtro: CAGR(E1)/CAGR(B1) = 0.171
+  Contra la canasta B2: Calmar 0.268 vs 0.405
+
+============================================================================
+ ROBUSTEZ
+============================================================================
+   Se sacan   CAGR queda  % del original
+       nada       12.06%            100%
+     1 meses        6.72%             56%
+     3 meses       -0.62%             -5%
+     5 meses       -5.83%            -48%
+    10 meses      -16.09%           -133%
+  Criterio 5: sin los 3 mejores meses, CAGR -0.62% vs 35.27% exigido   NO PASA
+
+  Deflated Sharpe Ratio: 0.771  (2 configuraciones probadas: E0 y E1)
+
+============================================================================
+ SENSIBILIDADES
+============================================================================
+  Ordenes maker suponiendo que TODAS entran (cota optimista, no
+  creible: la especificacion no da tasa de ejecucion):
+    CAGR +12.85%   Calmar 0.289   costo 1.00% anual
+    Principal (taker): CAGR +12.06%   Calmar 0.268   costo 1.57% anual
+
+  Por año:
+    año     E1        E0        B1        B2
+    2019     -3.6%    +39.7%    +89.5%     +9.3%
+    2020    +33.2%   +109.0%   +301.7%   +137.0%
+    2021    +28.6%    -15.2%    +57.6%   +213.5%
+    2022     -0.0%     -0.0%    -65.3%    -79.0%
+    2023    +11.5%    +62.7%   +154.5%    +94.6%
+    2024     +4.0%    +59.2%   +111.8%    +63.6%
+
+  (485 s)
+
+============================================================================
+ VERIFICACION: Â¿EL MINIMO DE 5 USDT EXPLICA EL RESULTADO?
+============================================================================
+  4.045 ordenes rechazadas es mucho, y podria ser un artefacto del motor
+  en vez de un hallazgo sobre la estrategia. No lo es:
+
+  con minimo 5 USDT, 500 cap     CAGR  +12.06%  Calmar 0.268  rechazadas 4,045
+  SIN minimo, 500 cap            CAGR  +12.19%  Calmar 0.270  rechazadas 4,114
+  con minimo, 50.000 cap         CAGR  +12.08%  Calmar 0.268  rechazadas 12,403
+
+  Ni el filtro ni la escala de capital mueven el resultado.

@@ -5,9 +5,144 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — E0 NO PASA. La compuerta funciona, pero solo empata
+## 30 de agosto de 2026 — E1 NO PASA, y no por poco: 4 de 6 criterios
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`strategy/e1.py` con 16 pruebas propias. **411 en total, en verde.**
+Evidencia en `docs/salida_e1_30ago2026.txt`.
+
+**Elegir por momentum resultó peor que no elegir.**
+
+### El cuadro completo
+
+| | CAGR | Caída | **Calmar** |
+|---|---|---|---|
+| **E1** (momentum transversal) | +12,1% | −45,1% | **0,268** |
+| B0 = E0 | +37,2% | −40,2% | 0,927 |
+| B1 comprar y mantener | +70,6% | −76,6% | 0,921 |
+| **B2** canasta top-10 sin señal | +35,0% | −86,5% | **0,405** |
+
+E1 queda **última**. Pierde contra E0, contra comprar BTC y esperar, y contra
+la canasta equiponderada de los diez más líquidos — que no mira absolutamente
+nada.
+
+### Los seis criterios
+
+| # | | |
+|---|---|---|
+| 1 | Calmar vs B1 por pares: mediana **0,293** vs 1,8 | **NO PASA** |
+| 2 | Caída 45,1% vs 46,0% permitido | PASA |
+| 3 | Calmar **0,268** vs **1,066** exigido (1,15 × E0) | **NO PASA** |
+| 4 | IC 95% del CAGR **[−9,42%, +44,07%]** | **NO PASA** |
+| 5 | Sin los 3 mejores meses: **−0,62%** vs +35,27% | **NO PASA** |
+| 6 | Costo 1,57% anual vs 3,41% permitido | PASA |
+
+**El criterio 4 es el que más pesa. El intervalo cruza cero.** No es que E1
+rinda poco: es que **no hay evidencia estadística de que gane nada.**
+
+Y el 5 lo remata: **sin los 3 mejores meses de 72, el CAGR es negativo.** Tres
+meses son el resultado entero.
+
+Deflated Sharpe 0,771, debajo del 0,95.
+
+### Lo que la especificación pedía decir, dicho
+
+> *"Si no supera a E0 por al menos 15% en Calmar, la selección transversal no
+> está aportando nada sobre la compuerta de régimen, y hay que decirlo
+> claramente en la bitácora."*
+
+**No es que no aporte: resta.** El Calmar de E1 es el **29%** del de E0. Los
+tres mecanismos apilados —selección por momentum, pesos por inversa de
+volatilidad, compuerta— rinden menos que la compuerta sola.
+
+Comparando E1 contra B2 se aísla qué mecanismo falla: los dos operan el mismo
+universo con el mismo rebalanceo mensual, y la única diferencia es que E1
+**elige cinco por momentum** y B2 se queda con los diez. B2 saca Calmar 0,405
+y E1 0,268. **La selección es el mecanismo que destruye valor.**
+
+### La conjetura de 5.2 quedó resuelta, y del lado que había avisado
+
+La medición 5.2 encontró correlación media 0,59 y un techo de selección
+perfecta de +22% cada 28 días — o sea, muchísimo espacio. Escribí entonces:
+
+> *"No dice que exista señal para capturarlo. Un techo alto es condición
+> necesaria, no suficiente."*
+
+Era eso. **El espacio existe y el momentum a 28 días no lo encuentra.**
+
+### Año por año
+
+| Año | E1 | E0 | B1 | B2 |
+|---|---|---|---|---|
+| 2019 | −3,6% | +39,7% | +89,5% | +9,3% |
+| 2020 | +33,2% | +109,0% | +301,7% | +137,0% |
+| **2021** | **+28,6%** | **−15,2%** | +57,6% | +213,5% |
+| 2022 | −0,0% | −0,0% | −65,3% | −79,0% |
+| 2023 | +11,5% | +62,7% | +154,5% | +94,6% |
+| 2024 | +4,0% | +59,2% | +111,8% | +63,6% |
+
+**2021 es el único año en que E1 le gana a E0** — el año de los 19 latigazos,
+donde tener cinco monedas repartidas amortiguó lo que a BTC solo lo mató. En
+los otros cinco años pierde, y en 2023 y 2024 pierde por goleada.
+
+### Tres explicaciones descartadas, no supuestas
+
+**No son los costos.** 1,57% anual contra 3,41% permitido. Y la corrida maker
+—cota optimista, no creíble— da Calmar 0,289 en vez de 0,268.
+
+**No es el mínimo de 5 USDT.** 4.045 órdenes rechazadas asustaban, así que lo
+medí: sin el mínimo, CAGR +12,19% en vez de +12,06%. Con 100 veces el capital,
++12,08%. Ni el filtro ni la escala mueven nada.
+
+**No es el stop de catástrofe.** Se disparó 10 veces en seis años. No es lo
+que explica una diferencia de este tamaño.
+
+### Por qué corrió con costos taker, decidido antes de ver el resultado
+
+La especificación pide órdenes maker *"con modelado de no ejecución"* pero
+**no da la tasa de ejecución**. Inventarla viola la regla 1, y suponer que la
+maker siempre entra es el sesgo que la propia especificación advierte.
+
+Además, **E0 corrió con taker y el criterio 3 los compara entre sí**: si E1
+pagara menos comisiones que E0, la comparación mediría el modelo de costos en
+vez de la estrategia.
+
+### Las dos hipótesis de rescate, y mi recomendación
+
+La especificación preautoriza exactamente dos: **R1** (ventana de momentum de
+90 días en vez de 28) y **R2** (8 posiciones en vez de 5).
+
+**Recomiendo no correrlas.** Hacen falta 1,066 de Calmar y hay 0,268 — un
+factor de cuatro. Ninguna ventana ni ningún conteo de posiciones cierra eso. Y
+el criterio 4 dice que no hay señal, no que la señal esté mal sintonizada:
+buscar la configuración que funcione sobre los mismos datos es exactamente el
+error que este proyecto existe para evitar.
+
+Están legítimamente preautorizadas y la decisión es de Felipe.
+
+### Un error real que encontró una prueba
+
+Cuando el stop de catástrofe sacaba una posición a mitad de mes,
+`pesos_inversa_volatilidad` renormalizaba y **repartía el peso liberado entre
+los que quedaban** — justo lo que la especificación prohíbe. Habría inflado el
+resultado subiendo la exposición después de un derrumbe. Ahora los pesos se
+calculan sobre la selección completa del mes y el que salió se pone en cero
+sin renormalizar; ese peso se va a efectivo.
+
+### Lo próximo, si Felipe decide seguir
+
+Quedan **E2** (largo/corto con perpetuos) y **E3** (carry de financiación).
+Las dos necesitan la **medición 5.1** —distribución de tasas de financiación—
+que todavía no se hizo, y E3 tiene falsación previa: si el carry neto no cubre
+el costo de montar la estructura, **no se codifica**.
+
+Y hay que tener presente lo que ya sabemos: **E2 usa la misma compuerta que
+empató en E0 y el mismo universo donde la selección de E1 destruyó valor.**
+
+---
+
+## 30 de agosto de 2026 — E0 NO PASA. La compuerta funciona, pero solo empata
 
 `backtesting/motor_cartera.py` y `strategy/e0.py`, con 23 pruebas propias.
 **395 en total, en verde.** Evidencia en `docs/salida_e0_30ago2026.txt`.

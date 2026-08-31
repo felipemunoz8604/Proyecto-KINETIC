@@ -151,8 +151,16 @@ def simular(
         costo_hoy = 0.0
         movido_hoy = 0.0
 
+        # Solo importan los que se tienen y los que se quieren. Con un universo
+        # de 116 columnas y 5 posiciones, recorrerlas todas multiplicaba por
+        # veinte el tiempo de una corrida sin cambiar un solo numero.
+        objetivo = exposiciones.loc[fecha]
+        en_juego = sorted({s for s in simbolos
+                           if cantidades[s] > 0
+                           or abs(float(objetivo.get(s, 0.0))) > 0.0})
+
         # --- 1. Los que murieron se liquidan antes de hacer nada -----------
-        for s in simbolos:
+        for s in en_juego:
             if cantidades[s] <= 0:
                 continue
             precio_cierre = cierres.at[fecha, s] if s in cierres.columns else np.nan
@@ -175,13 +183,12 @@ def simular(
         # --- 2. Rebalanceo a la apertura -----------------------------------
         precios_apertura = {s: aperturas.at[fecha, s]
                             if s in aperturas.columns else np.nan
-                            for s in simbolos}
+                            for s in en_juego}
         patrimonio_apertura = efectivo + sum(
             cantidades[s] * precios_apertura[s]
-            for s in simbolos if np.isfinite(precios_apertura[s]))
+            for s in en_juego if np.isfinite(precios_apertura[s]))
 
-        objetivo = exposiciones.loc[fecha]
-        for s in simbolos:
+        for s in en_juego:
             precio = precios_apertura[s]
             if not np.isfinite(precio) or precio <= 0:
                 continue
@@ -230,7 +237,7 @@ def simular(
 
         # --- 3. Valuacion al cierre ----------------------------------------
         valores = {}
-        for s in simbolos:
+        for s in (s for s in en_juego if cantidades[s] > 0):
             precio = cierres.at[fecha, s] if s in cierres.columns else np.nan
             if not np.isfinite(precio):
                 precio = ultimo_precio.at[fecha, s] if fecha in ultimo_precio.index else np.nan
@@ -249,7 +256,10 @@ def simular(
         efectivo=pd.Series(efectivo_diario, index=dias, name="efectivo"),
         costos=pd.Series(costos_diarios, index=dias, name="costos"),
         negociado=pd.Series(negociado_diario, index=dias, name="negociado"),
-        exposicion=pd.DataFrame(exposicion_real, index=dias),
+        # Un simbolo sin posicion ese dia no aparece en el diccionario del dia:
+        # eso es exposicion CERO, no dato faltante.
+        exposicion=pd.DataFrame(exposicion_real, index=dias)
+        .reindex(columns=simbolos).fillna(0.0),
         deslistados=deslistados,
         ordenes_rechazadas=rechazadas,
     )
