@@ -1,0 +1,127 @@
+============================================================================
+ KINETIC - historico de financiacion de perpetuos USDT-M
+============================================================================
+
+  Reconstruyendo el universo para saber que bajar...
+    116 simbolos pasaron por el universo
+  Listando perpetuos con financiacion...
+    920 perpetuos en el archivo
+    107 del universo tienen perpetuo, 9 no
+    Sin perpetuo (E2 y E3 no pueden tocarlos):
+      BCHABCUSDT    BONKUSDT      ERDUSDT       FLOKIUSDT     LUNCUSDT      PEPEUSDT    
+      SHIBUSDT      TFUELUSDT     WINUSDT     
+
+  Ya estaban: 0. Faltan: 107
+
+    [1/107] 1000SATSUSDT    5,773 cobros
+    [2/107] AAVEUSDT        6,344 cobros
+    [3/107] ADAUSDT         7,156 cobros
+    [4/107] ALGOUSDT        6,756 cobros
+    [5/107] APEUSDT         4,792 cobros
+    [6/107] APTUSDT         4,147 cobros
+    [7/107] ARBUSDT         3,680 cobros
+    [8/107] ARPAUSDT        5,240 cobros
+    [9/107] ATOMUSDT        7,102 cobros
+    [10/107] AVAXUSDT        6,415 cobros
+    [11/107] AXSUSDT         6,980 cobros
+    [12/107] BANDUSDT        6,581 cobros
+    [13/107] BATUSDT         7,082 cobros
+    [14/107] BCHUSDT         7,212 cobros
+    [15/107] BLZUSDT         7,133 cobros
+    [16/107] BNBUSDT         7,091 cobros
+    [17/107] BOMEUSDT        5,205 cobros
+    [18/107] BTCUSDT         7,212 cobros
+    [19/107] BTTUSDT           892 cobros
+    [20/107] CAKEUSDT        6,013 cobros
+    [21/107] CFXUSDT         3,773 cobros
+    [22/107] CHZUSDT         6,114 cobros
+    [23/107] COMPUSDT        6,668 cobros
+    [24/107] DASHUSDT        7,109 cobros
+    [25/107] DENTUSDT        5,563 cobros
+    [26/107] DOGEUSDT        6,638 cobros
+    [27/107] DOTUSDT         6,515 cobros
+    [28/107] DYDXUSDT        5,359 cobros
+    [29/107] ENAUSDT         5,101 cobros
+    [30/107] ENJUSDT         7,071 cobros
+    [31/107] ENSUSDT         5,116 cobros
+    [32/107] EOSUSDT         7,190 cobros
+    [33/107] ETCUSDT         7,166 cobros
+    [34/107] ETHUSDT         7,212 cobros
+    [35/107] FETUSDT         3,878 cobros
+    [36/107] FILUSDT         6,344 cobros
+    [37/107] FLMUSDT         8,483 cobros
+    [38/107] FTMUSDT         5,190 cobros
+    [39/107] FTTUSDT         3,522 cobros
+    [40/107] GALAUSDT        5,335 cobros
+    [41/107] GASUSDT         6,103 cobros
+    [42/107] HBARUSDT        5,888 cobros
+    [43/107] HIFIUSDT        4,414 cobros
+    [44/107] HOTUSDT         5,849 cobros
+    [45/107] ICPUSDT         4,290 cobros
+    [46/107] ICXUSDT         6,899 cobros
+    [47/107] INJUSDT         4,336 cobros
+    [48/107] IOSTUSDT        7,058 cobros
+    [49/107] IOTAUSDT        7,085 cobros
+    [50/107] JASMYUSDT       4,694 cobros
+    [51/107] KAVAUSDT        8,123 cobros
+    [52/107] KSMUSDT         6,350 cobros
+    [53/107] LDOUSDT         4,226 cobros
+    [54/107] LINAUSDT        4,660 cobros
+    [55/107] LINKUSDT        7,163 cobros
+    [56/107] LOOMUSDT        3,702 cobros
+    [57/107] LPTUSDT         9,153 cobros
+    [58/107] LRCUSDT         6,662 cobros
+    [59/107] LTCUSDT         7,187 cobros
+    [60/107] LUNAUSDT        1,410 cobros
+    [61/107] MANAUSDT        5,894 cobros
+    [62/107] MASKUSDT        7,411 cobros
+    [63/107] MATICUSDT       6,326 cobros
+    [64/107] MKRUSDT         5,557 cobros
+    [65/107] NEARUSDT        6,349 cobros
+    [66/107] NEOUSDT         7,070 cobros
+    [67/107] NULSUSDT        1,783 cobros
+    [68/107] OGUSDT          2,672 cobros
+    [69/107] OMGUSDT         5,448 cobros
+    [70/107] ONEUSDT         5,885 cobros
+    [71/107] ONTUSDT         8,208 cobros
+    [72/107] OPUSDT          4,565 cobros
+    [73/107] ORDIUSDT        5,983 cobros
+    [74/107] PENDLEUSDT      3,307 cobros
+    [75/107] PEOPLEUSDT      5,044 cobros
+    [76/107] QTUMUSDT        7,032 cobros
+    [77/107] RENUSDT         5,131 cobros
+    [78/107] RNDRUSDT        1,678 cobros
+    [79/107] ROSEUSDT        5,024 cobros
+    [80/107] RUNEUSDT        6,470 cobros
+    [81/107] SANDUSDT        6,041 cobros
+    [82/107] SEIUSDT         3,241 cobros
+    [83/107] SLPUSDT         5,823 cobros
+    [84/107] SOLUSDT         6,517 cobros
+    [85/107] STRAXUSDT       3,706 cobros
+    [86/107] STXUSDT         3,770 cobros
+    [87/107] SUIUSDT         3,556 cobros
+    [88/107] SUSHIUSDT       6,470 cobros
+    [89/107] SXPUSDT         5,890 cobros
+    [90/107] TAOUSDT         5,047 cobros
+    [91/107] THETAUSDT       6,772 cobros
+    [92/107] TRBUSDT         9,543 cobros
+    [93/107] TRXUSDT         7,169 cobros
+    [94/107] TWTUSDT         6,008 cobros
+    [95/107] UNFIUSDT        6,647 cobros
+    [96/107] UNIUSDT         6,431 cobros
+    [97/107] VETUSDT         7,079 cobros
+    [98/107] WAVESUSDT       5,317 cobros
+    [99/107] WIFUSDT         5,551 cobros
+    [100/107] WLDUSDT         3,310 cobros
+    [101/107] XLMUSDT         7,156 cobros
+    [102/107] XMRUSDT         7,119 cobros
+    [103/107] XRPUSDT         7,196 cobros
+    [104/107] XTZUSDT         8,277 cobros
+    [105/107] YGGUSDT         6,356 cobros
+    [106/107] ZECUSDT         7,109 cobros
+    [107/107] ZILUSDT         7,412 cobros
+
+============================================================================
+  624,755 cobros nuevos guardados en data\financiacion
+  Archivos totales: 107
+  (1145 s)

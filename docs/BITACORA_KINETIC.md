@@ -5,9 +5,137 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — E1 NO PASA, y no por poco: 4 de 6 criterios
+## 31 de agosto de 2026 — Medición 5.1: E3 sobrevive la falsación, pero rinde 25 USDT al año
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`core/financiacion.py` con 10 pruebas propias, más 5 nuevas en costos.
+**424 en total, en verde.** Evidencia en
+`docs/salida_medicion_51_31ago2026.txt`.
+
+**Las cinco mediciones previas están completas.** Esta era la única que
+faltaba, y la única que podía cerrar una estrategia sin escribirla.
+
+Se bajaron **624.755 cobros de financiación** de 107 perpetuos (autorizado por
+la regla 8 del MEGAPROMPT: los cerrojos de futuros están verdes desde
+`22eebf8`).
+
+### El veredicto de E3, con las dos lecturas
+
+La falsación de la especificación 6.4 dice: *"si la mediana de la financiación
+anualizada neta de comisiones no supera con margen el costo de montar la
+estructura, E3 no se codifica"*.
+
+| | |
+|---|---|
+| Mediana de la financiación anualizada | **10,95%** sobre nocional |
+| Costo de montar y desmontar | **0,36%** |
+
+**Literalmente, E3 sobrevive**: 10,95% es treinta veces 0,36%.
+
+Pero el número que decide es otro, y la especificación pedía calcularlo antes
+de codificar:
+
+| | |
+|---|---|
+| Carry sobre **capital** (las dos patas ocupan plata) | **5,47%** anual |
+| Neto montando una vez al año y no tocando | **5,12%** anual |
+| **En dinero, sobre 500 USDT** | **25,57 USDT al año** |
+
+Contra E0 que rindió 37,23% y B1 que rindió 70,55%.
+
+La especificación había anticipado exactamente este caso: *"el retorno
+absoluto puede quedar demasiado bajo para tener sentido con 500 USDT de
+capital. Ese caso hay que identificarlo y reportarlo explícitamente, no
+esconderlo detrás de un buen ratio."* Identificado: **son 25 dólares al año.**
+
+### Por qué la mediana da 10,95% exacto en todas las cortes
+
+Salió idéntica en el agregado, por símbolo, en tramos alcistas y bajistas, y
+en cuatro de cinco años. Eso parecía un error, así que lo verifiqué:
+
+**El 54% de todos los cobros vale exactamente 0,01%** — la tasa base de
+Binance. 0,01% × 3 × 365 = 10,95%. No es un error de cálculo: es el piso del
+mercado asomando por la mediana.
+
+**Consecuencia importante: la mediana subestima a E3**, que por diseño entra
+solo cuando la financiación está alta. La cola es donde está el dinero: p90 =
+39,7%, p95 = 72,9%, p99 = 190,5%.
+
+### Pero el filtro tampoco lo rescata
+
+| Umbral | % del tiempo | Tasa mientras dentro | Montajes/año | **Al año, neto** |
+|---|---|---|---|---|
+| 0% | 84,2% | 21,9% | 66 | **−14,5%** |
+| 11% | 17,8% | 66,6% | 33 | **−6,0%** |
+| 30% | 12,3% | 87,5% | 28 | **−4,9%** |
+| 100% | 3,1% | 181,6% | 9 | **−0,6%** |
+
+**Apretar el umbral sube la tasa y baja el tiempo adentro, y las dos cosas
+casi se cancelan** — mientras el costo de montar crece con cada entrada.
+
+*Con una advertencia que hay que leer: esa última columna cuenta un montaje
+cada vez que la tasa cruza el umbral, aunque sea por un solo cobro de 8 horas.
+Una implementación real pondría histeresis. Es una **cota pesimista de la
+versión ingenua**, no el veredicto. El veredicto es el 5,12% de arriba.*
+
+### El carry NO es direccional, y eso es a favor de E3
+
+| | Mediana | Positiva |
+|---|---|---|
+| Tramos alcistas | 10,95% | 91% del tiempo |
+| Tramos bajistas | 10,95% | 70% del tiempo |
+
+Paga en los dos regímenes. Si solo pagara en los alcistas sería una apuesta al
+mercado disfrazada; no lo es. El único año con compresión visible es **2022**:
+mediana 8,64% y solo 65% de cobros positivos.
+
+### Tres cosas que el dato real destapó
+
+**1. El intervalo de cobro no es 8 horas para todos.** De 106 perpetuos, **21
+cobran cada 4 horas y 5 cada 2**. Anualizar con la constante de 8 les borra la
+mitad o más del carry. El archivo trae la columna justamente por eso, y ahora
+se usa siempre.
+
+**2. `execution/costos.py` estaba mal, y contra el dato real habría fallado en
+todo.** La primera versión generaba los cortes en 00, 08 y 16 **en punto** y
+exigía coincidencia exacta con el índice. El dato real trae sellos como
+`12:00:00.001` y símbolos de 2 y 4 horas: **ningún cobro habría coincidido**, y
+cada posición habría levantado `FinanciacionFaltante`. Ahora cobra los cobros
+reales del archivo, y la verificación de huecos se hace contra el intervalo
+declarado del símbolo.
+
+**3. Cuatro monedas del universo no tienen perpetuo con ese ticker.** SHIB,
+PEPE, BONK y FLOKI cotizan en futuros como `1000SHIBUSDT`, `1000PEPEUSDT`…
+E2 y E3 necesitarían una tabla de mapeo a mano, igual que
+`RENOMBRAMIENTOS`. Nueve del universo no tienen perpetuo en absoluto.
+
+### La ventana de los perpetuos es más corta
+
+El perpetuo más viejo arranca **2020-01**; la mediana arranca **2020-10**.
+Todo resultado de E2 o E3 se lee sobre esa ventana, no sobre 2019-2024.
+
+### Lo próximo, y una advertencia sobre el objetivo
+
+Queda **E2** (largo/corto con perpetuos), la última candidata del plan. Usa la
+misma compuerta que empató en E0 y el mismo universo donde la selección de E1
+destruyó valor, así que conviene entrar con expectativas medidas.
+
+Y algo que hay que decir con todas las letras, porque Felipe pidió "llegar a
+una estrategia que pase": **eso no se puede perseguir como objetivo directo.**
+Si se prueban configuraciones hasta que una pase, el criterio deja de
+significar algo — es literalmente el error que el `CLAUDE.md` define como el
+que este proyecto existe para evitar. Lo que sí se puede hacer, y es lo que se
+viene haciendo, es agotar el plan preregistrado y anotar cada resultado, pase
+o falle.
+
+Hasta ahora: E0 empata, E1 destruye valor, E3 rinde 25 USDT al año. Son tres
+resultados negativos **medidos**, que valen más que un PF 1,8 encontrado a
+fuerza de intentos.
+
+---
+
+## 30 de agosto de 2026 — E1 NO PASA, y no por poco: 4 de 6 criterios
 
 `strategy/e1.py` con 16 pruebas propias. **411 en total, en verde.**
 Evidencia en `docs/salida_e1_30ago2026.txt`.

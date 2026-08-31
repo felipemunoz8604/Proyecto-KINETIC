@@ -171,6 +171,8 @@ class ModeloDeCostos:
 
 # --- Financiacion --------------------------------------------------------
 
+# Los cortes teoricos de un perpetuo de 8 horas. Se dejan como referencia,
+# pero NO se usan para cobrar: ver `financiacion_acumulada`.
 HORAS_DE_FINANCIACION = (0, 8, 16)
 
 
@@ -184,24 +186,31 @@ class FinanciacionFaltante(RuntimeError):
 
 
 def momentos_de_financiacion(desde: pd.Timestamp,
-                             hasta: pd.Timestamp) -> pd.DatetimeIndex:
+                             hasta: pd.Timestamp,
+                             horas: int = 8) -> pd.DatetimeIndex:
     """
-    Los cortes de financiacion (00, 08 y 16 UTC) que atraviesa una posicion
-    abierta en `desde` y cerrada en `hasta`.
+    Los cortes TEORICOS que atraviesa una posicion, cada `horas` horas.
 
     Convencion: `desde < momento <= hasta`. Se cobra si la posicion estaba
     abierta EN el corte. Cerrar exactamente a las 16:00 paga ese corte; es el
     lado pesimista de una ambiguedad real.
+
+    Sirve para razonar y para las pruebas. **Para cobrar de verdad se usan los
+    cobros reales del archivo**, porque el dato real no se parece a esto: hay
+    simbolos con intervalos de 2, 4 y 8 horas, y sellos de tiempo corridos un
+    milisegundo (`12:00:00.001`). Medido el 31-ago-2026 sobre 424.089 cobros.
     """
     desde = pd.Timestamp(desde)
     hasta = pd.Timestamp(hasta)
     if hasta < desde:
         raise ValueError("la posicion no puede cerrarse antes de abrirse")
+    if horas <= 0 or 24 % horas:
+        raise ValueError(f"intervalo de financiacion invalido: {horas} h")
     dia = desde.floor("D")
     cortes = pd.DatetimeIndex([
         dia + pd.Timedelta(days=d, hours=h)
         for d in range((hasta.floor("D") - dia).days + 2)
-        for h in HORAS_DE_FINANCIACION
+        for h in range(0, 24, horas)
     ])
     return cortes[(cortes > desde) & (cortes <= hasta)]
 
@@ -216,24 +225,53 @@ def flujo_de_financiacion(nocional_firmado: float, tasa: float) -> float:
     return -nocional_firmado * tasa
 
 
+def cobros_entre(tasas: pd.Series, desde: pd.Timestamp,
+                 hasta: pd.Timestamp) -> pd.Series:
+    """Los cobros REALES que atraviesa la posicion: `desde < momento <= hasta`."""
+    if tasas.empty or not isinstance(tasas.index, pd.DatetimeIndex):
+        return tasas.iloc[0:0]
+    return tasas.loc[(tasas.index > pd.Timestamp(desde))
+                     & (tasas.index <= pd.Timestamp(hasta))]
+
+
 def financiacion_acumulada(nocional_firmado: float,
                            tasas: pd.Series,
                            desde: pd.Timestamp,
-                           hasta: pd.Timestamp) -> float:
+                           hasta: pd.Timestamp,
+                           horas: float | None = None) -> float:
     """
     Suma la financiacion de una posicion de nocional constante.
 
-    `tasas` va indexada por los cortes de 8 horas. Si falta alguno de los
-    cortes que la posicion atraviesa, esto **levanta** en vez de suponer cero.
+    Cobra los cobros **reales** del archivo, no una grilla generada. La primera
+    version generaba los cortes en 00, 08 y 16 en punto y exigia que
+    coincidieran exactamente con el indice; contra el dato de verdad eso habria
+    fallado en todo: hay simbolos de 2 y 4 horas, y sellos corridos un
+    milisegundo.
+
+    `horas` es el intervalo declarado del simbolo. Si se pasa, se verifica que
+    no falte ningun cobro: un hueco mayor a una vez y media el intervalo
+    **levanta** en vez de valer cero.
     """
-    cortes = momentos_de_financiacion(desde, hasta)
-    if len(cortes) == 0:
+    desde = pd.Timestamp(desde)
+    hasta = pd.Timestamp(hasta)
+    if hasta < desde:
+        raise ValueError("la posicion no puede cerrarse antes de abrirse")
+
+    cobros = cobros_entre(tasas, desde, hasta)
+    if horas is not None and horas > 0:
+        limite = pd.Timedelta(hours=horas * 1.5)
+        bordes = pd.DatetimeIndex([desde]).append(cobros.index)
+        bordes = bordes.append(pd.DatetimeIndex([hasta]))
+        huecos = bordes.to_series().diff().dropna()
+        grandes = huecos[huecos > limite]
+        if len(grandes):
+            raise FinanciacionFaltante(
+                f"hay un hueco de {grandes.iloc[0]} entre {desde} y {hasta}, "
+                f"con intervalo declarado de {horas} h. Falta dato de "
+                "financiacion, y suponer cero haria pasar por bueno un "
+                "backtest de perpetuos invalido."
+            )
+    if cobros.empty:
         return 0.0
-    faltantes = cortes.difference(tasas.index)
-    if len(faltantes):
-        raise FinanciacionFaltante(
-            f"faltan {len(faltantes)} tasas entre {desde} y {hasta}; "
-            f"la primera es {faltantes[0]}"
-        )
     return float(sum(flujo_de_financiacion(nocional_firmado, t)
-                     for t in tasas.loc[cortes]))
+                     for t in cobros))

@@ -1,0 +1,120 @@
+============================================================================
+ KINETIC - medicion 5.1: tasas de financiacion de los perpetuos
+============================================================================
+  Ventana de diseño: 2019-01-01 a 2024-12-31
+
+  106 simbolos con al menos 100 cobros en la ventana
+  El perpetuo mas viejo arranca 2020-01-01; la mediana arranca 2020-10-20
+  OJO: la muestra de perpetuos es MAS CORTA que la de Spot. Todo
+  resultado de E2 y E3 se lee sobre esta ventana, no sobre 2019-2024.
+
+  Intervalos de cobro presentes:
+    cada    2 h   en 5 simbolos
+    cada    4 h   en 21 simbolos
+    cada    8 h   en 100 simbolos
+  Por eso se anualiza con el intervalo de cada fila y no con 3x365.
+
+============================================================================
+ DISTRIBUCION DE LA FINANCIACION ANUALIZADA
+============================================================================
+  Sobre 424,089 cobros de 106 simbolos:
+    mediana   10.95%    media   10.36%
+    p10   -9.12%    p90   39.70%
+    fraccion de cobros con tasa positiva: 83.5%
+
+  Mediana POR SIMBOLO (la que importa para E3): 10.95%
+    el mejor simbolo 10.95%, el peor -10.07%
+    simbolos con mediana positiva: 104 de 106
+
+============================================================================
+ TRAMOS ALCISTAS CONTRA BAJISTAS
+============================================================================
+  Marcados con la misma compuerta de E0: BTC sobre su media de 200.
+    ALCISTA  mediana   10.95%   positiva 91% del tiempo   (268,227 cobros)
+    BAJISTA  mediana   10.95%   positiva 70% del tiempo   (155,862 cobros)
+
+  Si el carry solo paga en los tramos alcistas, entonces NO es
+  no direccional: es una apuesta al mercado con otro nombre.
+
+============================================================================
+ ¿SE ESTA COMPRIMIENDO? (la especificacion pide mirarlo aparte)
+============================================================================
+    año     mediana anual   % positiva   cobros
+    2020        10.95%           87%     35,864
+    2021        10.95%           91%     71,860
+    2022         8.64%           65%     83,797
+    2023        10.95%           84%     99,985
+    2024        10.95%           90%    132,583
+
+============================================================================
+ POR QUE LA MEDIANA DA 10,95% EN TODOS LADOS
+============================================================================
+  Porque 54% de los cobros vale exactamente la tasa
+  base de Binance (0,01% por cobro). No es un error de calculo: es
+  el piso del mercado asomando por la mediana.
+
+  Consecuencia: la mediana SUBESTIMA lo que puede ganar E3, que por
+  diseño entra solo cuando la financiacion esta alta. La cola es
+  donde esta el dinero:
+    p  50      10.95% anual
+    p  75      10.95% anual
+    p  90      39.70% anual
+    p  95      72.94% anual
+    p  99     190.53% anual
+
+  CURVA POR UMBRAL DE ENTRADA. El umbral es un PARAMETRO de E3 y se
+  cuenta como tal: aca se reporta la curva entera, no se elige uno.
+
+  OJO con leer la columna equivocada: 'mientras esta dentro' NO es
+  el retorno anual. Si entras el 8% del tiempo a una tasa del 112%,
+  ganas el 8% de eso, no el 112%. La columna que decide es la ultima.
+
+    umbral   % del tiempo   mientras dentro   sobre capital   montajes/año   AL AÑO neto
+        0%        84.2%           21.88%        10.94%            66        -14.46%
+       11%        17.8%           66.57%        33.28%            33         -6.02%
+       20%        15.1%           75.86%        37.93%            32         -5.80%
+       30%        12.3%           87.49%        43.74%            28         -4.85%
+       50%         8.0%          112.79%        56.39%            23         -3.60%
+      100%         3.1%          181.59%        90.80%             9         -0.58%
+
+  Apretar el umbral SUBE la tasa y BAJA el tiempo adentro, y las dos
+  cosas casi se cancelan -- mientras el costo de montar y desmontar
+  crece con cada entrada. El filtro no rescata a E3.
+
+  ADVERTENCIA sobre esa ultima columna: cuenta un montaje cada vez
+  que la tasa cruza el umbral, incluso por un solo cobro de 8 horas.
+  Una implementacion real pondria histeresis o un minimo de dias, y
+  montaria muchas menos veces. O sea que es una COTA PESIMISTA de la
+  version ingenua, no el veredicto de E3. El veredicto es el de
+  abajo, sobre la estructura sostenida sin filtro.
+
+============================================================================
+ FALSACION DE E3 (especificacion 6.4)
+============================================================================
+
+  Costo de montar y desmontar la estructura, con descuento BNB:
+    cuatro comisiones + cuatro slippages = 0.360% del nocional
+    Carry mediano sobre NOCIONAL:    10.95% anual
+    Carry mediano sobre CAPITAL:      5.47% anual  <- las dos patas ocupan capital
+    Dias de posicion para cubrir un ciclo de costo: 12.0
+    Neto sobre capital rotando cada  1 mes(es):    1.15% anual
+    Neto sobre capital rotando cada  3 mes(es):    4.04% anual
+    Neto sobre capital rotando cada 12 mes(es):    5.12% anual
+
+  Costo de montar y desmontar la estructura, sin descuento:
+    cuatro comisiones + cuatro slippages = 0.420% del nocional
+    Carry mediano sobre NOCIONAL:    10.95% anual
+    Carry mediano sobre CAPITAL:      5.47% anual  <- las dos patas ocupan capital
+    Dias de posicion para cubrir un ciclo de costo: 14.0
+    Neto sobre capital rotando cada  1 mes(es):    0.43% anual
+    Neto sobre capital rotando cada  3 mes(es):    3.79% anual
+    Neto sobre capital rotando cada 12 mes(es):    5.05% anual
+
+  En el escenario MAS FAVORABLE que se puede armar -- montar una
+  vez al año y no tocar -- E3 rinde 5.12% anual
+  sobre 500 USDT, o sea 25.57 USDT.
+
+  Referencias para dimensionar:
+    E0 rindio 37,23% anual   B1 rindio 70,55% anual
+
+  (7 s)

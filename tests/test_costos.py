@@ -167,14 +167,52 @@ def test_una_tasa_faltante_levanta():
     """
     Y NO devuelve cero. Un cero silencioso convierte un backtest de perpetuos
     invalido en uno que se ve impecable.
+
+    El hueco se detecta pasando el intervalo declarado del simbolo: si entre
+    dos cobros pasa mas de una vez y media ese intervalo, falta dato.
     """
     cortes = c.momentos_de_financiacion(_t("2024-01-01 00:00"),
-                                        _t("2024-01-02 00:00"))
-    tasas = pd.Series(0.0001, index=cortes[:-1])
+                                        _t("2024-01-03 00:00"))
+    tasas = pd.Series(0.0001, index=cortes).drop(cortes[3])
     with pytest.raises(c.FinanciacionFaltante):
         c.financiacion_acumulada(1_000.0, tasas,
                                  _t("2024-01-01 00:00"),
-                                 _t("2024-01-02 00:00"))
+                                 _t("2024-01-03 00:00"), horas=8)
+
+
+def test_los_cobros_reales_no_tienen_que_caer_en_punto():
+    """
+    El dato real trae sellos como `12:00:00.001`. La primera version generaba
+    la grilla en punto y exigia coincidencia exacta: contra el archivo de
+    verdad no habria cobrado NADA y habria levantado en todo.
+    """
+    momentos = pd.DatetimeIndex([
+        _t("2024-01-01 08:00:00.001"),
+        _t("2024-01-01 16:00:00.001"),
+    ])
+    tasas = pd.Series(0.0001, index=momentos)
+    total = c.financiacion_acumulada(1_000.0, tasas,
+                                     _t("2024-01-01 00:00"),
+                                     _t("2024-01-01 20:00"))
+    assert total == pytest.approx(-2 * 1_000.0 * 0.0001)
+
+
+def test_un_simbolo_de_cuatro_horas_cobra_el_doble_de_veces():
+    """
+    Medido el 31-ago-2026: de 106 perpetuos del universo, 21 cobran cada 4
+    horas y 5 cada 2. Suponer 8 fijo les borra la mitad o mas del carry.
+    """
+    de_ocho = c.momentos_de_financiacion(_t("2024-01-01"), _t("2024-01-02"),
+                                         horas=8)
+    de_cuatro = c.momentos_de_financiacion(_t("2024-01-01"), _t("2024-01-02"),
+                                           horas=4)
+    assert len(de_ocho) == 3
+    assert len(de_cuatro) == 6
+
+
+def test_un_intervalo_que_no_divide_el_dia_levanta():
+    with pytest.raises(ValueError):
+        c.momentos_de_financiacion(_t("2024-01-01"), _t("2024-01-02"), horas=7)
 
 
 def test_sin_cortes_no_hace_falta_ninguna_tasa():
