@@ -40,15 +40,20 @@ from __future__ import annotations
 
 import pandas as pd
 
+from strategy.indicators import sma
+
 PERIODO_SMA = 200
 
 
 def media_movil(cierres: pd.Series, periodo: int = PERIODO_SMA) -> pd.Series:
     """
-    Media movil simple. `min_periods=periodo` para que los primeros dias sean
-    NaN en vez de una media de tres datos disfrazada de media de 200.
+    La media movil de `strategy/indicators.py`, no una copia.
+
+    Tener dos implementaciones de la misma media es como se rompen las cosas
+    en este proyecto: se corrige una y la otra queda vieja. La de indicators
+    ya tiene la prueba de no-anticipacion encima.
     """
-    return cierres.rolling(periodo, min_periods=periodo).mean()
+    return sma(cierres, periodo)
 
 
 def compuerta_de_regimen(cierres: pd.Series,

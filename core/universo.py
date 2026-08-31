@@ -20,7 +20,7 @@ solo": ni un dia. Si el universo del 1-mar-2021 se arma con el volumen de
 marzo, la cartera esta comprando lo que va a ser liquido, no lo que era
 liquido.
 
-Esta escrito de una sola forma en un solo lugar -- `_hasta(panel, fecha)` --
+Esta escrito de una sola forma en un solo lugar -- `hasta(panel, fecha)` --
 porque es el tipo de regla que se rompe en el segundo sitio donde se
 reimplementa. Hay pruebas que verifican la propiedad de frente: un simbolo que
 muere en 2022 tiene que aparecer en el universo de 2020, y ninguna decision
@@ -109,13 +109,14 @@ class Panel:
         return len(self.cierres)
 
 
-def _hasta(datos: pd.DataFrame, fecha: pd.Timestamp) -> pd.DataFrame:
+def hasta(datos: pd.DataFrame, fecha: pd.Timestamp) -> pd.DataFrame:
     """
     Lo unico que se sabia ANTES de `fecha`. Estrictamente antes.
 
-    Toda decision del universo pasa por aca. Que sea una sola funcion no es
-    prolijidad: es que una regla de no-anticipacion reimplementada en tres
-    lugares se rompe en el segundo.
+    Toda decision del universo pasa por aca, y tambien las de `risk/`. Que sea
+    una sola funcion no es prolijidad: es que una regla de no-anticipacion
+    reimplementada en tres lugares se rompe en el segundo. Por eso es publica
+    aunque parezca demasiado chica para serlo.
     """
     return datos[datos.index < fecha]
 
@@ -188,7 +189,7 @@ def liquidez_en(panel: Panel, fecha: pd.Timestamp) -> pd.Series:
     top 20, y esa es justo la que despues no se puede vender al precio que
     dice el backtest.
     """
-    previo = _hasta(panel.volumen_cotizado, fecha)
+    previo = hasta(panel.volumen_cotizado, fecha)
     if previo.empty:
         return pd.Series(dtype="float64")
     return previo.tail(DIAS_VENTANA_LIQUIDEZ).median()
@@ -217,7 +218,7 @@ def universo_en(
     **Un par que va a morir el mes que viene entra igual, y tiene que
     entrar.** Esa es la diferencia entre este universo y el de la Fase 1.
     """
-    previo = _hasta(panel.cierres, fecha)
+    previo = hasta(panel.cierres, fecha)
     if previo.empty:
         return []
 

@@ -5,9 +5,117 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — Mediciones 5.2 y 5.4: me equivoqué de dirección
+## 30 de agosto de 2026 — Riesgo v2: el capital que de verdad trabaja es 32%
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`risk/pesos.py` y `risk/catastrofe.py`, con 29 pruebas propias. **372 en
+total, en verde.** Evidencia en `docs/salida_riesgo_v2_30ago2026.txt`.
+
+La sección 4.4 de la especificación, completa:
+
+```
+exposicion_i(t) = G(t) × k(t) × w_i(t)
+```
+
+Tres piezas independientes, y ninguna mira qué activo es. Eso lo decide
+`strategy/`; `risk/` solo decide con cuánto. Es la regla 3 del proyecto.
+
+### El hallazgo: la cartera corre al 32% del capital
+
+Corrí la capa sobre los datos reales, sin comprar nada — solo calcular qué
+exposición habría tenido en cada rebalanceo. Prender el motor en el taller
+antes de sacar el auto a la ruta.
+
+| | |
+|---|---|
+| σ mediana de **un activo** | 94% |
+| σ de la **cartera** | 71% |
+| **k(t)** = 0,35 / 0,71 | **mediana 0,49** |
+| Rebalanceos con k pegado en 1,0 | **1 de 72** |
+| Compuerta cerrada | 30 de 72 |
+| **Exposición bruta final** | **mediana 0,39, media 0,32** |
+
+**El escalar de volatilidad está abajo casi siempre.** Con una cartera al 71%
+anualizado y un objetivo del 35%, `k` casi nunca puede llegar a 1. Sumado a
+que la compuerta está cerrada el 42% del tiempo, **el capital que de verdad
+trabaja promedia el 32%.**
+
+Esto no está mal — es exactamente lo que un objetivo de volatilidad pide —
+pero **cambia cómo hay que leer el resultado de E0.** Una estrategia que
+rinda 30% sobre el capital desplegado va a mostrar ~10% sobre el capital
+total. Mejor saberlo ahora que interpretando mal el CAGR después.
+
+### El tope del 40% no hace absolutamente nada
+
+| | |
+|---|---|
+| Peso máximo de un activo | mediana 0,091, **máximo 0,155** |
+| Rebalanceos con alguien en el tope | **0 de 72** |
+
+Con veinte activos, la inversa de la volatilidad reparte solo: el promedio es
+5% y el más pesado que hubo en seis años fue 15,5%. **El tope nunca se tocó.**
+
+Lo dejo porque la especificación lo fija y como red de seguridad no molesta,
+pero **decir que "controla la concentración" sería falso**: no controla nada,
+porque no hay nada que controlar. La concentración de esta cartera no viene de
+los pesos, viene de la correlación.
+
+### Diversificar ahorra un 25% de volatilidad
+
+94% por activo contra 71% de cartera. Es la contracara del hallazgo de 5.2
+(correlación media 0,59) medida en el número que importa. Por eso
+`sigma_cartera` **no** se calcula como promedio ponderado de los sigmas: eso
+la sobreestimaría y haría que `k` bajara de más todos los días.
+
+### Dos cosas cerradas por código, no por memoria
+
+**`k_max = 1,0` levanta una excepción si alguien pide más.** No es un valor
+por defecto que se pisa pasando otro: es la regla 7 del MEGAPROMPT y ahora es
+un cerrojo. Los perpetuos entraron para habilitar la pata corta, no para
+apalancar.
+
+**El umbral del cortacircuito diario no tiene valor por defecto.** El 3% de la
+Fase 1 se medía sobre operaciones cerradas y no se traslada a patrimonio a
+precio de mercado sin medirlo de nuevo. La especificación avisa: *"un
+cortacircuito que se activa cada semana no es un cortacircuito, es un
+parámetro escondido de la estrategia"*. La función para contarlo ya está; el
+número sale de E0.
+
+### El agujero de especificación que quedó resuelto
+
+Qué pasa con el peso de una posición que el stop de catástrofe cierra a mitad
+de mes. La especificación lo dice y yo lo había marcado como duda: *"el resto
+de la cartera no se toca"*. **Ese peso se va a efectivo y ahí se queda hasta
+el rebalanceo.** No se reparte entre los que quedan — repartirlo mejoraría el
+resultado del backtest y sería aumentar la exposición justo después de que
+algo se derrumbó. Hay una prueba que lo fija.
+
+### Dos duplicaciones eliminadas de paso
+
+- `compuerta.py` tenía su propia media móvil. Ahora usa la de
+  `strategy/indicators.py`, que ya tiene encima la prueba de no-anticipación.
+- La regla de "solo el pasado" (`universo.hasta`) se hizo pública y `risk/` la
+  importa en vez de reimplementarla. Una regla de no-anticipación escrita en
+  dos lugares se rompe en el segundo.
+
+Los cuatro archivos viejos de `risk/` (Fase 1) siguen ahí porque el motor de
+backtest viejo los usa y sus pruebas están en verde. Se retiran cuando se
+retire ese motor, no antes.
+
+### Lo próximo
+
+**E0** — la línea base: BTC con filtro de tendencia y volatilidad objetivo.
+Es la primera estrategia de la Fase 2, y además decide dos cosas que quedaron
+abiertas a propósito: si hace falta el amortiguador de la compuerta, y en
+cuánto se fija el cortacircuito diario.
+
+Falta la medición 5.1 (financiación de perpetuos), que **no bloquea**: solo
+hace falta para E2 y E3.
+
+---
+
+## 30 de agosto de 2026 — Mediciones 5.2 y 5.4: me equivoqué de dirección
 
 `metrics/transversal.py` y `risk/compuerta.py`, con 17 pruebas propias.
 **343 en total, en verde.** Evidencia en
