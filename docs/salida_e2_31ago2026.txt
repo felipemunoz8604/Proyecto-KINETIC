@@ -1,0 +1,115 @@
+============================================================================
+ KINETIC - E2: momentum largo/corto con perpetuos
+============================================================================
+  Capital 500 USDT   sin compuerta   costos TAKER
+  5 posiciones por pata, 50% de bruta cada una
+
+  Cargando panel y universo...
+  Cargando OHLC de Spot y de perpetuos...
+    116 en Spot, 111 con perpetuo
+  VENTANA EFECTIVA: 2020-01-01 a 2024-12-31 (1,827 dias)
+    contra la de diseño, que empieza 2019-01-01: se pierden 365 dias por el nacimiento de los perpetuos
+
+  Armando exposiciones...
+    listo (34 s)
+  Financiacion cargada para 106 perpetuos
+
+============================================================================
+ RESULTADO (todos sobre la ventana efectiva de E2)
+============================================================================
+  E2
+    Periodo:          1,826 dias
+    Patrimonio:       504.98 -> 362.48  (-28.2%)
+    CAGR:             -6.41%
+    Volatilidad:      27.7% anualizada
+    Caida maxima:     -60.9%   (1,782 dias sin recuperarse)
+    CALMAR:           -0.105
+    Sortino:          -0.098
+    Tiempo en mercado: 100%
+    Rotacion anual:   25.52x
+    Costo pagado:     3.54% anual
+
+  E1
+    Periodo:          1,826 dias
+    Patrimonio:       500.00 -> 1,022.91  (+104.6%)
+    CAGR:             +15.38%
+    Volatilidad:      28.6% anualizada
+    Caida maxima:     -44.7%   (849 dias sin recuperarse)
+    CALMAR:           0.344
+    Sortino:          0.529
+
+  B0 = E0
+    Periodo:          1,826 dias
+    Patrimonio:       500.00 -> 2,067.00  (+313.4%)
+    CAGR:             +32.80%
+    Volatilidad:      29.6% anualizada
+    Caida maxima:     -40.2%   (1,049 dias sin recuperarse)
+    CALMAR:           0.816
+    Sortino:          0.980
+
+  B1
+    Periodo:          1,826 dias
+    Patrimonio:       499.38 -> 6,489.44  (+1199.5%)
+    CAGR:             +66.97%
+    Volatilidad:      65.0% anualizada
+    Caida maxima:     -76.6%   (847 dias sin recuperarse)
+    CALMAR:           0.874
+    Sortino:          1.146
+
+  Financiacion cobrada por la pata corta: +109.81 USDT (+22.0% del capital inicial)
+  Stops disparados: 93 (67 en la pata corta)
+  Dias sin pata corta: 0
+  Deslistados atravesados: 9
+
+============================================================================
+ LOS SEIS CRITERIOS, MAS LA FALSACION PROPIA DE E2
+============================================================================
+  Criterio 1 -- Calmar contra B1, por pares...
+    mediana -0.123   exigido 1,8   NO PASA
+  Criterio 2 -- caida 60.9% vs 46.0%   NO PASA
+  Criterio 3 -- Calmar -0.105 vs 1.005 (1,15 x B1)   NO PASA
+  Criterio 4 -- IC 95% [-26.58%, +16.87%]   NO PASA
+  Criterio 5 -- sin 3 meses -13.51% vs +33.48%   NO PASA
+  Criterio 6 -- costo 3.54% vs -0.72%   NO PASA
+
+  Falsacion propia: Calmar E2 -0.105 vs E1 0.344   NO supera a E1
+    => la pata corta no justifica el riesgo operativo extra
+
+  0 de 6 criterios
+  >>> E2 NO PASA <<<
+  Falla: 1, 2, 3, 4, 5, 6
+
+============================================================================
+ EL RETORNO ABSOLUTO, QUE UN BUEN RATIO PUEDE ESCONDER
+============================================================================
+  E2 sobre 500 USDT en 5.0 años: -137.52 USDT
+    o sea -27.47 USDT por año
+  E0 en la misma ventana: +1567.00 USDT
+  B1 en la misma ventana: +5989.44 USDT
+
+============================================================================
+ ROBUSTEZ Y SENSIBILIDADES
+============================================================================
+   Se sacan   CAGR queda  % del original
+       nada       -6.41%            100%
+     1 meses       -8.97%            140%
+     3 meses      -13.51%            211%
+     5 meses      -16.94%            264%
+    10 meses      -22.03%            344%
+  Criterio 5: sin los 3 mejores meses, CAGR -13.51% vs 33.48% exigido   NO PASA
+
+  Deflated Sharpe: 0.083  (3 configuraciones: E0, E1, E2)
+
+  Sin cobrar financiacion (para ver cuanto aporta):
+    CAGR -10.59%   Calmar -0.160
+    Con financiacion: CAGR -6.41%   Calmar -0.105
+
+  Por año:
+    año     E2        E1        E0        B1
+    2020     -8.4%    +33.0%   +109.4%   +301.7%
+    2021     +0.1%    +28.7%    -15.3%    +57.6%
+    2022    -25.4%     +0.0%     +0.0%    -65.3%
+    2023     -8.6%    +11.0%    +40.3%   +154.5%
+    2024    +13.0%     +4.0%    +59.3%   +111.8%
+
+  (507 s)

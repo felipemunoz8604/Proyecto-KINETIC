@@ -224,3 +224,152 @@ def test_las_exposiciones_desordenadas_levantan():
     exp = pd.DataFrame(1.0, index=idx[::-1], columns=["AUSDT"])
     with pytest.raises(ValueError):
         mc.simular(aperturas, cierres, exp, 500.0, MODELO)
+
+
+# --- Posiciones cortas y financiacion (E2) --------------------------------
+
+def test_sin_permiso_no_se_puede_quedar_corto():
+    """El default sigue siendo solo-largo: E0 y E1 no pueden shortear por error."""
+    aperturas, cierres, idx = _mercado(np.full(10, 100.0))
+    exp = pd.DataFrame(-0.5, index=idx, columns=["AUSDT"])
+    r = mc.simular(aperturas, cierres, exp, 500.0, MODELO)
+    assert (r.exposicion["AUSDT"] == 0).all()
+    assert r.patrimonio.iloc[-1] == pytest.approx(500.0)
+
+
+def test_un_corto_gana_cuando_el_precio_baja():
+    precios = np.array([100.0] * 3 + [50.0] * 3)
+    aperturas, cierres, idx = _mercado(precios)
+    exp = pd.DataFrame(-0.5, index=idx, columns=["AUSDT"])
+    r = mc.simular(aperturas, cierres, exp, 1_000.0, MODELO,
+                   rangos={"AUSDT": 1}, permitir_cortos=True)
+    assert r.patrimonio.iloc[-1] > 1_100.0
+
+
+def test_un_corto_pierde_cuando_el_precio_sube():
+    precios = np.array([100.0] * 3 + [200.0] * 3)
+    aperturas, cierres, idx = _mercado(precios)
+    exp = pd.DataFrame(-0.5, index=idx, columns=["AUSDT"])
+    r = mc.simular(aperturas, cierres, exp, 1_000.0, MODELO,
+                   rangos={"AUSDT": 1}, permitir_cortos=True)
+    assert r.patrimonio.iloc[-1] < 900.0
+
+
+def test_la_bruta_suma_valores_absolutos():
+    """
+    +0,6 y -0,6 NO son exposicion cero: son 1,2 de bruta, o sea
+    apalancamiento disfrazado de neutralidad. Es el error mas facil de
+    cometer al agregar la pata corta.
+    """
+    idx = _dias(10)
+    aperturas = pd.DataFrame({"AUSDT": 100.0, "BUSDT": 100.0}, index=idx)
+    cierres = aperturas.copy()
+    exp = pd.DataFrame({"AUSDT": 0.6, "BUSDT": -0.6}, index=idx)
+    with pytest.raises(ValueError, match="apalancamiento"):
+        mc.simular(aperturas, cierres, exp, 500.0, MODELO,
+                   permitir_cortos=True)
+
+
+def test_una_cartera_neutral_no_se_mueve_con_el_mercado():
+    """
+    Dos activos que se mueven identico, uno largo y uno corto: el precio puede
+    hacer lo que quiera y el patrimonio solo pierde los peajes.
+    """
+    idx = _dias(60)
+    precios = 100 * np.exp(np.cumsum(
+        np.random.default_rng(3).normal(0, 0.05, 60)))
+    cierres = pd.DataFrame({"AUSDT": precios, "BUSDT": precios}, index=idx)
+    aperturas = cierres.shift(1)
+    aperturas.iloc[0] = cierres.iloc[0]
+    exp = pd.DataFrame({"AUSDT": 0.5, "BUSDT": -0.5}, index=idx)
+    r = mc.simular(aperturas, cierres, exp, 1_000.0, MODELO,
+                   rangos={"AUSDT": 1, "BUSDT": 1}, permitir_cortos=True)
+    # Sin costos daria exactamente 1.000. Con peajes, un poco menos.
+    assert 960 < r.patrimonio.iloc[-1] <= 1_000.0
+
+
+def test_el_corto_COBRA_financiacion_cuando_la_tasa_es_positiva():
+    """
+    Tasa positiva => los largos le pagan a los cortos. Si este signo estuviera
+    al reves, E2 se veria peor de lo que es -- o mejor, que es peor todavia.
+    """
+    idx = _dias(10)
+    aperturas = pd.DataFrame({"AUSDT": 100.0}, index=idx)
+    cierres = aperturas.copy()
+    exp = pd.DataFrame(-0.5, index=idx, columns=["AUSDT"])
+    tasas = pd.Series(0.001, index=pd.date_range(idx[0], periods=30, freq="8h",
+                                                 tz="UTC"))
+    r = mc.simular(aperturas, cierres, exp, 1_000.0, MODELO,
+                   rangos={"AUSDT": 1}, permitir_cortos=True,
+                   financiacion_de_cortos={"AUSDT": tasas})
+    assert r.financiacion_total > 0
+    assert r.patrimonio.iloc[-1] > 1_000.0
+
+
+def test_el_corto_PAGA_cuando_la_tasa_es_negativa():
+    idx = _dias(10)
+    aperturas = pd.DataFrame({"AUSDT": 100.0}, index=idx)
+    cierres = aperturas.copy()
+    exp = pd.DataFrame(-0.5, index=idx, columns=["AUSDT"])
+    tasas = pd.Series(-0.001, index=pd.date_range(idx[0], periods=30,
+                                                  freq="8h", tz="UTC"))
+    r = mc.simular(aperturas, cierres, exp, 1_000.0, MODELO,
+                   rangos={"AUSDT": 1}, permitir_cortos=True,
+                   financiacion_de_cortos={"AUSDT": tasas})
+    assert r.financiacion_total < 0
+
+
+def test_la_pata_larga_no_paga_financiacion():
+    """
+    En E2 la pata larga esta en Spot, que no cobra financiacion. Cobrarsela
+    seria cobrar dos veces por el mismo dia.
+    """
+    idx = _dias(10)
+    aperturas = pd.DataFrame({"AUSDT": 100.0}, index=idx)
+    cierres = aperturas.copy()
+    exp = pd.DataFrame(0.5, index=idx, columns=["AUSDT"])   # LARGO
+    tasas = pd.Series(0.001, index=pd.date_range(idx[0], periods=30, freq="8h",
+                                                 tz="UTC"))
+    r = mc.simular(aperturas, cierres, exp, 1_000.0, MODELO,
+                   rangos={"AUSDT": 1}, permitir_cortos=True,
+                   financiacion_de_cortos={"AUSDT": tasas})
+    assert r.financiacion_total == 0.0
+
+
+def test_la_financiacion_no_se_suma_al_costo():
+    """
+    Puede ser un INGRESO. Sumarla a los costos daria un costo negativo, que no
+    significa nada y rompe el criterio 6.
+    """
+    idx = _dias(10)
+    aperturas = pd.DataFrame({"AUSDT": 100.0}, index=idx)
+    cierres = aperturas.copy()
+    exp = pd.DataFrame(-0.5, index=idx, columns=["AUSDT"])
+    tasas = pd.Series(0.01, index=pd.date_range(idx[0], periods=30, freq="8h",
+                                                tz="UTC"))
+    r = mc.simular(aperturas, cierres, exp, 1_000.0, MODELO,
+                   rangos={"AUSDT": 1}, permitir_cortos=True,
+                   financiacion_de_cortos={"AUSDT": tasas})
+    assert r.costo_total > 0
+    assert r.financiacion_total > 0
+
+
+def test_un_deslistado_en_corto_se_recompra_mas_caro():
+    """
+    La penalizacion juega SIEMPRE en contra. Si estabas corto, cerrar la
+    posicion significa recomprar, y recomprar un deslistado sale mas caro.
+    """
+    idx = _dias(20)
+    precios = np.full(20, 100.0)
+    precios[10:] = np.nan
+    cierres = pd.DataFrame({"AUSDT": precios}, index=idx)
+    aperturas = pd.DataFrame({"AUSDT": precios}, index=idx)
+    exp = pd.DataFrame(-0.5, index=idx, columns=["AUSDT"])
+
+    sin_pena = mc.simular(aperturas, cierres, exp, 1_000.0, MODELO,
+                          rangos={"AUSDT": 1}, permitir_cortos=True,
+                          penalizacion_deslistado_pct=0.0)
+    con_pena = mc.simular(aperturas, cierres, exp, 1_000.0, MODELO,
+                          rangos={"AUSDT": 1}, permitir_cortos=True,
+                          penalizacion_deslistado_pct=20.0)
+    assert con_pena.patrimonio.iloc[-1] < sin_pena.patrimonio.iloc[-1]

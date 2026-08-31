@@ -309,3 +309,24 @@ def test_el_patrimonio_desordenado_levanta():
     patrimonio = pd.Series([100.0, 95.0], index=_dias(2)[::-1])
     with pytest.raises(ValueError):
         cat.perdidas_diarias_pct(patrimonio)
+
+
+# --- Stop de las posiciones cortas (E2) -----------------------------------
+
+def test_el_stop_de_un_corto_esta_arriba_no_abajo():
+    assert cat.precio_de_stop_corto(100.0, 0.05) == pytest.approx(120.0)
+    assert cat.precio_de_stop(100.0, 0.05) == pytest.approx(80.0)
+
+
+def test_el_corto_se_dispara_cuando_el_precio_sube():
+    stop = cat.precio_de_stop_corto(100.0, 0.05)      # 120
+    assert cat.se_disparo_corto(cierre=119.0, stop=stop) is False
+    assert cat.se_disparo_corto(cierre=120.0, stop=stop) is True
+    assert cat.se_disparo_corto(cierre=121.0, stop=stop) is True
+
+
+def test_los_dos_stops_son_simetricos_respecto_de_la_entrada():
+    entrada, atr = 100.0, 0.03
+    largo = cat.precio_de_stop(entrada, atr)
+    corto = cat.precio_de_stop_corto(entrada, atr)
+    assert (entrada - largo) == pytest.approx(corto - entrada)

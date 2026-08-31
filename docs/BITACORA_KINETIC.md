@@ -5,9 +5,126 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 31 de agosto de 2026 — Medición 5.1: E3 sobrevive la falsación, pero rinde 25 USDT al año
+## 31 de agosto de 2026 — E2 NO PASA los seis. El plan de la Fase 2 está agotado
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`strategy/e2.py` con 14 pruebas propias, más soporte de cortos y financiación
+en el motor. **451 en total, en verde.** Evidencia en
+`docs/salida_e2_31ago2026.txt`.
+
+**E2 falla los seis criterios y tampoco supera a E1.** Con esto, las cuatro
+candidatas de la Fase 2 están medidas y ninguna pasa.
+
+### El resultado
+
+Ventana efectiva **2020-01-01 a 2024-12-31** — se pierde un año entero
+respecto de la de diseño porque los perpetuos nacen después. Todos los
+rivales están recalculados sobre esa misma ventana.
+
+| | CAGR | Caída | **Calmar** | En dólares |
+|---|---|---|---|---|
+| **E2** | **−6,41%** | −60,9% | **−0,105** | **−137,52** |
+| E1 | +15,38% | −44,7% | 0,344 | +522,91 |
+| E0 | +32,80% | −40,2% | 0,816 | +1.567,00 |
+| B1 | +66,97% | −76,6% | 0,874 | +5.989,44 |
+
+**Pierde plata.** No es que rinda poco: sobre 500 USDT termina con 362.
+
+| # | | |
+|---|---|---|
+| 1 | Calmar vs B1 por pares: **−0,123** vs 1,8 | NO PASA |
+| 2 | Caída 60,9% vs 46,0% | NO PASA |
+| 3 | Calmar −0,105 vs 1,005 | NO PASA |
+| 4 | IC 95% **[−26,58%, +16,87%]** | NO PASA |
+| 5 | Sin 3 meses: −13,51% | NO PASA |
+| 6 | Costo 3,54% anual | NO PASA |
+
+**Cero de seis.** Y su falsación propia también: Calmar −0,105 contra 0,344 de
+E1, así que *la pata corta no justifica el riesgo operativo adicional*.
+
+### La financiación SÍ funcionó. Lo demás se la comió
+
+**La pata corta cobró +109,81 USDT de financiación — el 22% del capital
+inicial en cinco años.** Sin ese ingreso, E2 habría dado −10,59% en vez de
+−6,41%.
+
+O sea que el único mecanismo nuevo que E2 traía **funcionó exactamente como
+la medición 5.1 anticipaba**, y aun así la estrategia pierde. Lo que la hunde
+es el momentum, que ya había fallado en E1.
+
+### Los 67 stops de la pata corta
+
+De 93 stops disparados, **67 fueron en la pata corta**: unos 13 por año sobre
+5 posiciones. Un stop de catástrofe de 4×ATR debería ser rarísimo.
+
+Es el desplome de momentum que la literatura advierte, visto desde el otro
+lado: **las monedas de peor momentum son justamente las que rebotan más
+violentamente.** Shortearlas es pararse delante de eso, y el stop lo único que
+hace es realizar la pérdida y esperar al mes siguiente.
+
+Y la rotación lo confirma: **25,5 vueltas al año** contra 11,7 de E1, con un
+costo de 3,54% anual contra 1,57%.
+
+### El año que lo dice todo
+
+| Año | E2 | B1 |
+|---|---|---|
+| **2022** | **−25,4%** | **−65,3%** |
+
+Una cartera neutral al mercado perdiendo 25% en el año en que el mercado cayó
+65%. **Si la neutralidad funcionara, 2022 debería haber sido su mejor año.**
+Que pierda ahí significa que el problema no es la exposición al mercado: es la
+selección.
+
+### El estado del plan, completo
+
+| | Veredicto |
+|---|---|
+| **E0** BTC + compuerta + volatilidad objetivo | NO PASA — empata con comprar y esperar |
+| **E1** momentum transversal largo | NO PASA — 4 de 6 criterios |
+| **E2** momentum largo/corto con perpetuos | **NO PASA — 0 de 6** |
+| **E3** carry de financiación | Sobrevive la falsación, rinde 25 USDT/año |
+
+**Las cuatro candidatas están medidas. Ninguna pasa.**
+
+La especificación decía: *"E0 es obligatoria… si nada la supera, se implementa
+E0 y se cierra la investigación."* Nada la superó — pero **E0 tampoco alcanzó
+su propia vara**: iguala a comprar BTC y esperar, no lo supera.
+
+Deflated Sharpe de E2: **0,083** sobre tres configuraciones probadas.
+
+### Lo que queda, y lo que no
+
+Quedan las **dos hipótesis de rescate de E1** (R1: ventana de 90 días; R2: 8
+posiciones), preautorizadas en la especificación. Sigo recomendando no
+correrlas: a E1 le faltaba un factor de cuatro y su criterio 4 decía que no
+hay señal, no que esté mal sintonizada.
+
+**Lo que no queda es una candidata nueva.** Inventar una quinta después de ver
+fallar cuatro es empezar el barrido que este proyecto existe para evitar, con
+la diferencia de que ahora ya conocemos los datos — que es peor.
+
+Lo que sí corresponde, y es decisión de Felipe, es **cerrar la Fase 2 con un
+informe** como se cerró la Fase 1. Hay material medido de sobra: cinco
+mediciones previas, cuatro estrategias, un universo sin sesgo de
+supervivencia, y un modelo de costos verificado contra el archivo real.
+
+### Cuatro decisiones de implementación que valían
+
+- **La pata corta es otro instrumento**: `BTCUSDT` toma precios de Spot y
+  `BTCUSDT.P` del perpetuo. Compartiendo columna, cada cambio de venue le
+  metería al motor un salto de precio que nunca ocurrió.
+- **La bruta se mide en valores absolutos**: +0,6 y −0,6 no son exposición
+  cero, son 1,2 de bruta. El motor levanta.
+- **El stop de un corto está arriba y mira el precio del perpetuo.** La
+  pérdida de un corto no tiene techo.
+- **No se fuerza la neutralidad.** Si a la pata corta le faltan nombres, queda
+  más chica y se ve. Rellenar sería elegir por un motivo que no es el puntaje.
+
+---
+
+## 31 de agosto de 2026 — Medición 5.1: E3 sobrevive la falsación, pero rinde 25 USDT al año
 
 `core/financiacion.py` con 10 pruebas propias, más 5 nuevas en costos.
 **424 en total, en verde.** Evidencia en

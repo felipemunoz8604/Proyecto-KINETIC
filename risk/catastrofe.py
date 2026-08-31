@@ -84,6 +84,22 @@ def precio_de_stop(precio_entrada: float, atr_frac: float,
     return max(precio_entrada * (1.0 - multiplicador * atr_frac), 0.0)
 
 
+def precio_de_stop_corto(precio_entrada: float, atr_frac: float,
+                         multiplicador: float = MULTIPLICADOR_ATR) -> float:
+    """
+    El stop de una posicion CORTA: el precio va para arriba, no para abajo.
+
+    Simetrico al largo, y con una diferencia que importa: la perdida de un
+    corto no tiene techo. Un activo puede subir 10x; bajar mas de 100% no
+    puede. Por eso el stop del corto no es un lujo como el del largo.
+    """
+    if precio_entrada <= 0:
+        raise ValueError(f"precio de entrada invalido: {precio_entrada}")
+    if not np.isfinite(atr_frac) or atr_frac < 0:
+        raise ValueError(f"ATR invalido: {atr_frac}")
+    return precio_entrada * (1.0 + multiplicador * atr_frac)
+
+
 def se_disparo(cierre: float, stop: float) -> bool:
     """
     Sobre el CIERRE del dia. Si el precio toco el stop intradia y se recupero
@@ -92,6 +108,11 @@ def se_disparo(cierre: float, stop: float) -> bool:
     cierre.
     """
     return bool(cierre <= stop)
+
+
+def se_disparo_corto(cierre: float, stop: float) -> bool:
+    """El corto se abandona cuando el precio SUBE hasta el stop."""
+    return bool(cierre >= stop)
 
 
 @dataclass

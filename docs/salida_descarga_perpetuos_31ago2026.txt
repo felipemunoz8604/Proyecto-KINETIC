@@ -1,0 +1,136 @@
+============================================================================
+ KINETIC - velas diarias de perpetuos USDT-M
+============================================================================
+
+  Reconstruyendo el universo...
+    116 simbolos en el universo
+  Listando perpetuos disponibles...
+    986 perpetuos en el archivo
+    112 tienen perpetuo (5 con otro ticker), 4 no
+      BONKUSDT       -> 1000BONKUSDT
+      FLOKIUSDT      -> 1000FLOKIUSDT
+      LUNCUSDT       -> 1000LUNCUSDT
+      PEPEUSDT       -> 1000PEPEUSDT
+      SHIBUSDT       -> 1000SHIBUSDT
+    Sin perpetuo (no se pueden vender en corto):
+      BCHABCUSDT    ERDUSDT       TFUELUSDT     WINUSDT     
+
+  Ya estaban: 0. Faltan: 112
+
+    [1/112] 1000SATSUSDT      963 velas
+    [2/112] AAVEUSDT        2,115 velas
+    [3/112] ADAUSDT         2,374 velas
+    [4/112] ALGOUSDT        2,237 velas
+    [5/112] APEUSDT         1,598 velas
+    [6/112] APTUSDT         1,382 velas
+    [7/112] ARBUSDT         1,227 velas
+    [8/112] ARPAUSDT        1,747 velas
+    [9/112] ATOMUSDT        2,367 velas
+    [10/112] AVAXUSDT        2,138 velas
+    [11/112] AXSUSDT         2,080 velas
+    [12/112] BANDUSDT        2,194 velas
+    [13/112] BATUSDT         2,361 velas
+    [14/112] BCHUSDT         2,404 velas
+    [15/112] BLZUSDT         2,144 velas
+    [16/112] BNBUSDT         2,364 velas
+    [17/112] BOMEUSDT          868 velas
+    [18/112] BONKUSDT          983 velas
+    [19/112] BTCUSDT         2,404 velas
+    [20/112] BTTUSDT           296 velas
+    [21/112] CAKEUSDT        1,003 velas
+    [22/112] CFXUSDT         1,258 velas
+    [23/112] CHZUSDT         2,018 velas
+    [24/112] COMPUSDT        2,223 velas
+    [25/112] DASHUSDT        2,370 velas
+    [26/112] DENTUSDT        1,956 velas
+    [27/112] DOGEUSDT        2,213 velas
+    [28/112] DOTUSDT         2,170 velas
+    [29/112] DYDXUSDT        1,786 velas
+    [30/112] ENAUSDT           851 velas
+    [31/112] ENJUSDT         2,132 velas
+    [32/112] ENSUSDT         1,705 velas
+    [33/112] EOSUSDT         1,961 velas
+    [34/112] ETCUSDT         2,389 velas
+    [35/112] ETHUSDT         2,404 velas
+    [36/112] FETUSDT         1,292 velas
+    [37/112] FILUSDT         2,110 velas
+    [38/112] FLMUSDT         2,127 velas
+    [39/112] FLOKIUSDT       1,183 velas
+    [40/112] FTMUSDT         2,132 velas
+    [41/112] FTTUSDT         1,569 velas
+    [42/112] GALAUSDT        1,778 velas
+    [43/112] GASUSDT         1,011 velas
+    [44/112] HBARUSDT        1,958 velas
+    [45/112] HIFIUSDT        1,050 velas
+    [46/112] HOTUSDT         1,945 velas
+    [47/112] ICPUSDT         1,882 velas
+    [48/112] ICXUSDT         2,146 velas
+    [49/112] INJUSDT         1,445 velas
+    [50/112] IOSTUSDT        2,353 velas
+    [51/112] IOTAUSDT        2,357 velas
+    [52/112] JASMYUSDT       1,564 velas
+    [53/112] KAVAUSDT        2,195 velas
+    [54/112] KSMUSDT         2,112 velas
+    [55/112] LDOUSDT         1,409 velas
+    [56/112] LINAUSDT        1,956 velas
+    [57/112] LINKUSDT        2,388 velas
+    [58/112] LOOMUSDT        1,025 velas
+    [59/112] LPTUSDT         1,724 velas
+    [60/112] LRCUSDT         2,107 velas
+    [61/112] LTCUSDT         2,391 velas
+    [62/112] LUNAUSDT          466 velas
+    [63/112] LUNCUSDT        1,422 velas
+    [64/112] MANAUSDT        1,960 velas
+    [65/112] MASKUSDT        1,795 velas
+    [66/112] MATICUSDT       1,421 velas
+    [67/112] MKRUSDT         2,174 velas
+    [68/112] NEARUSDT        2,111 velas
+    [69/112] NEOUSDT         2,357 velas
+    [70/112] NULSUSDT          705 velas
+    [71/112] OGUSDT            446 velas
+    [72/112] OMGUSDT         2,216 velas
+    [73/112] ONEUSDT         1,957 velas
+    [74/112] ONTUSDT         2,363 velas
+    [75/112] OPUSDT          1,522 velas
+    [76/112] ORDIUSDT          998 velas
+    [77/112] PENDLEUSDT      1,100 velas
+    [78/112] PEOPLEUSDT      1,676 velas
+    [79/112] PEPEUSDT        1,184 velas
+    [80/112] QTUMUSDT        2,354 velas
+    [81/112] RENUSDT         2,118 velas
+    [82/112] RNDRUSDT          544 velas
+    [83/112] ROSEUSDT        1,669 velas
+    [84/112] RUNEUSDT        2,157 velas
+    [85/112] SANDUSDT        2,009 velas
+    [86/112] SEIUSDT         1,080 velas
+    [87/112] SHIBUSDT        1,909 velas
+    [88/112] SLPUSDT         1,005 velas
+    [89/112] SOLUSDT         2,142 velas
+    [90/112] STRAXUSDT       1,025 velas
+    [91/112] STXUSDT         1,257 velas
+    [92/112] SUIUSDT         1,186 velas
+    [93/112] SUSHIUSDT       2,152 velas
+    [94/112] SXPUSDT         2,141 velas
+    [95/112] TAOUSDT           842 velas
+    [96/112] THETAUSDT       2,257 velas
+    [97/112] TRBUSDT         2,153 velas
+    [98/112] TRXUSDT         2,385 velas
+    [99/112] TWTUSDT         1,002 velas
+    [100/112] UNFIUSDT        1,984 velas
+    [101/112] UNIUSDT         2,143 velas
+    [102/112] VETUSDT         2,355 velas
+    [103/112] WAVESUSDT       2,175 velas
+    [104/112] WIFUSDT           926 velas
+    [105/112] WLDUSDT         1,104 velas
+    [106/112] XLMUSDT         2,380 velas
+    [107/112] XMRUSDT         2,371 velas
+    [108/112] XRPUSDT         2,394 velas
+    [109/112] XTZUSDT         2,368 velas
+    [110/112] YGGUSDT         1,092 velas
+    [111/112] ZECUSDT         2,364 velas
+    [112/112] ZILUSDT         2,230 velas
+
+============================================================================
+  199,040 velas nuevas en data\perpetuo
+  Archivos totales: 112
+  (1127 s)

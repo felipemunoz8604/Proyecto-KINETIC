@@ -60,13 +60,22 @@ class ResultadoCartera:
     efectivo: pd.Series
     costos: pd.Series          # USDT pagados cada dia
     negociado: pd.Series       # nocional movido cada dia, en USDT
+    financiacion: pd.Series    # cobrado (+) o pagado (-) por financiacion
     exposicion: pd.DataFrame   # la que quedo de verdad, al cierre
     deslistados: list[dict] = field(default_factory=list)
     ordenes_rechazadas: int = 0
 
     @property
     def costo_total(self) -> float:
+        """
+        Comisiones y slippage. La financiacion va aparte porque puede ser un
+        INGRESO: sumarla al costo daria un costo negativo sin sentido.
+        """
         return float(self.costos.sum())
+
+    @property
+    def financiacion_total(self) -> float:
+        return float(self.financiacion.sum())
 
     @property
     def rotacion_anual(self) -> float:
@@ -88,7 +97,7 @@ class ResultadoCartera:
 
     @property
     def tiempo_en_mercado_pct(self) -> float:
-        return float((self.exposicion.sum(axis=1) > 1e-9).mean() * 100.0)
+        return float((self.exposicion.abs().sum(axis=1) > 1e-9).mean() * 100.0)
 
 
 def _rango_de(rangos, simbolo: str, fecha: pd.Timestamp) -> int:
@@ -112,6 +121,8 @@ def simular(
     rangos=None,
     filtros: TablaDeFiltros | None = None,
     penalizacion_deslistado_pct: float = PENALIZACION_DESLISTADO_PCT,
+    permitir_cortos: bool = False,
+    financiacion_de_cortos: dict | None = None,
 ) -> ResultadoCartera:
     """
     Corre la simulacion dia por dia.
@@ -125,7 +136,10 @@ def simular(
     dias = exposiciones.index
     if not dias.is_monotonic_increasing:
         raise ValueError("las exposiciones tienen que venir ordenadas")
-    bruta = exposiciones.sum(axis=1)
+    # BRUTA = suma de VALORES ABSOLUTOS. Con posiciones cortas, sumar con
+    # signo dejaria pasar +3 y -3 como si fuera exposicion cero, que es
+    # apalancamiento 6 a 1 disfrazado de neutralidad.
+    bruta = exposiciones.abs().sum(axis=1)
     if (bruta > 1.0 + 1e-9).any():
         peor = bruta.idxmax()
         raise ValueError(
@@ -145,6 +159,7 @@ def simular(
     negociado_diario: list[float] = []
     exposicion_real: list[dict[str, float]] = []
     deslistados: list[dict] = []
+    financiacion_diaria: list[float] = []
     rechazadas = 0
 
     for fecha in dias:
@@ -156,12 +171,12 @@ def simular(
         # veinte el tiempo de una corrida sin cambiar un solo numero.
         objetivo = exposiciones.loc[fecha]
         en_juego = sorted({s for s in simbolos
-                           if cantidades[s] > 0
+                           if cantidades[s] != 0.0
                            or abs(float(objetivo.get(s, 0.0))) > 0.0})
 
         # --- 1. Los que murieron se liquidan antes de hacer nada -----------
         for s in en_juego:
-            if cantidades[s] <= 0:
+            if cantidades[s] == 0.0:
                 continue
             precio_cierre = cierres.at[fecha, s] if s in cierres.columns else np.nan
             if np.isfinite(precio_cierre):
@@ -169,12 +184,15 @@ def simular(
             ultimo = ultimo_precio.at[fecha, s] if fecha in ultimo_precio.index else np.nan
             if not np.isfinite(ultimo):
                 continue
-            precio_salida = ultimo * (1.0 - penalizacion_deslistado_pct / 100.0)
+            # La penalizacion siempre juega EN CONTRA: si estabas largo
+            # recuperas menos, y si estabas corto recomprar te sale mas caro.
+            signo = 1.0 if cantidades[s] > 0 else -1.0
+            precio_salida = ultimo * (1.0 - signo * penalizacion_deslistado_pct / 100.0)
             nocional = cantidades[s] * precio_salida
-            costo = modelo.costo_de_lado(nocional, _rango_de(rangos, s, fecha))
+            costo = modelo.costo_de_lado(abs(nocional), _rango_de(rangos, s, fecha))
             efectivo += nocional - costo
             costo_hoy += costo
-            movido_hoy += nocional
+            movido_hoy += abs(nocional)
             deslistados.append({"simbolo": s, "fecha": fecha,
                                 "ultimo_precio": float(ultimo),
                                 "recuperado": float(nocional - costo)})
@@ -207,14 +225,14 @@ def simular(
             rango = _rango_de(rangos, s, fecha)
             peaje = modelo.peaje_por_lado_pct(rango) / 100.0
             filtro = filtros.de(s) if filtros is not None else FiltroSimbolo.generico()
-            if delta > 0:
+            if delta > 0 and cantidades[s] >= 0 and not permitir_cortos:
                 # El costo tambien se paga con efectivo. Con exposicion 1,0 no
                 # se puede comprar el 100% del patrimonio: hay que dejar con
                 # que pagar el peaje. Se compra un poco menos, no se rechaza.
                 delta = min(delta, efectivo / (1.0 + peaje))
-                orden = ajustar_orden(delta, precio, filtro)
-            else:
-                # Vender: nunca mas de lo que se tiene, y redondeado al paso.
+            orden = ajustar_orden(abs(delta), precio, filtro)
+            if not permitir_cortos and delta < 0:
+                # Sin cortos no se puede vender mas de lo que se tiene.
                 cantidad = min(filtro.ajustar_cantidad(-delta / precio),
                                cantidades[s])
                 orden = ajustar_orden(cantidad * precio, precio, filtro)
@@ -224,7 +242,7 @@ def simular(
 
             costo = modelo.costo_de_lado(orden.nocional, rango)
             if delta > 0:
-                if orden.nocional + costo > efectivo + 1e-9:
+                if not permitir_cortos and orden.nocional + costo > efectivo + 1e-9:
                     rechazadas += 1
                     continue
                 cantidades[s] += orden.cantidad
@@ -235,9 +253,36 @@ def simular(
             costo_hoy += costo
             movido_hoy += orden.nocional
 
-        # --- 3. Valuacion al cierre ----------------------------------------
+        # --- 3. Financiacion de la pata corta ------------------------------
+        #
+        # Solo sobre las posiciones CORTAS, porque son las que estan en
+        # perpetuo: en E2 la pata larga se ejecuta en Spot, que no paga
+        # financiacion. Por eso el parametro se llama `financiacion_de_cortos`
+        # y no `financiacion` a secas -- cobrarsela tambien a la pata larga
+        # seria cobrar dos veces por el mismo dia.
+        flujo_hoy = 0.0
+        if financiacion_de_cortos:
+            manana = fecha + pd.Timedelta(days=1)
+            for s in en_juego:
+                if cantidades[s] >= 0 or s not in financiacion_de_cortos:
+                    continue
+                precio = cierres.at[fecha, s] if s in cierres.columns else np.nan
+                if not np.isfinite(precio):
+                    continue
+                tasas = financiacion_de_cortos[s]
+                delta_dia = tasas.loc[(tasas.index >= fecha)
+                                      & (tasas.index < manana)]
+                if delta_dia.empty:
+                    continue
+                # Tasa positiva => los largos pagan a los cortos, asi que un
+                # nocional negativo COBRA. El signo sale solo.
+                nocional = cantidades[s] * precio
+                flujo_hoy += float(-nocional * delta_dia.sum())
+        efectivo += flujo_hoy
+
+        # --- 4. Valuacion al cierre ----------------------------------------
         valores = {}
-        for s in (s for s in en_juego if cantidades[s] > 0):
+        for s in (s for s in en_juego if cantidades[s] != 0.0):
             precio = cierres.at[fecha, s] if s in cierres.columns else np.nan
             if not np.isfinite(precio):
                 precio = ultimo_precio.at[fecha, s] if fecha in ultimo_precio.index else np.nan
@@ -248,6 +293,7 @@ def simular(
         efectivo_diario.append(efectivo)
         costos_diarios.append(costo_hoy)
         negociado_diario.append(movido_hoy)
+        financiacion_diaria.append(flujo_hoy)
         exposicion_real.append({s: (v / patrimonio if patrimonio > 0 else 0.0)
                                 for s, v in valores.items()})
 
@@ -256,6 +302,8 @@ def simular(
         efectivo=pd.Series(efectivo_diario, index=dias, name="efectivo"),
         costos=pd.Series(costos_diarios, index=dias, name="costos"),
         negociado=pd.Series(negociado_diario, index=dias, name="negociado"),
+        financiacion=pd.Series(financiacion_diaria, index=dias,
+                               name="financiacion"),
         # Un simbolo sin posicion ese dia no aparece en el diccionario del dia:
         # eso es exposicion CERO, no dato faltante.
         exposicion=pd.DataFrame(exposicion_real, index=dias)
