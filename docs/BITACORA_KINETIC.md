@@ -5,9 +5,154 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 30 de agosto de 2026 — Riesgo v2: el capital que de verdad trabaja es 32%
+## 30 de agosto de 2026 — E0 NO PASA. La compuerta funciona, pero solo empata
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`backtesting/motor_cartera.py` y `strategy/e0.py`, con 23 pruebas propias.
+**395 en total, en verde.** Evidencia en `docs/salida_e0_30ago2026.txt`.
+
+**La estrategia E0 falla su condición de falsación.** Es el hallazgo mayor
+que la especificación anticipó y pidió anotar aunque doliera.
+
+### El veredicto
+
+| | |
+|---|---|
+| Calmar(E0) / Calmar(B1), mediana de 20 arranques | **1,017** |
+| Umbral de la especificación 6.1 | **1,3** |
+| Arranques que lo superan | **0 de 20** |
+
+El rango va de 0,963 a 1,121. **No es que falle por poco en algún arranque:
+no lo alcanza en ninguno.**
+
+### E0 contra comprar y esperar, en una línea
+
+| | CAGR | Caída máxima | **Calmar** |
+|---|---|---|---|
+| **E0** | +37,2% | **−40,2%** | **0,927** |
+| **B1** (comprar y mantener BTC) | +70,6% | −76,6% | 0,921 |
+
+**Exactamente la mitad del retorno con exactamente la mitad de la caída.** El
+objetivo era "igualar al mercado con la mitad de la caída". Se consiguió la
+mitad de la frase.
+
+### El control nulo, que es lo que hace interpretable el resultado
+
+Antes de concluir nada corrí el nulo: ¿y si E0 no fuera más que "menos BTC"?
+E0 estuvo en promedio al 39% del capital, así que comparé contra tener ese
+39% sin mirar absolutamente nada.
+
+| | CAGR | Caída | **Calmar** |
+|---|---|---|---|
+| Nulo blando (39% rebalanceado a diario) | +29,8% | −40,3% | 0,740 |
+| **Nulo duro** (39% comprado una vez, nunca tocado) | +47,4% | −70,5% | **0,673** |
+| **E0** | +37,2% | −40,2% | **0,927** |
+
+**La compuerta sí hace algo: +38% de Calmar sobre el nulo duro.** No es un
+adorno. El problema es otro, y es más incómodo:
+
+> Mezclar BTC con efectivo **baja** el Calmar (0,673 contra 0,921 de BTC
+> puro). La compuerta recupera todo eso y un poco más — y ese "poco más" te
+> deja justo donde estabas si simplemente comprabas BTC.
+
+Todo el trabajo de la compuerta se gasta en compensar el costo de tener plata
+quieta.
+
+*(El nulo blando es flojo a propósito y está reportado como tal: rebalancear
+a peso fijo todos los días obliga a comprar mientras el mercado cae, y por eso
+su caída no es menor que la de E0. El nulo duro es el rival honesto.)*
+
+### Dónde se gana y dónde se pierde: los dos años que explican todo
+
+| Año | E0 | B1 | Exposición media |
+|---|---|---|---|
+| 2019 | +39,7% | +89,5% | 0,26 |
+| 2020 | +109,0% | +301,7% | 0,53 |
+| **2021** | **−15,2%** | **+57,6%** | 0,35 |
+| **2022** | **−0,0%** | **−65,3%** | **0,00** |
+| 2023 | +62,7% | +154,5% | 0,65 |
+| 2024 | +59,2% | +111,8% | 0,58 |
+
+**2022 es la compuerta haciendo exactamente su trabajo**: el mercado perdió
+65% y E0 no perdió nada, porque estuvo afuera los 365 días.
+
+**2021 es la factura.** El mercado subió 58% y E0 perdió 15%. Es el año que
+la medición 5.4 había marcado con **19 cambios de compuerta** — los latigazos
+dejaron de ser una estadística y se volvieron un número de resultado.
+
+El seguro contra 2022 se paga con 2021. Al final del período, empatan.
+
+### Los otros criterios
+
+| # | | |
+|---|---|---|
+| 2 | Caída 40,2% vs 46,0% permitido | **PASA** |
+| 4 | IC 95% del CAGR [+3,10%, +89,05%] | **PASA** (excluye cero) |
+| 5 | Sin los 3 mejores meses: 17,5% vs 35,3% exigido | **NO PASA** |
+| 6 | Costo 0,93% anual vs 9,54% permitido | **PASA** |
+
+El 3 no aplica: E0 **es** la línea base.
+
+**El criterio 5 vuelve a señalar concentración**, que es el mismo problema que
+hundió la Fase 1. La curva de retiro:
+
+```
+  sin sacar nada    +37,23%   100%
+  sin 1 mes         +29,40%    79%
+  sin 3 meses       +17,48%    47%
+  sin 5 meses        +8,20%    22%
+  sin 10 meses       −6,65%   −18%
+```
+
+Diez meses de 72 explican más que el resultado entero.
+
+### Lo que NO explica el fallo, y lo verifiqué
+
+**No son los costos.** 0,93% anual, contra 9,54% permitido. La sensibilidad
+sin el descuento por BNB da Calmar 0,917 en vez de 0,927: cambia el tercer
+decimal, no el veredicto.
+
+**No es el rebalanceo diario.** Sin el mínimo de 5 USDT que impone Binance
+—o sea rebalanceando de verdad todos los días— el CAGR da +37,24% contra
++37,23%. Idéntico. La decisión de rebalanceo que se tomó antes de correr no
+influyó en el resultado.
+
+### Lo que esto significa para E1 y E2
+
+La especificación lo dice sin vueltas: si E0 falla, **la compuerta de régimen
+no está funcionando en este mercado, y E1 y E2 —que usan la misma compuerta—
+quedan muy debilitadas antes de probarse.**
+
+Matizado por lo que muestra el nulo: la compuerta **no es inútil**, aporta
++38% de Calmar sobre no hacer nada. Lo que no alcanza es a superar a BTC
+puro en una ventana donde BTC hizo +2.364%.
+
+Y ahí está el sesgo declarado en la sección 6 de los criterios: **la ventana
+2019-2024 contiene un mercado alcista extraordinario**. B1 es un rival
+durísimo acá y lo sería mucho menos en otra década. Eso **no rescata a E0** —
+el criterio estaba escrito de antemano y no se toca — pero es parte honesta
+de la lectura.
+
+### La decisión es de Felipe
+
+Por regla del proyecto, una hipótesis que falla **no se ajusta ni se vuelve a
+correr**, y **no se encadena la siguiente sin preguntar**. E1 está
+especificada y lista para escribirse, pero arrancarla es decisión de Felipe
+sabiendo que su compuerta es la misma que acaba de empatar.
+
+### De paso, dos errores reales que encontró el motor nuevo
+
+- Un símbolo deslistado se **recompraba y se reliquidaba todos los días**,
+  pagando la penalización una vez por jornada hasta el final de la serie. La
+  regla que lo arregla: no se compra lo que no se va a poder valuar al cierre.
+- Con exposición objetivo 1,0 **ninguna compra se ejecutaba**: el costo se
+  paga con efectivo, así que no se puede invertir el 100% del patrimonio. Se
+  compra un poco menos, no se rechaza la orden.
+
+---
+
+## 30 de agosto de 2026 — Riesgo v2: el capital que de verdad trabaja es 32%
 
 `risk/pesos.py` y `risk/catastrofe.py`, con 29 pruebas propias. **372 en
 total, en verde.** Evidencia en `docs/salida_riesgo_v2_30ago2026.txt`.
