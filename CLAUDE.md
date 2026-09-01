@@ -135,12 +135,15 @@ costo creciendo en el mismo orden (0,93% → 1,66% → 3,54% anual). El criterio
 exigía Calmar 1,573 y el mejor llegó a 0,816: **falta un factor de 1,9, no un
 ajuste.**
 
-**No propongas una estrategia nueva por tu cuenta.** Inventar una quinta
-después de ver fallar cuatro, y conociendo ya los datos, es el barrido que
-este proyecto existe para evitar. Las dos hipótesis de rescate de E1 (R1:
-ventana de 90 días; R2: ocho posiciones) están preautorizadas en la
-especificación pero **la recomendación registrada es no correrlas**, y son
-decisión de Felipe.
+**Las dos hipótesis de rescate de E1 se corrieron el 31-ago-2026 por decisión
+de Felipe, y las dos fallaron:** R1 (ventana de 90 días) 2/6 criterios con
+Calmar 0,350, R2 (ocho posiciones) 1/6 con Calmar 0,306. La especificación
+permitía dos y dice textual *"una tercera no se hace"*: **el cupo está
+agotado.**
+
+**No propongas una estrategia nueva ni una variante nueva de las que hay.**
+Inventar una después de ver fallar seis configuraciones, y conociendo ya los
+datos, es el barrido que este proyecto existe para evitar.
 
 **El holdout (2025 en adelante) NO se miró** y sigue cerrado por código en
 `metrics/ventana.py`. Ninguna candidata llegó a merecerlo.

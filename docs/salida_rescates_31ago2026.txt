@@ -1,0 +1,64 @@
+==============================================================================
+ KINETIC - R1 y R2, las dos hipotesis de rescate de E1
+==============================================================================
+  R1: ventana de momentum 90 dias (en vez de 28)
+  R2: 8 posiciones (en vez de 5)
+  Todo lo demas identico a E1. Preautorizadas en la especificacion.
+
+  Cargando...
+  Ventana 2019-01-01 a 2024-12-31 (2,192 dias)   33 s
+  Armando E1...
+  Armando R1...
+  Armando R2...
+
+==============================================================================
+ EL CUADRO
+==============================================================================
+             CAGR    Caida   Calmar      USDT  Costo/año  Posiciones
+  E1      +12.06%   -45.1%    0.268      +490      1.57%           5
+  R1      +14.79%   -42.2%    0.350      +644      1.53%           5
+  R2      +14.87%   -48.6%    0.306      +649      1.62%           8
+  E0      +37.23%   -40.2%    0.927     +2843      0.93%           1
+  B1      +70.55%   -76.6%    0.921    +11807         --           1
+
+==============================================================================
+ LOS SEIS CRITERIOS
+==============================================================================
+  El criterio 1 pide mediana del cociente >= 1.8, el 3 pide Calmar >= 1.066
+
+  E1   1:NO   2:si   3:NO   4:NO   5:NO   6:si    2/6  NO PASA
+       criterio 1: mediana 0.293   criterio 4: IC [-9.4%, +44.1%]   criterio 5: -0.62%
+  R1   1:NO   2:si   3:NO   4:NO   5:NO   6:si    2/6  NO PASA
+       criterio 1: mediana 0.383   criterio 4: IC [-10.0%, +51.7%]   criterio 5: -0.27%
+  R2   1:NO   2:NO   3:NO   4:NO   5:NO   6:si    1/6  NO PASA
+       criterio 1: mediana 0.334   criterio 4: IC [-8.5%, +50.2%]   criterio 5: +1.77%
+
+==============================================================================
+ EL DEFLATED SHARPE, AHORA SOBRE CINCO CONFIGURACIONES
+==============================================================================
+  Antes de R1 y R2 habia tres probadas (E0, E1, E2). Ahora cinco.
+  Probar mas sube la probabilidad de encontrar algo bueno por azar,
+  y el DSR es lo que descuenta eso. Es el precio de esta corrida.
+
+  E1    con 3 configuraciones 0.771   con 5 0.707
+  R1    con 3 configuraciones 0.822   con 5 0.766
+  R2    con 3 configuraciones 0.824   con 5 0.769
+  Hace falta 0,95 para hablar de evidencia.
+
+  Por año:
+    año     E1        R1        R2        E0        B1
+    2019     -3.6%     -4.4%     -5.1%    +39.7%    +89.5%
+    2020    +33.2%    +12.3%    +55.6%   +109.0%   +301.7%
+    2021    +28.6%    +33.7%    +39.1%    -15.2%    +57.6%
+    2022     -0.0%     +0.0%     -0.0%     -0.0%    -65.3%
+    2023    +11.5%    +48.5%    +13.5%    +62.7%   +154.5%
+    2024     +4.0%     +4.7%     -3.4%    +59.2%   +111.8%
+
+==============================================================================
+ EL CUPO DE RESCATES QUEDA AGOTADO
+==============================================================================
+  La especificacion permite dos hipotesis de rescate por estrategia
+  y dice, textual: 'Una tercera no se hace.' Estas eran las dos.
+  Cualquier variante nueva sobre E1 ya seria un barrido.
+
+  (1219 s)

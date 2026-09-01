@@ -19,9 +19,10 @@
 
 ## 1. El veredicto, en una frase
 
-**Se probaron cuatro estrategias con parámetros cerrados de antemano, y
-ninguna superó a comprar Bitcoin y no hacer nada — cada capa de complejidad
-que se le agregó al activo empeoró el resultado de forma monótona.**
+**Se probaron cuatro estrategias y las dos hipótesis de rescate permitidas,
+todas con parámetros cerrados de antemano, y ninguna superó a comprar Bitcoin
+y no hacer nada — cada capa de complejidad que se le agregó al activo empeoró
+el resultado de forma monótona.**
 
 ---
 
@@ -182,6 +183,47 @@ El criterio 1 exige Calmar ≥ 1,8 × el de B1, o sea **1,573**. El mejor de los
 cuatro llegó a **0,816**.
 
 **No falta un ajuste: falta un factor de 1,9.**
+
+### 5.1 Las dos hipótesis de rescate, corridas y falladas
+
+La especificación preautorizaba exactamente dos variantes de E1, nombradas
+antes de ver ningún resultado, y aclaraba: *"Una tercera no se hace."* Se
+corrieron las dos el 31 de agosto de 2026.
+
+| | Calmar | Criterios | Criterio 1 (mediana) |
+|---|---|---|---|
+| E1 base (28 días, 5 posiciones) | 0,268 | 2/6 | 0,293 |
+| **R1** ventana de 90 días | **0,350** | 2/6 | 0,383 |
+| **R2** ocho posiciones | 0,306 | **1/6** | 0,334 |
+
+**R1 mejora a E1 en un 31% de Calmar**, y en la dirección que la literatura
+sugería: la ventana larga le sienta mejor al momentum que la corta. No es
+ruido.
+
+**Pero el criterio 4 sigue fallando en las tres.** El intervalo de confianza
+del CAGR de R1 es **[−10,0%, +51,7%]**: cruza cero. Mejorar un valor puntual
+que no se distingue de cero no es evidencia de nada — es mover un número que
+no tiene precisión.
+
+**R2 sale peor que E1**: ocho posiciones diluyen menos de lo que agrandan la
+caída (48,6% contra el 46,0% permitido), así que pierde el criterio 2 que E1
+sí pasaba.
+
+**El precio de haber probado más, hecho visible.** El Deflated Sharpe se
+recalcula sobre las cinco configuraciones probadas en vez de tres:
+
+| | Con 3 configuraciones | Con 5 |
+|---|---|---|
+| E1 | 0,771 | **0,707** |
+| R1 | 0,822 | **0,766** |
+| R2 | 0,824 | **0,769** |
+
+Hace falta 0,95. Ninguna se acerca, y las tres **bajan** al contabilizar los
+dos intentos extra. Ese descuento es exactamente lo que el DSR existe para
+medir.
+
+**Con esto el cupo de rescates queda agotado.** Cualquier variante nueva sobre
+E1 ya sería un barrido.
 
 ---
 

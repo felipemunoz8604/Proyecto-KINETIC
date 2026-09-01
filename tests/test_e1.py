@@ -241,3 +241,37 @@ def test_los_rangos_cambian_cuando_cambia_el_universo():
     r = e1.rangos_de_liquidez(universo, idx)
     assert r.iloc[10]["AUSDT"] == 1
     assert r.iloc[40]["AUSDT"] == 2
+
+
+# --- Las dos hipotesis de rescate preautorizadas (R1 y R2) ----------------
+
+def test_la_ventana_de_momentum_es_un_parametro():
+    """
+    R1 cambia la ventana de 28 a 90 dias. Tiene que entrar por parametro y no
+    por edicion del codigo: si hay que tocar el modulo para correrla, la
+    corrida siguiente ya no mide lo mismo que la anterior.
+    """
+    cierres, aperturas, atr, g, universo = _escenario(500)
+    corta = e1.construir_exposiciones(cierres, aperturas, atr, g, universo,
+                                      cierres.index, dias_momentum=28)
+    larga = e1.construir_exposiciones(cierres, aperturas, atr, g, universo,
+                                      cierres.index, dias_momentum=90)
+    assert not corta.exposiciones.equals(larga.exposiciones)
+
+
+def test_con_ocho_posiciones_hay_hasta_ocho():
+    """R2: ocho posiciones en vez de cinco."""
+    cierres, aperturas, atr, g, universo = _escenario()
+    a = e1.construir_exposiciones(cierres, aperturas, atr, g, universo,
+                                  cierres.index, cuantas=8)
+    assert (a.exposiciones > 0).sum(axis=1).max() <= 8
+    assert (a.exposiciones > 0).sum(axis=1).max() > e1.CUANTAS_POSICIONES
+
+
+def test_los_rescates_no_pueden_apalancar():
+    """Ni R1 ni R2 aflojan el tope de bruta: sigue siendo k_max = 1,0."""
+    cierres, aperturas, atr, g, universo = _escenario()
+    for kwargs in ({"dias_momentum": 90}, {"cuantas": 8}):
+        a = e1.construir_exposiciones(cierres, aperturas, atr, g, universo,
+                                      cierres.index, **kwargs)
+        assert a.exposiciones.sum(axis=1).max() <= pz.K_MAX + 1e-9

@@ -154,6 +154,7 @@ def construir_exposiciones(
     k_max: float = K_MAX,
     ventana_vol: int = VENTANA_VOLATILIDAD_DIAS,
     multiplicador_stop: float = cat.MULTIPLICADOR_ATR,
+    dias_momentum: int = DIAS_MOMENTUM,
 ) -> Armado:
     """
     El armado completo, dia por dia.
@@ -163,7 +164,7 @@ def construir_exposiciones(
     supervivencia. `atr_relativo` es ATR(14) como fraccion del precio.
     """
     sigmas = sigmas_diarias(cierres, ventana_vol)
-    marcas = puntajes(cierres, sigmas)
+    marcas = puntajes(cierres, sigmas, dias=dias_momentum)
     retornos = np.log(cierres / cierres.shift(1))
 
     columnas = sorted({s for v in universo_mensual.values() for s in v})

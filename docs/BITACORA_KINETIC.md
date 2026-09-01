@@ -5,9 +5,73 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 31 de agosto de 2026 — FASE 2 CERRADA
+## 31 de agosto de 2026 — R1 y R2 corridas y falladas. El cupo se agotó
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+**454 pruebas en verde.** Evidencia en `docs/salida_rescates_31ago2026.txt`.
+
+Felipe decidió correr las dos hipótesis de rescate preautorizadas, contra la
+recomendación registrada. Están corridas y **las dos fallan.**
+
+| | Calmar | Criterios | Criterio 1 |
+|---|---|---|---|
+| E1 base (28 días, 5 posiciones) | 0,268 | 2/6 | 0,293 |
+| **R1** ventana de 90 días | **0,350** | 2/6 | 0,383 |
+| **R2** ocho posiciones | 0,306 | **1/6** | 0,334 |
+
+### Lo que sí se aprendió, y no es poco
+
+**R1 mejora a E1 en un 31% de Calmar, en la dirección que la literatura
+sugería:** la ventana larga le sienta mejor al momentum que la corta. Eso no
+es ruido, y no lo sabríamos si no se hubiera corrido.
+
+**R2 sale peor que E1.** Ocho posiciones diluyen menos de lo que agrandan la
+caída (48,6% contra el 46,0% permitido), así que pierde el criterio 2 que E1
+sí pasaba.
+
+### Por qué "mejorar" no alcanza acá
+
+**El criterio 4 falla en las tres.** El IC del CAGR de R1 es
+**[−10,0%, +51,7%]**: cruza cero.
+
+Mejorar un valor puntual que no se distingue de cero **no es evidencia**. Es
+mover un número que no tiene precisión. Esa es la diferencia entre "R1 anduvo
+mejor" y "R1 tiene ventaja", y es toda la diferencia.
+
+Y la distancia sigue siendo de otro orden: el criterio 1 pide el equivalente a
+1,573 y R1 llegó a 0,350.
+
+### El precio de haber probado más, hecho visible
+
+El Deflated Sharpe recalculado sobre **cinco** configuraciones en vez de tres:
+
+| | Con 3 | Con 5 |
+|---|---|---|
+| E1 | 0,771 | **0,707** |
+| R1 | 0,822 | **0,766** |
+| R2 | 0,824 | **0,769** |
+
+Las tres **bajan**. Hace falta 0,95. Ese descuento es exactamente lo que el
+DSR existe para medir, y por eso el compromiso previo pedía reportarlo con el
+número de configuraciones probadas hasta el momento.
+
+### Correrlas fue mejor que no correrlas — para el informe
+
+La recomendación era no hacerlo, y el resultado la confirmó. Pero hay algo que
+se ganó: el informe ahora puede decir **"se corrieron las dos y fallaron"** en
+vez de **"elegimos no probarlas"**. Frente a un lector externo eso es más
+fuerte, no más débil.
+
+### El cupo queda agotado
+
+La especificación permite dos rescates por estrategia y dice textual: *"Una
+tercera no se hace."* Estas eran las dos. **Cualquier variante nueva sobre E1
+ya sería un barrido**, y el `CLAUDE.md` quedó actualizado diciéndolo.
+
+---
+
+## 31 de agosto de 2026 — FASE 2 CERRADA
 
 El informe formal es **`docs/FASE_2_informe.md`**. Está escrito para
 sostenerse fuera del repo, igual que el de la Fase 1, y es lo que se lleva a
