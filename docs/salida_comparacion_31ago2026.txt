@@ -1,0 +1,59 @@
+==============================================================================
+ KINETIC - los cuatro candidatos de la Fase 2, sobre la misma ventana
+==============================================================================
+
+  Cargando...
+  Ventana comun: 2020-01-01 a 2024-12-31 (5.0 años)
+  La manda E2: antes de 2020 no habia perpetuos.
+
+==============================================================================
+ EL CUADRO
+==============================================================================
+                                           CAGR    Caida   Calmar       USDT  Costo/año
+  B1  comprar y mantener BTC            +66.97%   -76.6%    0.874      +5989         --
+  Nulo  42% de BTC, una vez             +42.96%   -66.6%    0.645      +2487         --
+  E0  BTC + compuerta + vol objetivo    +32.80%   -40.2%    0.816      +1567      0.93%
+  E1  momentum transversal largo        +15.38%   -44.7%    0.344       +523      1.66%
+  E2  momentum largo/corto               -6.41%   -60.9%   -0.105       -138      3.54%
+
+  E3  carry de financiacion               +5.12%       --       --       +128      0.36%
+      (de la medicion 5.1, no simulada: la falsacion previa la
+       resolvio antes de codificarla)
+
+==============================================================================
+ MATRIZ DE CRITERIOS
+==============================================================================
+            1 Calmar   2 Caida  3 vs base    4 IC   5 cola  6 costo   veredicto
+  E0              NO        si         NO      NO       NO       si   2/6  NO PASA
+  E1              NO        si         NO      NO       NO       si   2/6  NO PASA
+  E2              NO        NO         NO      NO       NO       NO   0/6  NO PASA
+
+  El criterio 1 exige Calmar >= 1,8 x el de B1, o sea 1.573.
+  El mejor de los cuatro llego a 0.816.
+
+==============================================================================
+ QUE DICE EL PATRON
+==============================================================================
+  Cada capa que se le agrego a 'comprar BTC' le RESTO Calmar:
+    comprar y mantener BTC            0.874
+    + compuerta y volatilidad (E0)    0.816
+    + seleccion por momentum (E1)     0.344
+    + pata corta (E2)                 -0.105
+
+  El nulo dice de donde viene lo poco que E0 aporta:
+    tener 42% de BTC sin mirar nada      0.645
+    E0, o sea mirarlo todos los dias        0.816
+  La compuerta SI compra Calmar sobre no hacer nada. Lo que no
+  alcanza es a superar a tener BTC y punto.
+
+  Concentracion (CAGR que queda sacando los 3 mejores meses):
+    E0    +32.80%  ->   +12.44%
+    E1    +15.38%  ->    +2.56%
+    E2     -6.41%  ->   -13.51%
+
+  Costo pagado por año, y rotacion:
+    E0    0.93%     8.8 vueltas
+    E1    1.66%    12.5 vueltas
+    E2    3.54%    25.5 vueltas
+
+  (101 s)

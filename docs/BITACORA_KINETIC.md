@@ -5,9 +5,101 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 31 de agosto de 2026 — E2 NO PASA los seis. El plan de la Fase 2 está agotado
+## 31 de agosto de 2026 — Los cuatro candidatos juntos: cada capa restó
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`tools/comparar_candidatos.py`. **451 pruebas en verde.** Evidencia en
+`docs/salida_comparacion_31ago2026.txt`.
+
+Cada candidata se había corrido con la ventana que le tocaba, y comparar sus
+CAGR así es comparar períodos distintos. Acá van las cuatro sobre la **misma
+ventana, 2020-01-01 a 2024-12-31** — la manda E2, porque antes de 2020 no
+había perpetuos.
+
+### El cuadro
+
+| | CAGR | Caída | **Calmar** | USDT | Costo/año |
+|---|---|---|---|---|---|
+| **B1** comprar y mantener BTC | +66,97% | −76,6% | **0,874** | +5.989 | — |
+| Nulo: 42% de BTC, comprado una vez | +42,96% | −66,6% | 0,645 | +2.487 | — |
+| **E0** BTC + compuerta + vol objetivo | +32,80% | −40,2% | **0,816** | +1.567 | 0,93% |
+| **E1** momentum transversal largo | +15,38% | −44,7% | **0,344** | +523 | 1,66% |
+| **E2** momentum largo/corto | −6,41% | −60,9% | **−0,105** | −138 | 3,54% |
+| **E3** carry (de la medición 5.1) | +5,12% | — | — | +128 | 0,36% |
+
+### Una corrección a lo que dije antes
+
+Venía diciendo que **E0 empata con comprar y esperar**. Eso era sobre
+2019-2024, donde daba 0,927 contra 0,921. **Sobre 2020-2024 pierde**: 0,816
+contra 0,874.
+
+O sea que el empate dependía de la fecha de arranque, que es exactamente el
+problema que llevó a hacer el criterio 1 por pares. Las dos mediciones dicen
+lo mismo en el fondo —E0 ronda a comprar y esperar, no lo supera— pero el
+matiz importa y estaba mal dicho.
+
+### El patrón, que es el hallazgo
+
+**Cada capa que se le agregó a "comprar BTC" le restó Calmar:**
+
+```
+  comprar y mantener BTC            0,874
+  + compuerta y volatilidad (E0)    0,816
+  + selección por momentum (E1)     0,344
+  + pata corta (E2)                -0,105
+```
+
+Monótono. No hay una capa que aporte y otra que reste: **todas restan**, y
+cada una resta más que la anterior.
+
+Y el costo sube en el mismo orden: **0,93% → 1,66% → 3,54% al año**, con
+8,8 → 12,5 → 25,5 vueltas de cartera.
+
+### Lo único que sí aporta
+
+| | Calmar |
+|---|---|
+| Tener 42% de BTC sin mirar nada | 0,645 |
+| **E0**, o sea mirarlo todos los días | **0,816** |
+
+**La compuerta compra un 26% de Calmar sobre no hacer nada.** Es real. Lo que
+no alcanza es a superar a tener BTC y punto, porque mezclar con efectivo
+cuesta más de lo que la compuerta recupera.
+
+### La distancia a la vara
+
+El criterio 1 exige Calmar ≥ 1,8 × el de B1, o sea **1,573**. El mejor de los
+cuatro llegó a **0,816**.
+
+No falta un ajuste: falta un **factor de 1,9**.
+
+### Concentración
+
+CAGR que queda sacando los 3 mejores meses de 60:
+
+| | Completo | Sin 3 meses |
+|---|---|---|
+| E0 | +32,80% | **+12,44%** |
+| E1 | +15,38% | +2,56% |
+| E2 | −6,41% | −13,51% |
+
+Ninguno pasa el criterio 5. E0 conserva el 38% del resultado; E1, el 17%.
+
+### Qué es este cuadro y qué no
+
+Es una **reagrupación de resultados ya obtenidos**: ninguna configuración
+nueva, ningún parámetro distinto, ninguna variante que no se haya corrido ya
+con sus criterios escritos de antemano.
+
+**No busca la combinación que funcione.** Después de ver fallar cuatro
+candidatas, armar una quinta mirando qué falló sería el barrido que este
+proyecto existe para evitar — y peor que un barrido común, porque ya conocemos
+los datos.
+
+---
+
+## 31 de agosto de 2026 — E2 NO PASA los seis. El plan de la Fase 2 está agotado
 
 `strategy/e2.py` con 14 pruebas propias, más soporte de cortos y financiación
 en el motor. **451 en total, en verde.** Evidencia en
