@@ -5,9 +5,55 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 31 de agosto de 2026 — R1 y R2 corridas y falladas. El cupo se agotó
+## 31 de agosto de 2026 — Documento para la segunda consulta externa
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`docs/CONSULTA_EXTERNA_31ago2026.md`. Es lo que Felipe lleva afuera, junto con
+los dos informes de cierre y el documento de criterios.
+
+### Por qué no alcanzaba con el informe de cierre
+
+El informe de la Fase 2 documenta **qué pasó**. Una consulta tiene otro
+trabajo: que el analista pueda **proponer algo**, y que no proponga lo que ya
+falló. Son documentos distintos y los dos van juntos.
+
+### Lo que el documento hace distinto
+
+**No pide "otra estrategia".** Pide decidir si hay razón para esperar que algo
+supere a comprar Bitcoin y no tocarlo — y **deja explícito que "no la hay" es
+una respuesta válida y la queremos escrita.** La especificación anterior ya lo
+contemplaba: *"si nada la supera, se implementa E0 y se cierra la
+investigación."*
+
+Sin eso, se le estaría pidiendo al analista que produzca la estrategia número
+siete por construcción, que es el barrido subido un nivel: en vez de barrer
+parámetros, barrer consultores.
+
+**Consolida las once restricciones medidas** de las dos fases en una sola
+lista. Un analista nuevo necesita las seis de la Fase 1 y las cinco de la 2, y
+hasta ahora estaban en dos documentos separados.
+
+**Advierte sobre el costo de proponer de más.** Ya se probaron seis
+configuraciones y el Deflated Sharpe las descuenta a todas. El documento pide
+explícitamente que una recomendación diga **por qué esperaríamos que la
+próxima sea distinta**, no solo cuál sería.
+
+**Pone en duda los propios criterios.** La pregunta 5 le pregunta al analista
+si pedir Calmar ≥ 1,8 × comprar-y-mantener, en una ventana donde eso hizo
++1.199%, es una vara exigente o una imposible por construcción. Con una
+salvaguarda: si el criterio está mal, hay que decirlo **con un criterio
+alternativo y su razón**, no con un número más cómodo.
+
+### Lo próximo
+
+Está en manos de Felipe: llevar el documento a la consulta y traer la
+respuesta. **No hay trabajo de código pendiente.** El repo está limpio, con
+454 pruebas en verde y el holdout intacto.
+
+---
+
+## 31 de agosto de 2026 — R1 y R2 corridas y falladas. El cupo se agotó
 
 **454 pruebas en verde.** Evidencia en `docs/salida_rescates_31ago2026.txt`.
 
