@@ -5,9 +5,38 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 31 de agosto de 2026 — Los cuatro candidatos juntos: cada capa restó
+## 31 de agosto de 2026 — FASE 2 CERRADA
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+El informe formal es **`docs/FASE_2_informe.md`**. Está escrito para
+sostenerse fuera del repo, igual que el de la Fase 1, y es lo que se lleva a
+una consulta externa.
+
+**Cuatro estrategias, cinco mediciones previas, seis criterios escritos antes
+de ver un dato. Ninguna candidata pasó.**
+
+El hallazgo no es que una estrategia haya fallado: es que **cada capa de
+complejidad agregada sobre "comprar Bitcoin" empeoró el resultado ajustado por
+riesgo, de forma monótona**, con el costo creciendo en el mismo orden. El
+mejor del conjunto quedó a **un factor de 1,9** de la vara.
+
+La sección 6 del informe tiene las cinco cosas medidas que condicionan
+cualquier estrategia futura, y la sección 10 las cinco preguntas abiertas.
+
+`CLAUDE.md` quedó actualizado: una sesión nueva ahora lee que las Fases 0, 1 y
+2 están cerradas, con el cuadro de resultados y la instrucción de no proponer
+una quinta candidata por cuenta propia.
+
+**El holdout (2025 en adelante) no se miró** y sigue cerrado por código.
+Ninguna candidata llegó a merecerlo.
+
+**Cerrar la Fase 2 no abre la Fase 3.** No hay estrategia validada que llevar
+a Testnet.
+
+---
+
+## 31 de agosto de 2026 — Los cuatro candidatos juntos: cada capa restó
 
 `tools/comparar_candidatos.py`. **451 pruebas en verde.** Evidencia en
 `docs/salida_comparacion_31ago2026.txt`.

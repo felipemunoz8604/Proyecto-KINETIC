@@ -110,29 +110,47 @@ cuenta. Está todo probado, no lo desarmes:
   `github.com/felipemunoz8604/Proyecto-KINETIC`, privado a propósito — el
   repo tiene la lógica de la estrategia y los resultados completos.
 
-## Dónde está parado el proyecto (30-ago-2026)
+## Dónde está parado el proyecto (31-ago-2026)
 
-**Fases 0 y 1 CERRADAS. Ninguna fase abierta.** La Fase 1 cerró con hallazgo
-negativo **sobre muestra suficiente**: la estrategia de rupturas no tiene
-ventaja explotable en Spot después de costos. El informe formal es
-**`docs/FASE_1_informe.md`** — leelo antes de proponer nada. Está escrito para
-sostenerse fuera del repo, y su **sección 6 tiene las seis restricciones
-medidas** que condicionan cualquier estrategia nueva.
+**Fases 0, 1 y 2 CERRADAS. Ninguna fase abierta.**
 
-La evidencia final: 500 operaciones fuera de muestra en 15 pares en 4h, seis
-años, +193 USDT sobre 7.500 de capital (2,6% total), mediana de los pares
-negativa, y **una sola operación aportando el 36% del neto agregado**.
+La **Fase 2** cerró con hallazgo negativo sobre las cuatro candidatas que la
+consulta externa había especificado. El informe formal es
+**`docs/FASE_2_informe.md`** — leelo antes de proponer nada, junto con
+`docs/FASE_1_informe.md`. Los dos están escritos para sostenerse fuera del
+repo.
 
-**Decisión de Felipe del 30-ago-2026: la estrategia de rupturas se descarta y
-se busca otra.** Va a llevar el informe a una consulta externa con perfil de
-analista de cripto. **No propongas una estrategia nueva por tu cuenta ni
-empieces a escribir `strategy/` hasta que Felipe traiga esa definición.**
+El resultado, sobre 2020-2024 y contra comprar BTC y no tocar (Calmar 0,874):
 
-Cambiar de estrategia significa reescribir `strategy/`. Todo lo demás —datos,
-indicadores, riesgo, backtest, walk-forward, cerrojos— se reusa tal cual, con
-194 pruebas.
+| | Calmar | Veredicto |
+|---|---|---|
+| **E0** BTC + compuerta + volatilidad objetivo | 0,816 | NO PASA — 2/6 criterios |
+| **E1** momentum transversal largo | 0,344 | NO PASA — 2/6 |
+| **E2** momentum largo/corto con perpetuos | −0,105 | NO PASA — 0/6 |
+| **E3** carry de financiación | — | rinde 25 USDT al año sobre 500 |
 
-Cerrar la Fase 1 **no abre la Fase 2.** No hay estrategia validada que llevar
+**El hallazgo central: cada capa de complejidad agregada sobre "comprar
+Bitcoin" empeoró el resultado ajustado por riesgo, de forma monótona**, con el
+costo creciendo en el mismo orden (0,93% → 1,66% → 3,54% anual). El criterio 1
+exigía Calmar 1,573 y el mejor llegó a 0,816: **falta un factor de 1,9, no un
+ajuste.**
+
+**No propongas una estrategia nueva por tu cuenta.** Inventar una quinta
+después de ver fallar cuatro, y conociendo ya los datos, es el barrido que
+este proyecto existe para evitar. Las dos hipótesis de rescate de E1 (R1:
+ventana de 90 días; R2: ocho posiciones) están preautorizadas en la
+especificación pero **la recomendación registrada es no correrlas**, y son
+decisión de Felipe.
+
+**El holdout (2025 en adelante) NO se miró** y sigue cerrado por código en
+`metrics/ventana.py`. Ninguna candidata llegó a merecerlo.
+
+Lo construido se reusa entero y no depende de la estrategia: datos sin sesgo
+de supervivencia, universo reconstruido mes a mes, costos por venue con
+financiación, riesgo v2, motor de cartera por exposición (con cortos), y
+métricas de robustez. **451 pruebas en verde.**
+
+Cerrar la Fase 2 **no abre la Fase 3.** No hay estrategia validada que llevar
 a Testnet, y avanzar de fase necesita decisión explícita de Felipe.
 
 ## El error que este proyecto tiene que evitar
