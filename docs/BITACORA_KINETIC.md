@@ -5,9 +5,85 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 31 de agosto de 2026 — Documento para la segunda consulta externa
+## 1 de septiembre de 2026 — Paso 1: E0 protege, y el criterio nuevo no está cerrado
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`metrics/regimen.py` con 10 pruebas propias. **464 en verde.** Evidencia en
+`docs/salida_repuntaje_1sep2026.txt` y
+`docs/salida_sensibilidad_regimen_1sep2026.txt`. El seguimiento para el
+analista es `docs/SEGUIMIENTO_CONSULTA_1sep2026.md`.
+
+Se ejecutó el paso 1 de la respuesta a la segunda consulta: re-puntuar las
+seis corridas contra C-A (captura) y C-B (protección). **Cuesta cero pruebas
+de DSR**: son las mismas configuraciones con otra vara.
+
+### Lo que quedó firme
+
+**La caída de E0 en meses bajistas es el 9% de la de comprar y mantener** —
+−5,6% contra −63,7%. El analista esperaba que E0 pasara C-B con holgura; pasa
+con muchísima más de la que él suponía.
+
+Y se confirma que E0 falla C-A bajo cualquiera de las cuatro lecturas.
+
+La versión de C-B sobre el peor tramo bajista **contiguo** —una curva real, no
+encadenada— da idéntico a la encadenada en las seis configuraciones. Esa
+elección de implementación no maneja el resultado.
+
+### Dos problemas de definición que bloquean el criterio
+
+**1. C-A no mide una captura.** "Retorno acumulado sobre el de B1" aplicado a
+43 meses compuestos es el cociente de dos exponenciales, no una fracción. Para
+E0 la misma palabra da cuatro valores:
+
+| Lectura | E0 |
+|---|---|
+| Acumulados — C-A textual | **0,108** |
+| Mensuales medios | 0,333 |
+| Anualizados | 0,260 |
+| La del propio §2.2 del analista | **0,490** |
+
+El 70% parece elegido pensando en la última. Contra la primera es
+inalcanzable: el nulo del 42% de BTC da 0,437.
+
+**2. La ventana de régimen sí es un parámetro libre.** El analista la presentó
+como "sin parámetros libres nuevos". Variándola de 3 a 24 meses, sin tocar E0:
+
+| Ventana | C-A | C-B |
+|---|---|---|
+| 3 m | 0,549 | 0,203 |
+| 9 m | 0,145 | **0,032** |
+| 12 m | 0,108 | 0,089 |
+| 18 m | 0,551 | **0,474** |
+| 24 m | 0,733 | 0,437 |
+
+**C-B se mueve un factor de 15 y C-A un factor de 7.** Contra el umbral del
+40%, E0 pasa con 3/6/9/12 meses y falla con 18/24. **La ventana decide el
+veredicto.** El mecanismo: con 18 y 24 meses el conjunto bajista ya no
+contiene lo peor de 2022 y la caída de B1 pasa de −63,7% a −29,0%.
+
+### Una sospecha mía que salió equivocada
+
+Sospeché que el rezago de 12 meses inflaba la protección: la regla marca
+bajista a 2022-03…2023-06 y BTC subió 154,5% en 2023.
+
+**El etiquetado sí falla —9 de 17 meses bajistas subieron— pero no infla
+nada.** E0 estaba invertido en esos meses (exposición media 0,48) contra 0,11
+en los que sí bajaron. Sacándolos de la cuenta, C-B pasa de 0,089 a 0,085.
+
+**La protección de E0 es real.** La sospecha era razonable y estaba mal.
+
+### Lo próximo
+
+**No se corrió M1** a propósito: medir contra una vara que no está cerrada no
+sirve. Y **no se eligió ninguna ventana ni umbral** — con la tabla ya a la
+vista, elegir ahora sería el barrido que el proyecto evita.
+
+Queda esperar la respuesta del analista a las tres preguntas del seguimiento.
+
+---
+
+## 31 de agosto de 2026 — Documento para la segunda consulta externa
 
 `docs/CONSULTA_EXTERNA_31ago2026.md`. Es lo que Felipe lleva afuera, junto con
 los dos informes de cierre y el documento de criterios.

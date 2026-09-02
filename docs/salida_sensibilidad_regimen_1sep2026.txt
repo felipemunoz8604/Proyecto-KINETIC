@@ -1,0 +1,103 @@
+==============================================================================
+ KINETIC - cuanto de la proteccion de E0 la produce el rezago
+==============================================================================
+  E0 NO cambia en ninguna corrida. Lo unico que varia es la ventana
+  con que se clasifican los meses. Cuesta cero pruebas de DSR.
+
+  Ventana 2020-01-01 a 2024-12-31   (1 s)
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:70: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  mensual.index = mensual.index.to_period("M")
+C:\Proyectos\Proyecto-KINETIC\tools\sensibilidad_regimen.py:102: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  exp_mensual.index = exp_mensual.index.to_period("M")
+
+==============================================================================
+ C-A Y C-B SEGUN LA VENTANA DE TENDENCIA
+==============================================================================
+    ventana  bajistas      C-A      C-B   caida E0   caida B1
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:86: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  alcista.index = alcista.index.to_period("M")
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:70: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  mensual.index = mensual.index.to_period("M")
+        3m        23    0.549    0.203     -12.9%     -63.7%
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:86: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  alcista.index = alcista.index.to_period("M")
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:70: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  mensual.index = mensual.index.to_period("M")
+        6m        21    0.431    0.228     -12.8%     -56.0%
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:86: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  alcista.index = alcista.index.to_period("M")
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:70: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  mensual.index = mensual.index.to_period("M")
+        9m        17    0.145    0.032      -1.9%     -60.3%
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:86: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  alcista.index = alcista.index.to_period("M")
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:70: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  mensual.index = mensual.index.to_period("M")
+       12m        17    0.108    0.089      -5.6%     -63.7%
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:86: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  alcista.index = alcista.index.to_period("M")
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:70: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  mensual.index = mensual.index.to_period("M")
+       18m        18    0.551    0.474     -13.7%     -29.0%
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:86: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  alcista.index = alcista.index.to_period("M")
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:70: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  mensual.index = mensual.index.to_period("M")
+       24m        19    0.733    0.437     -13.7%     -31.5%
+
+==============================================================================
+ EL ERROR DE ETIQUETADO: MESES 'BAJISTAS' QUE SUBIERON
+==============================================================================
+    ventana  bajistas   que subieron   % mal etiquetados
+        3m        23             14                 61%
+        6m        21             13                 62%
+        9m        17              8                 47%
+       12m        17              9                 53%
+       18m        18             11                 61%
+       24m        19             13                 68%
+
+  Un mes mal etiquetado NO infla la proteccion por si solo. La infla
+  si ademas E0 estaba AFUERA del mercado ese mes: ahi la caida
+  medida es cero por una razon que no es proteger de nada.
+
+==============================================================================
+ LOS MESES MAL ETIQUETADOS CON VENTANA DE 12 (LA PROPUESTA)
+==============================================================================
+  mes             BTC   exposicion E0
+  2020-07      +24.0%            0.96  <- subio
+  2022-03       +5.4%           -0.00  <- subio
+  2022-04      -17.3%           -0.00
+  2022-05      -15.5%           -0.00
+  2022-06      -37.3%           -0.00
+  2022-07      +16.8%           -0.00  <- subio
+  2022-08      -13.9%           -0.00
+  2022-09       -3.1%           -0.00
+  2022-10       +5.5%           -0.00  <- subio
+  2022-11      -16.2%           -0.00
+  2022-12       -3.6%           -0.00
+  2023-01      +39.8%            0.53  <- subio
+  2023-02       +0.1%            0.72  <- subio
+  2023-03      +23.0%            0.58  <- subio
+  2023-04       +2.7%            0.71  <- subio
+  2023-05       -6.9%            0.89
+  2023-06      +12.0%            0.83  <- subio
+
+  De 17 meses marcados bajistas, 9 subieron.
+  Exposicion media de E0 en esos 9: 0.48
+  Exposicion media en los que si bajaron: 0.11
+
+==============================================================================
+ LA PROTECCION SIN LOS MESES MAL ETIQUETADOS
+==============================================================================
+  Sacando de la cuenta los meses que la regla llamo bajistas y
+  subieron, queda la proteccion sobre meses que de verdad cayeron.
+
+  C-B con la regla tal cual:            0.089   (caida E0 -5.6%)
+  C-B solo sobre meses que bajaron:     0.085   (caida E0 -5.6%)
+
+  OJO: la version 'limpia' usa el retorno del propio mes para
+  decidir si contarlo, o sea que MIRA AL FUTURO. No sirve como
+  criterio -- sirve solo para saber cuanto del numero venia del
+  etiquetado y cuanto de la estrategia.
+
+  (1 s)

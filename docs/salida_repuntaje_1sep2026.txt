@@ -1,0 +1,92 @@
+==============================================================================
+ KINETIC - re-puntaje contra C-A (captura) y C-B (proteccion)
+==============================================================================
+  Paso 1 de la respuesta a la segunda consulta. Cuesta CERO
+  pruebas de DSR: son las mismas corridas con otra regla.
+
+  Cargando...
+  Ventana comun 2020-01-01 a 2024-12-31   (35 s)
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:86: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  alcista.index = alcista.index.to_period("M")
+C:\Proyectos\Proyecto-KINETIC\tools\repuntuar.py:125: UserWarning: Converting to Period representation will drop timezone information.
+  en_ventana = alcistas[(alcistas.index >= dias[0].to_period("M"))
+C:\Proyectos\Proyecto-KINETIC\tools\repuntuar.py:126: UserWarning: Converting to Period representation will drop timezone information.
+  & (alcistas.index <= dias[-1].to_period("M"))]
+  Meses alcistas 43, bajistas 17 de 60
+  Regla: alcista si el retorno de BTC de los 12 meses PREVIOS fue
+  positivo. Rezagado, asi que ningun mes se clasifica con su propio
+  resultado.
+
+  Los meses bajistas:
+    2020-07  2022-03  2022-04  2022-05  2022-06  2022-07  2022-08  2022-09
+    2022-10  2022-11  2022-12  2023-01  2023-02  2023-03  2023-04  2023-05
+    2023-06
+  Armando E1...
+  Armando R1...
+  Armando R2...
+  Armando E2...
+
+==============================================================================
+ C-A (CAPTURA EN MESES ALCISTAS) Y C-B (PROTECCION EN BAJISTAS)
+==============================================================================
+                    C-A      C-B   C-B tramo  ret. alcista  caida bajista
+C:\Proyectos\Proyecto-KINETIC\metrics\regimen.py:70: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  mensual.index = mensual.index.to_period("M")
+  E0              0.108    0.089       0.089        150.1%          -5.6%
+  E1              0.080    0.264       0.264        111.4%         -16.8%
+  R1              0.053    0.158       0.158         73.7%         -10.1%
+  R2              0.105    0.268       0.268        145.6%         -17.1%
+  E2              0.009    0.670       0.670         12.5%         -42.7%
+  Nulo 42%        0.437    0.818       0.818        604.2%         -52.0%
+  B1              1.000    1.000       1.000       1383.9%         -63.7%
+
+  'C-B tramo' usa el peor tramo bajista CONTIGUO, que es una curva
+  real. La columna C-B encadena meses bajistas no contiguos. Si las
+  dos dieran veredictos distintos, el criterio dependeria de esa
+  eleccion y no del dato.
+
+==============================================================================
+ CONTRA LOS UMBRALES PROPUESTOS -- PROVISIONAL
+==============================================================================
+  El analista propuso C-A >= 70% y C-B <= 40%, SIN derivar de donde salen.
+  Esto es informativo, no un veredicto. Fijar los umbrales con su
+  razon es decision de Felipe, y va escrito antes de usarlos.
+
+  E0           C-A NO   C-B si
+  E1           C-A NO   C-B si
+  R1           C-A NO   C-B si
+  R2           C-A NO   C-B si
+  E2           C-A NO   C-B NO
+  Nulo 42%     C-A NO   C-B NO
+
+==============================================================================
+ C-C: IC 95% DEL COCIENTE DE CAPTURA (bloques de 3 meses)
+==============================================================================
+  E0           [-0.532,  0.628]   excluye 1,0
+  E1           [-0.244,  0.961]   excluye 1,0
+  R1           [-0.580,  0.784]   excluye 1,0
+  R2           [-0.248,  1.237]   contiene 1,0
+  E2           [-0.305,  0.808]   excluye 1,0
+  Nulo 42%     [ 0.208,  0.897]   excluye 1,0
+
+==============================================================================
+ LO QUE C-A Y C-B SEPARAN Y EL CRITERIO 1 FUNDIA
+==============================================================================
+  E0 protege: su caida en meses bajistas es el 9% de la de B1.
+  E0 no captura: se queda con el 11% de la subida.
+
+  El criterio 1 daba un solo numero y de ahi no se leia cual de las
+  dos mitades estaba resuelta. Ahora se lee.
+
+  La prima del seguro, medida: 59 puntos de captura
+  por debajo del 70% propuesto.
+
+  Y el metricas clasico de cada uno, para tener las dos lecturas:
+    E0           CAGR  +32.80%   caida  -40.2%   Calmar  0.816
+    E1           CAGR  +15.38%   caida  -44.7%   Calmar  0.344
+    R1           CAGR  +18.99%   caida  -35.4%   Calmar  0.536
+    R2           CAGR  +19.52%   caida  -48.5%   Calmar  0.403
+    E2           CAGR   -6.41%   caida  -60.9%   Calmar -0.105
+    Nulo 42%     CAGR  +42.96%   caida  -66.6%   Calmar  0.645
+
+  (182 s)
