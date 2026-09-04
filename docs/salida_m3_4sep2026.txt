@@ -1,0 +1,148 @@
+==============================================================================
+ KINETIC - M3a y M3b: las dos condiciones de cualquier compuerta
+==============================================================================
+  Particiones de la serie de BTC, no corridas de estrategia.
+  CERO pruebas de DSR. El contador sigue en seis.
+  La regla esta en docs/CRITERIOS_M3_4sep2026.md, commiteada antes.
+
+  Ventana 2020-01-01 a 2024-12-31   (1827 dias)
+  Log-retorno total de B1                  +2.5646
+  Caida maxima de B1                        -76.6%
+  3 peores episodios de B1               -76.6%, -53.6%, -53.1%
+
+  UMBRAL de caida (0,50 x caida de B1)       38.3%
+  UMBRAL por episodios (0,50 x la media)     30.6%
+
+==============================================================================
+ M3a - LA CONDICION DE RETORNO
+==============================================================================
+  Pasa si y solo si los dias que deja AFUERA suman log-retorno
+  NEGATIVO, por mas que el costo de las transiciones.
+
+                             dias fuera  trans.  log afuera   costo       
+  E0 sin des-parpadear              699      39     +0.4919  0.0488     NO
+  consolidada N=5 (techo)           703      15     +0.0132  0.0187     NO
+  consolidada N=10 (techo)          694      13     -0.0239  0.0163   PASA
+  consolidada N=20 (techo)          670      11     -0.1615  0.0138   PASA
+  consolidada N=30 (techo)          641       9     -0.2175  0.0112   PASA
+  confirmada N=5 (real)             707      15     +0.9724  0.0187     NO
+  confirmada N=10 (real)            703      13     +1.2666  0.0163     NO
+  confirmada N=20 (real)            689      11     +0.7847  0.0138     NO
+  confirmada N=30 (real)            670       9     +0.7753  0.0112     NO
+  ORACULO mensual                   761      30     -3.3528  0.0375   PASA
+  ORACULO trimestral                730       9     -1.9097  0.0112   PASA
+  ORACULO anual (sin 2022)          365       3     -1.0274  0.0037   PASA
+
+  Y lo que termina valiendo cada una, contra el log-retorno de B1:
+
+                               log final   % de B1
+  E0 sin des-parpadear           +2.0239     78.9%
+  consolidada N=5 (techo)        +2.5326     98.8%
+  consolidada N=10 (techo)       +2.5722    100.3%
+  consolidada N=20 (techo)       +2.7124    105.8%
+  consolidada N=30 (techo)       +2.7708    108.0%
+  confirmada N=5 (real)          +1.5734     61.3%
+  confirmada N=10 (real)         +1.2817     50.0%
+  confirmada N=20 (real)         +1.7661     68.9%
+  confirmada N=30 (real)         +1.7780     69.3%
+  ORACULO mensual                +5.8811    229.3%
+  ORACULO trimestral             +4.4630    174.0%
+  ORACULO anual (sin 2022)       +3.5895    140.0%
+
+==============================================================================
+ M3b - LA CONDICION DE CAIDA
+==============================================================================
+  Pasa si y solo si la curva de los dias que deja ADENTRO no cae
+  mas de 38.3%. Se reporta tambien la media de los 3 peores
+  episodios, contra su propio umbral de 30.6%.
+
+                              caida max         3 episodios       
+  E0 sin des-parpadear           -64.2%     NO       -38.9%     NO
+  consolidada N=5 (techo)        -48.6%     NO       -32.7%     NO
+  consolidada N=10 (techo)       -48.6%     NO       -32.7%     NO
+  consolidada N=20 (techo)       -49.1%     NO       -32.9%     NO
+  consolidada N=30 (techo)       -44.0%     NO       -31.8%     NO
+  confirmada N=5 (real)          -55.4%     NO       -48.3%     NO
+  confirmada N=10 (real)         -66.9%     NO       -49.1%     NO
+  confirmada N=20 (real)         -54.3%     NO       -44.4%     NO
+  confirmada N=30 (real)         -69.5%     NO       -47.4%     NO
+  ORACULO mensual                -25.2%   PASA       -21.8%   PASA
+  ORACULO trimestral             -31.7%   PASA       -26.5%   PASA
+  ORACULO anual (sin 2022)       -53.6%     NO       -46.1%     NO
+
+==============================================================================
+ LA REGLA DE DECISION, TAL COMO QUEDO COMMITEADA
+==============================================================================
+  1. Si ningun N deja afuera log-retorno negativo -> cerrar.
+     Ningun N lo logra: no
+  2. Si ningun N deja adentro una caida menor a 38.3% -> cerrar.
+     Ningun N lo logra: SI
+  3. Si alguno cumple las dos, se toma el N DECLARADO = 10, no el mejor.
+
+  N=10 techo (consolidada)    C-A' PASA   C-B' NO
+  N=10 real (confirmada)      C-A' NO   C-B' NO
+
+  >>> NINGUN N cumple la de caida.
+  >>> La regla dice CERRAR. A2 no se corre.
+
+==============================================================================
+ CUANTO DEL DES-PARPADEO ERA MIRAR AL FUTURO
+==============================================================================
+     N   log afuera techo   log afuera real   diferencia
+     5            +0.0132           +0.9724      +0.9593
+    10            -0.0239           +1.2666      +1.2905
+    20            -0.1615           +0.7847      +0.9463
+    30            -0.2175           +0.7753      +0.9928
+
+  La consolidacion fusiona tramos cortos sabiendo que fueron
+  cortos. La confirmacion espera N dias y llega tarde a cada giro.
+  La diferencia es el precio de no poder mirar adelante, y es lo
+  que separa un diagnostico de una estrategia.
+
+==============================================================================
+ LOS ORACULOS: DONDE ESTA EL LIMITE, Y POR QUE NO ES IMPOSIBLE
+==============================================================================
+  El analista concluye de su oraculo de 2022 que el asunto queda
+  cerrado 'por imposibilidad'. **Eso no se sostiene, y hay que
+  decirlo:** su oraculo resuelve al nivel ANUAL, y la resolucion es
+  justamente lo que decide.
+
+                              log afuera   % de B1    caida   C-A   C-B
+  ORACULO mensual                -3.3528    229.3%   -25.2%    si    si
+  ORACULO trimestral             -1.9097    174.0%   -31.7%    si    si
+  ORACULO anual (sin 2022)       -1.0274    140.0%   -53.6%    si    NO
+
+  El oraculo MENSUAL cumple las dos condiciones con holgura, y el
+  trimestral tambien. Solo el anual falla la de caida, porque deja
+  adentro marzo de 2020 y mediados de 2021 enteros.
+
+  **Entonces la conclusion correcta NO es que sea imposible.** Es
+  que hace falta resolver al nivel del TRIMESTRE o mas fino, y el
+  oraculo lo logra porque conoce el resultado del periodo antes de
+  que empiece. La pregunta que queda no es si existe una compuerta
+  que pase --existe-- sino si alguna ESTIMABLE llega ahi.
+
+  Y sobre eso la evidencia de arriba es la que decide, no el
+  oraculo: las cuatro compuertas implementables dejan afuera entre
+  +0,78 y +1,27 de log-retorno, o sea que son PEORES que la
+  compuerta cruda de E0, que ya dejaba afuera +0,49. Y las cuatro
+  fallan la condicion de caida por margen amplio.
+
+==============================================================================
+ VERIFICACION - CUANTO EXCESO HACE FALTA PARA SER DETECTABLE
+==============================================================================
+  Traduccion del intervalo de C-C' medido el 3-sep. No cambia
+  ningun veredicto; se verifica porque es el numero que el analista
+  propone como hallazgo central del proyecto.
+
+                        semiancho/mes   exceso anual necesario
+  B4 sin compuerta             0.0218                    29.8%
+  B3 constante                 0.0287                    41.2%
+  E0                           0.0334                    49.3%
+  E1                           0.0426                    66.6%
+
+  Para que ESTA ventana pudiera certificar que una estrategia le
+  gana a comprar Bitcoin, esa estrategia tendria que rendir entre
+  30% y 49% ANUAL por encima de BTC. No es un resultado sobre las
+  estrategias probadas: es un resultado sobre la muestra.
+\n  (1 s)

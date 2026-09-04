@@ -38,6 +38,7 @@ no se sabe si existe.
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 from strategy.indicators import sma
@@ -109,3 +110,73 @@ def latigazos(compuerta: pd.Series, dias_minimos: int = 10) -> pd.DataFrame:
     # El ultimo tramo esta cortado por el final de los datos, no por el
     # mercado: contarlo como latigazo seria un artefacto de la ventana.
     return t.iloc[:-1][t.iloc[:-1]["dias"] < dias_minimos]
+
+
+def consolidar(compuerta: pd.Series, dias_minimos: int) -> pd.Series:
+    """
+    Des-parpadeo por consolidacion: fusiona los tramos cortos con lo que los
+    rodea. **MIRA AL FUTURO. No se puede operar con esto.**
+
+    Es el M3a que pidio el analista el 4-sep-2026, y hay que decir muy fuerte
+    lo que es: para saber que un tramo duro menos de `dias_minimos` hay que
+    esperar a que TERMINE. El dia que empieza no se sabe si va a ser corto.
+
+    Entonces sirve como **techo**, no como estrategia: dice lo mejor que podria
+    haber hecho un des-parpadeo con conocimiento perfecto de la duracion de los
+    tramos. Como falsador es valido y de una sola cara -- **si ni el techo
+    pasa, ninguna version implementable pasa**. Como validador no sirve.
+
+    La version implementable es `con_confirmacion`, aca abajo.
+    """
+    if dias_minimos <= 1:
+        return compuerta.copy()
+    salida = compuerta.copy()
+    # Se repite hasta que no quede ningun tramo corto: fusionar dos tramos
+    # puede dejar al vecino todavia corto, y una sola pasada lo dejaria pasar.
+    for _ in range(len(compuerta)):
+        t = tramos(salida)
+        if len(t) < 2:
+            break
+        # El PRIMER tramo esta cortado por el arranque de los datos y el
+        # ULTIMO por el final: los dos son artefactos de la ventana, no
+        # latigazos del mercado. No se sabe cuanto duraron de verdad, asi que
+        # fusionarlos seria inventar. Es el mismo criterio que en `latigazos`,
+        # que ya excluia el ultimo; el primero faltaba y lo agarro una prueba.
+        interiores = t.iloc[1:-1]
+        cortos = interiores[interiores["dias"] < dias_minimos]
+        if cortos.empty:
+            break
+        fila = cortos.iloc[0]
+        salida.loc[fila["desde"]:fila["hasta"]] = 1 - int(fila["estado"])
+    return salida.astype(int)
+
+
+def con_confirmacion(compuerta: pd.Series, dias: int) -> pd.Series:
+    """
+    Des-parpadeo implementable: la señal tiene que sostenerse `dias` dias
+    seguidos antes de que el estado cambie.
+
+    **Solo usa el pasado.** Si hoy la señal dice lo mismo que dijo los ultimos
+    `dias` dias, el estado pasa a eso; si no, se queda como estaba. Se puede
+    operar mañana con esto, cosa que con `consolidar` no.
+
+    El precio es que llega tarde a cada giro, que es justamente lo que
+    `consolidar` no paga porque hace trampa con el futuro. La diferencia entre
+    las dos mide cuanto de la mejora del des-parpadeo era mirar adelante.
+    """
+    if dias <= 1:
+        return compuerta.copy()
+    seguidos = compuerta.rolling(dias).sum()
+    valores = compuerta.to_numpy()
+    firme_dentro = (seguidos == dias).to_numpy()
+    firme_afuera = (seguidos == 0).to_numpy()
+
+    salida = np.empty(len(valores), dtype=int)
+    estado = 0                       # sin confirmacion todavia: afuera
+    for i in range(len(valores)):
+        if firme_dentro[i]:
+            estado = 1
+        elif firme_afuera[i]:
+            estado = 0
+        salida[i] = estado
+    return pd.Series(salida, index=compuerta.index, name=compuerta.name)

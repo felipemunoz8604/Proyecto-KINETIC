@@ -81,10 +81,13 @@ La caida maxima se sigue reportando; el criterio se evalua sobre la CDaR.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+
+from metrics import metricas
 
 # Las tres periodicidades. El criterio se fija en mensual, que es la
 # convencion; las otras dos son control de robustez -- si el veredicto cambia
@@ -95,6 +98,8 @@ _A_PERIODO = {MENSUAL: "M", SEMANAL: "W", TRIMESTRAL: "Q"}
 NIVEL_CDAR = 0.95
 CAIDA_OBJETIVO = 0.50          # "la mitad de la caida", el objetivo de Felipe
 BLOQUE_MESES = 3
+EPISODIOS = 3                  # cuantos episodios de caida entran en C-B'
+MESES_POR_ANIO = 12
 
 # La frontera es una igualdad exacta, y `exigido` se calcula dividiendo y
 # volviendo a multiplicar. Una estrategia que empate EXACTO con B1 puede caer
@@ -290,3 +295,85 @@ def intervalo_de_exceso(patrimonio: pd.Series,
     medias = exceso[indices].mean(axis=1)
     return (float(np.percentile(medias, 2.5)),
             float(np.percentile(medias, 97.5)))
+
+
+def episodios_de_caida(patrimonio: pd.Series,
+                       cuantos: int = EPISODIOS) -> list[float]:
+    """
+    Los `cuantos` peores episodios de caida pico-a-valle, sin superponerse.
+
+    Es el reemplazo de la CDaR que propuso el analista el 4-sep-2026, y arregla
+    el defecto que le encontramos: **la caida maxima tiene una sola observacion
+    porque es un EPISODIO, no porque sea diaria.** Contar dias no multiplica
+    nada -- un tramo en efectivo aporta 91 copias del mismo numero. Contar
+    episodios si: son eventos distintos de verdad.
+
+    Cada episodio se toma entero, del pico a la recuperacion, y despues se lo
+    saca de la serie para buscar el siguiente. Asi no se cuenta dos veces el
+    mismo derrumbe partido en dos.
+
+    Devuelve valores negativos, del peor al menos malo.
+    """
+    if cuantos < 1:
+        raise ValueError(f"Hacen falta al menos 1 episodio y llegaron {cuantos}.")
+    segmentos = [patrimonio.dropna()]
+    encontrados: list[float] = []
+    for _ in range(cuantos):
+        mejor = None
+        for i, seg in enumerate(segmentos):
+            if len(seg) < 2:
+                continue
+            peor, _, pico, fin = metricas.caida_maxima(seg)
+            if peor < 0 and (mejor is None or peor < mejor[1]):
+                mejor = (i, peor, pico, fin)
+        if mejor is None:
+            break
+        i, peor, pico, fin = mejor
+        seg = segmentos.pop(i)
+        encontrados.append(float(peor))
+        # Lo de antes del pico y lo de despues de la recuperacion siguen en
+        # juego; el episodio en si sale, para no contarlo partido en dos.
+        antes, despues = seg.loc[:pico], seg.loc[fin:]
+        segmentos.extend(x for x in (antes, despues) if len(x) >= 2)
+    return encontrados
+
+
+def caida_por_episodios(patrimonio: pd.Series,
+                        cuantos: int = EPISODIOS) -> float:
+    """La media de la profundidad de los `cuantos` peores episodios."""
+    episodios = episodios_de_caida(patrimonio, cuantos)
+    if not episodios:
+        return 0.0
+    return float(np.mean(episodios))
+
+
+def fraccion_por_episodios(patrimonio: pd.Series,
+                           patrimonio_b1: pd.Series,
+                           cuantos: int = EPISODIOS) -> float:
+    """C-B' medida sobre episodios: la de la estrategia sobre la de B1."""
+    propia = caida_por_episodios(patrimonio, cuantos)
+    referencia = caida_por_episodios(patrimonio_b1, cuantos)
+    if not referencia:
+        return float("nan")
+    return abs(propia) / abs(referencia)
+
+
+def exceso_detectable(bajo: float, alto: float,
+                      periodos_por_anio: int = MESES_POR_ANIO) -> float:
+    """
+    Cuanto exceso ANUAL sobre el benchmark haria falta para que C-C' lo vea.
+
+    El semiancho del intervalo del exceso mensual de log-retorno es la barra
+    que hay que superar para que el IC deje de contener cero. Anualizado y
+    pasado a retorno simple, dice **cuanto tendria que rendir una estrategia
+    por encima de B1 para que ESTA MUESTRA pudiera certificarlo.**
+
+    Es un resultado sobre la muestra, no sobre las estrategias: aunque una
+    septima funcionara, con 60 meses y un solo ciclo esta ventana no podria
+    demostrarlo. Es el hallazgo que el analista propone como central, y por eso
+    esta calculado aca y no a mano en una planilla.
+    """
+    if not (np.isfinite(bajo) and np.isfinite(alto)):
+        return float("nan")
+    semiancho = (alto - bajo) / 2.0
+    return math.expm1(semiancho * periodos_por_anio)

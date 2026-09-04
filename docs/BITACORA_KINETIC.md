@@ -5,6 +5,92 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
+## 4 de septiembre de 2026 — M3 dice cerrar, y des-parpadear empeora
+
+> **Si estás retomando el proyecto, empezá por acá.**
+
+`risk/compuerta.consolidar` y `con_confirmacion`, más `frontera.episodios_de_caida`
+y `exceso_detectable`, con 21 pruebas nuevas. **512 en verde.** Criterios en
+`docs/CRITERIOS_M3_4sep2026.md` (commit `4a4158b`, **anterior a la corrida**),
+evidencia en `docs/salida_m3_4sep2026.txt`, respuesta al analista en
+`docs/SEGUIMIENTO_CONSULTA_4sep2026.md`.
+
+El analista aceptó las tres correcciones del 3-sep y propuso M3a/M3b para
+falsar A2 sin gastar la prueba de DSR. Se corrieron. **La regla dice CERRAR
+por la condición de caída: ningún N la cumple**, ni el declarado (10).
+
+### El hallazgo técnico: des-parpadear de verdad la empeora
+
+Su M3a **mira al futuro** — para saber que un tramo fue corto hay que esperar
+a que termine. Es un **techo**, no una estrategia, y hay una prueba que lo
+demuestra cortando la serie (`test_consolidar_mira_al_futuro_y_confirmar_no`).
+
+Por eso se midió también la versión implementable: **confirmación de N días**,
+que solo usa el pasado.
+
+| N | log afuera, techo | log afuera, real |
+|---|---|---|
+| 5 | +0,0132 | **+0,9724** |
+| 10 | −0,0239 | **+1,2666** |
+| 20 | −0,1615 | **+0,7847** |
+| 30 | −0,2175 | **+0,7753** |
+
+**La compuerta cruda de E0 dejaba afuera +0,49. Las cuatro implementables
+dejan entre +0,78 y +1,27** — de 1,6 a 2,6 veces peor. La confirmación
+retrasa la reentrada después de cada hueco y en este mercado los huecos se
+recuperan rápido: la demora cuesta más que el latigazo que evita.
+
+**El diagnóstico del analista era bueno y la cura es la equivocada.** Si se
+hubiera medido solo su versión, el techo pasa C-A′ en N=10/20/30 y habríamos
+concluido que había margen.
+
+### Su "imposibilidad" no se sostiene — y hay que decirlo
+
+Concluye que el asunto cierra por imposibilidad porque su oráculo de 2022
+falla C-B′. **Ese oráculo resuelve al nivel ANUAL:**
+
+| Oráculo | log afuera | caída | C-A′ | C-B′ |
+|---|---|---|---|---|
+| **mensual** | −3,3528 | **−25,2%** | sí | **sí** |
+| **trimestral** | −1,9097 | **−31,7%** | sí | **sí** |
+| anual (sin 2022) | −1,0274 | −53,6% | sí | NO |
+
+El mensual y el trimestral **pasan las dos con holgura**. La conclusión
+correcta no es que no exista: es que **hace falta resolver al trimestre o más
+fino**, y ningún estimador probado se acerca. "No existe" y "existe pero
+ningún estimador llega" son cierres distintos, y el segundo es el que la
+evidencia sostiene.
+
+### Los dos cierres, que no son el mismo
+
+**De diseño:** dentro de "compuerta de encendido y apagado sobre BTC a
+exposición plena", nada estimable cumple las dos condiciones. Vale para ese
+espacio de diseño, no para todos.
+
+**De muestra:** aunque algo funcionara, esta ventana no podría certificarlo —
+harían falta **entre 29,8% y 49,3% anuales** de exceso sobre BTC para que el
+intervalo dejara de contener cero. Verificado exacto contra los números del
+analista. **Este es el fuerte y no depende del espacio de diseño**, y es lo
+que hace que "buscar mejor" no sea una salida.
+
+### Un bug propio, encontrado por una prueba
+
+La primera `consolidar` fusionaba también el **primer** tramo, cortado por el
+arranque de los datos y no por el mercado — el mismo criterio que `latigazos`
+ya aplicaba al último. Cambió los números de N=30 y ninguna conclusión.
+
+### Qué queda
+
+**A2 no se corre.** M1 y M2 tampoco: el analista los retira y la razón es
+buena. El contador de configuraciones probadas sigue en **seis**.
+
+Queda una sola decisión y **no es técnica: es de Felipe.** B1 o E0 es una
+apuesta de régimen. E0 no es "B1 con menos riesgo" — con `c_up` 0,441 y
+`c_down` 0,356 es una apuesta distinta: pierde en una ventana como 2020-2024 y
+gana en una como 2022.
+
+---
+
 ## 3 de septiembre de 2026 — La frontera derivada: nada la pasa, y A1 ya está contestada
 
 > **Si estás retomando el proyecto, empezá por acá.**

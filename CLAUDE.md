@@ -110,7 +110,7 @@ cuenta. Está todo probado, no lo desarmes:
   `github.com/felipemunoz8604/Proyecto-KINETIC`, privado a propósito — el
   repo tiene la lógica de la estrategia y los resultados completos.
 
-## Dónde está parado el proyecto (3-sep-2026)
+## Dónde está parado el proyecto (4-sep-2026)
 
 **Fases 0, 1 y 2 CERRADAS. Ninguna fase abierta.**
 
@@ -166,11 +166,26 @@ necesitaba 0,635.
 ventana de 12 meses resultó ser un parámetro libre que movía el resultado un
 factor de 15. No la uses para decidir nada; sirve para contrastar.
 
-**A1 no hay que correrla: la identidad ya la contesta.** A exposición plena una
+**A1 y A2 están las dos contestadas y NO se corren.** A exposición plena una
 compuerta solo elige días, así que pasa si y solo si los días que deja afuera
-suman negativo. BTC subió +0,4919 en log-retorno mientras E0 estaba afuera.
-**A2 es la única ablación que sigue en pie y cuesta una prueba de DSR:** no se
-corre sin decisión explícita de Felipe.
+suman negativo. BTC subió +0,4919 mientras E0 estaba afuera (A1), y M3
+falsó A2 el 4-sep-2026: ningún N cumple la condición de caída.
+
+### Las dos cosas del 4-sep que hay que tener presentes
+
+**Des-parpadear la compuerta de forma implementable la EMPEORA.** La versión
+con confirmación de N días deja afuera entre +0,78 y +1,27 de log-retorno,
+contra +0,49 de la compuerta cruda. La consolidación de tramos cortos que da
+mejor **mira al futuro** y por eso es un techo, no una estrategia
+(`test_consolidar_mira_al_futuro_y_confirmar_no`). Si proponés des-parpadear,
+esto ya está medido y da peor.
+
+**El cierre fuerte es de MUESTRA, no de diseño.** Harían falta entre 29,8% y
+49,3% anuales de exceso sobre BTC para que esta ventana pudiera certificar
+algo — 60 meses y un solo ciclo no alcanzan. Por eso "buscar una estrategia
+mejor" no es una salida: el problema no es la estrategia, es que la muestra no
+puede decidir. Un oráculo trimestral SÍ pasa las dos condiciones; ningún
+estimador probado se le acerca.
 
 **El holdout (2025 en adelante) NO se miró** y sigue cerrado por código en
 `metrics/ventana.py`. Ninguna candidata llegó a merecerlo.
@@ -178,7 +193,7 @@ corre sin decisión explícita de Felipe.
 Lo construido se reusa entero y no depende de la estrategia: datos sin sesgo
 de supervivencia, universo reconstruido mes a mes, costos por venue con
 financiación, riesgo v2, motor de cartera por exposición (con cortos), y
-métricas de robustez. **491 pruebas en verde.**
+métricas de robustez. **512 pruebas en verde.**
 
 **Las curvas de las seis corridas se arman en un solo lugar:
 `backtesting/corridas.py`.** Si necesitás las candidatas para comparar algo, usá
