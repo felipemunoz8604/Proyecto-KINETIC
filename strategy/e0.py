@@ -73,18 +73,25 @@ def exposicion_objetivo(cierres: pd.Series,
                         objetivo: float = SIGMA_OBJETIVO,
                         k_max: float = K_MAX,
                         periodo_sma: int = PERIODO_SMA,
-                        dias_vol: int = VENTANA_VOLATILIDAD_DIAS) -> pd.Series:
+                        dias_vol: int = VENTANA_VOLATILIDAD_DIAS,
+                        con_compuerta: bool = True) -> pd.Series:
     """
     La fraccion del patrimonio que E0 quiere tener en BTC cada dia.
 
     Camino rapido. Todo lo que se usa para el dia t esta desplazado un dia:
     `shift(1)` sobre la volatilidad y sobre la señal.
+
+    `con_compuerta=False` es la **referencia B4**: solo objetivo de
+    volatilidad, siempre dentro. Es una bandera y no un archivo aparte a
+    proposito -- B4 se define como "E0 sin la compuerta", asi que todo lo
+    demas tiene que ser identico por construccion y no por disciplina.
     """
     if k_max > K_MAX:
         # Se delega el mensaje completo, que explica por que es un cerrojo.
         escalar_de_volatilidad(1.0, objetivo, k_max)
 
-    g = compuerta_de_regimen(cierres, periodo_sma)
+    g = (compuerta_de_regimen(cierres, periodo_sma) if con_compuerta
+         else pd.Series(1, index=cierres.index))
 
     retornos = np.log(cierres / cierres.shift(1))
     sigma = (retornos.rolling(dias_vol, min_periods=MINIMO_DE_OBSERVACIONES)
@@ -104,6 +111,7 @@ def exposicion_objetivo_lenta(cierres: pd.Series,
                               k_max: float = K_MAX,
                               periodo_sma: int = PERIODO_SMA,
                               dias_vol: int = VENTANA_VOLATILIDAD_DIAS,
+                              con_compuerta: bool = True,
                               simbolo: str = SIMBOLO) -> pd.Series:
     """
     El mismo calculo, dia por dia, pasando por `risk/`. Es la referencia.
@@ -113,7 +121,8 @@ def exposicion_objetivo_lenta(cierres: pd.Series,
     camino rapido se desvia, la prueba de equivalencia lo agarra.
     """
     marco = cierres.to_frame(name=simbolo)
-    g = compuerta_de_regimen(cierres, periodo_sma)
+    g = (compuerta_de_regimen(cierres, periodo_sma) if con_compuerta
+         else pd.Series(1, index=cierres.index))
     salida = {}
     for fecha in cierres.index:
         if int(g.get(fecha, 0)) == 0:

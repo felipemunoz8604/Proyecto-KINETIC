@@ -5,9 +5,115 @@ primero en cualquier sesión nueva, antes de tocar código.
 
 ---
 
-## 1 de septiembre de 2026 — Paso 1: E0 protege, y el criterio nuevo no está cerrado
+## 3 de septiembre de 2026 — La frontera derivada: nada la pasa, y A1 ya está contestada
 
 > **Si estás retomando el proyecto, empezá por acá.**
+
+`metrics/frontera.py` y `backtesting/corridas.py`, con 27 pruebas propias.
+**491 en verde.** Evidencia en `docs/salida_frontera_3sep2026.txt`. El
+seguimiento para el analista es `docs/SEGUIMIENTO_CONSULTA_2sep2026.md`.
+
+El analista respondió el 2-sep-2026 aceptando las tres objeciones —dos como
+errores propios— y **reemplazó los umbrales inventados del 70% y el 40% por
+una frontera derivada**. Se ejecutaron sus pasos 1 a 4, los cuatro de costo
+cero. **El contador de configuraciones probadas sigue en seis.**
+
+### La frontera es una identidad, y eso es el aporte
+
+De `c_up·U + c_down·D ≥ U + D` sale `c_up ≥ 1 − (1−c_down)·R`. No hay ningún
+número elegido ahí: R se mide sobre B1 y el resto es despejar. Verificado, y
+hay una prueba (`test_la_frontera_es_exactamente_ganarle_a_b1`) que exige que
+**pasar la frontera y superar el retorno total de B1 sean el mismo evento**.
+
+Sobre 2020-2024: **U = +5,9174 (35 meses), D = −3,3528 (25 meses), R = 0,5666.**
+
+**Ninguna de las siete configuraciones la pasa**, ni en mensual, ni en semanal,
+ni en trimestral:
+
+| | `c_up` | `c_down` | Frontera | |
+|---|---|---|---|---|
+| B4 sin compuerta | 0,686 | 0,650 | 0,802 | NO |
+| B3 constante k=0,449 | 0,470 | 0,406 | 0,664 | NO |
+| **E0** | 0,441 | 0,356 | 0,635 | **NO** |
+| R1 | 0,317 | 0,301 | 0,604 | NO |
+| R2 | 0,309 | 0,279 | 0,591 | NO |
+| E1 | 0,274 | 0,270 | 0,586 | NO |
+| E2 | −0,063 | −0,012 | 0,427 | NO |
+
+**Y la vara nueva es algo más dura que la vieja:** la frontera es literalmente
+"igualar el retorno total de B1", y junto con C-B′ pide un cociente de 2,0
+contra el 1,8 del criterio 1. El valor del cambio no es el veredicto —E0 ya
+fallaba— sino que **el veredicto dejó de depender de números elegidos.**
+
+### A1 no hace falta correrla, y eso ahorra una prueba de DSR
+
+A exposición 1,0 una compuerta no dimensiona: solo elige días. Su log-retorno
+es el de BTC en los días que deja adentro. Como la frontera es exactamente
+igualar el retorno total de B1, **A1 pasa si y solo si los días que la
+compuerta deja afuera suman negativo.**
+
+Medido: BTC **subió +0,4919** en log-retorno mientras E0 estaba afuera (699 de
+1.827 días). A1 termina con el **80,8%** del log-retorno de B1 y la frontera
+pide el 100%. **A1 falla, y no por poco.**
+
+No cuesta DSR porque no se corrió nada nuevo: es la compuerta de E0
+descompuesta según su propio estado. **La asimetría está anotada en el
+seguimiento**: si hubiera dado que pasa, correrla después sería confirmatorio.
+
+De ahí sale una condición general para cualquier compuerta de prendido y
+apagado a exposición plena, probada en
+`test_una_compuerta_a_exposicion_plena_pasa_solo_si_lo_que_deja_afuera_baja`.
+
+### Tres correcciones al analista
+
+**1. Su §5.1 mezcla particiones.** Evalúa contra la frontera un `c_up = 0,34`,
+que es la partición vieja de 12 meses. Con la partición nueva —la suya— es
+**0,4413**. Falla igual, pero por 0,194 y no por 0,295.
+
+**2. La compuerta aporta +11,7%, no +37%.** B3 no se estimó: se calibró
+corriendo el motor. La exposición constante que iguala el CAGR de E0 es
+**k = 0,449** (Calmar 0,731), no k≈0,55 con Calmar 0,594.
+
+| | CAGR | Caída | Calmar | vs B1 |
+|---|---|---|---|---|
+| B1 | +66,97% | −76,6% | 0,874 | 1,000 |
+| B4 sin compuerta | +45,57% | −59,2% | 0,769 | 0,880 |
+| B3 constante k=0,449 | +32,80% | −44,9% | 0,731 | 0,836 |
+| **E0** | +32,80% | −40,2% | **0,816** | 0,934 |
+
+**3. La CDaR no entrega las observaciones que promete.** Se cambió a CDaR 95%
+para pasar de una observación a cientos. Pero **mientras una estrategia está
+afuera del mercado su patrimonio no se mueve**, así que su caída es idéntica
+todos esos días: la cola del peor 5% de E0 son **91 copias de un solo número**,
+y su CDaR da −40,2%, exactamente su caída máxima. Para una estrategia con
+compuerta a efectivo, **la CDaR degenera en la caída máxima.**
+
+### Y algo que confirma el fondo
+
+**C-C′ contiene cero en las siete configuraciones**, incluidas B3 y B4, que ni
+siquiera son estrategias. Con 60 meses y bloques de 3, **nada de lo construido
+se distingue de comprar y no tocar.**
+
+### Qué queda
+
+**A2** es la única ablación que sigue en pie y **cuesta una prueba de DSR**. No
+se corre sin decisión explícita de Felipe. Si el analista acepta que ninguna
+compuerta puede cumplir la condición de §7 del seguimiento, el paso 7 de su §8
+—cerrar la investigación— se puede tomar ya.
+
+El holdout sigue cerrado. Ninguna fase abierta.
+
+### De paso, una limpieza
+
+Las curvas de las seis corridas estaban copiadas en `tools/comparar_candidatos`
+y `tools/repuntuar`, y esta sesión iba a ser la tercera copia. Se centralizaron
+en **`backtesting/corridas.py`**. `tools/repuntuar.py` refactorizado reproduce
+**idéntica** la evidencia del 1-sep, que es la verificación de que la
+centralización no cambió nada.
+
+---
+
+## 1 de septiembre de 2026 — Paso 1: E0 protege, y el criterio nuevo no está cerrado
 
 `metrics/regimen.py` con 10 pruebas propias. **464 en verde.** Evidencia en
 `docs/salida_repuntaje_1sep2026.txt` y

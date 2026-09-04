@@ -44,48 +44,19 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
-import pandas as pd  # noqa: E402
-
-from backtesting import motor_cartera as mc  # noqa: E402
-from core import archivo_binance as arch  # noqa: E402
-from core import financiacion as fin  # noqa: E402
-from core import universo as uni  # noqa: E402
-from execution.costos import ModeloDeCostos, TipoOrden, Venue  # noqa: E402
-from execution.filtros import TablaDeFiltros  # noqa: E402
-from metrics import benchmarks, metricas, regimen, ventana  # noqa: E402
-from risk import catastrofe as cat  # noqa: E402
-from risk import compuerta as cp  # noqa: E402
-from strategy import e0, e1, e2  # noqa: E402
+from backtesting import corridas  # noqa: E402
+from metrics import benchmarks, metricas, regimen  # noqa: E402
 
 CARPETA = RAIZ / "data" / "archivo"
 CARPETA_PERP = RAIZ / "data" / "perpetuo"
 CARPETA_FIN = RAIZ / "data" / "financiacion"
 FILTROS = RAIZ / "data" / "filtros_spot.json"
-CAPITAL = 500.0
-REFERENCIA = "BTCUSDT"
+CAPITAL = corridas.CAPITAL
 
 # PROVISIONALES. Propuestos por el analista, sin derivacion. No son la vara
 # hasta que Felipe los fije con su razon.
 CAPTURA_PROPUESTA = 0.70
 PROTECCION_PROPUESTA = 0.40
-
-
-def _modelo() -> ModeloDeCostos:
-    return ModeloDeCostos(Venue.SPOT, TipoOrden.TAKER, con_bnb=True)
-
-
-def _cargar(carpeta: Path, simbolos: list[str]):
-    ap, ci, at = {}, {}, {}
-    for s in simbolos:
-        try:
-            v = arch.cargar(s, "1d", carpeta)
-        except FileNotFoundError:
-            continue
-        v = v[v.index <= ventana.DISENO_HASTA]
-        if v.empty:
-            continue
-        ap[s], ci[s], at[s] = v["open"], v["close"], cat.atr_relativo(v)
-    return pd.DataFrame(ap), pd.DataFrame(ci), pd.DataFrame(at)
 
 
 def main() -> int:
@@ -98,25 +69,13 @@ def main() -> int:
     print("  pruebas de DSR: son las mismas corridas con otra regla.")
     print()
 
-    print("  Cargando...", flush=True)
-    panel = uni.cargar_panel(CARPETA)
-    fechas_reb = [f for f in uni.fechas_de_rebalanceo(panel)
-                  if ventana.DISENO_DESDE <= f <= ventana.DISENO_HASTA]
-    universo = uni.construir(panel, fechas_reb)
-    candidatos = sorted({s for v in universo.values() for s in v})
-    ap, ci, atr = _cargar(CARPETA, candidatos)
-    ap_p, ci_p, atr_p = _cargar(CARPETA_PERP, candidatos)
-    filtros = TablaDeFiltros.desde_json(FILTROS) if FILTROS.exists() else None
-    g = cp.compuerta_de_regimen(panel.cierres[REFERENCIA].dropna())
-
-    velas_btc = arch.cargar(REFERENCIA, "1d", CARPETA)
-    velas_btc = velas_btc[velas_btc.index <= ventana.DISENO_HASTA]
-
-    # La ventana comun la manda E2: antes de 2020 no hay perpetuos.
-    desde = max(ventana.DISENO_DESDE,
-                ci_p.apply(lambda c: c.first_valid_index()).min())
-    dias = ci.index[(ci.index >= desde) & (ci.index <= ventana.DISENO_HASTA)]
-    rangos = e1.rangos_de_liquidez(universo, dias)
+    # Las curvas las arma `backtesting/corridas.py`, que es el unico lugar
+    # donde viven. Antes estaban copiadas aca y en `comparar_candidatos.py`.
+    c = corridas.construir(CARPETA, CARPETA_PERP, CARPETA_FIN, FILTROS,
+                           capital=CAPITAL,
+                           avisar=lambda t: print(f"  {t}", flush=True))
+    dias, p_b1, velas_btc = c.dias, c.b1, c.velas_btc
+    curvas = dict(c.curvas)
     print(f"  Ventana comun {dias[0].date()} a {dias[-1].date()}   "
           f"({time.time() - t0:.0f} s)")
 
@@ -134,56 +93,9 @@ def main() -> int:
     for i in range(0, len(bajistas), 8):
         print("    " + "  ".join(bajistas[i:i + 8]))
 
-    # --- Las curvas --------------------------------------------------------
-    datos_btc = velas_btc.assign(
-        exposicion=e0.exposicion_objetivo(velas_btc["close"]))
-    datos_btc = datos_btc[datos_btc.index >= desde]
-    p_b1 = benchmarks.comprar_y_mantener(datos_btc, CAPITAL)
-    r_e0 = mc.simular(
-        datos_btc[["open"]].rename(columns={"open": e0.SIMBOLO}),
-        datos_btc[["close"]].rename(columns={"close": e0.SIMBOLO}),
-        datos_btc[["exposicion"]].rename(columns={"exposicion": e0.SIMBOLO}),
-        CAPITAL, _modelo(), rangos={e0.SIMBOLO: 1}, filtros=filtros)
-
-    curvas = {"E0": r_e0.patrimonio}
-    for nombre, kwargs in (("E1", {}), ("R1", {"dias_momentum": 90}),
-                           ("R2", {"cuantas": 8})):
-        print(f"  Armando {nombre}...", flush=True)
-        a = e1.construir_exposiciones(ci, ap, atr, g, universo, dias, **kwargs)
-        cols = list(a.exposiciones.columns)
-        curvas[nombre] = mc.simular(
-            ap.reindex(index=dias, columns=cols),
-            ci.reindex(index=dias, columns=cols), a.exposiciones,
-            CAPITAL, _modelo(), rangos=rangos, filtros=filtros).patrimonio
-
-    print("  Armando E2...", flush=True)
-    a2 = e2.construir_exposiciones(ci, ap, ci_p, ap_p, atr, atr_p, universo,
-                                   dias)
-    cols2 = list(a2.exposiciones.columns)
-
-    def matriz(spot, perp):
-        d = {}
-        for c in cols2:
-            base = e2.simbolo_base(c)
-            origen = perp if e2.es_perpetuo(c) else spot
-            if base in origen.columns:
-                d[c] = origen[base]
-        return pd.DataFrame(d).reindex(index=dias, columns=cols2)
-
-    tasas = {c: fin.cargar(e2.simbolo_base(c), CARPETA_FIN)["tasa"]
-             for c in cols2 if e2.es_perpetuo(c)
-             and (CARPETA_FIN / f"{e2.simbolo_base(c)}.csv").exists()}
-    curvas["E2"] = mc.simular(
-        matriz(ap, ap_p), matriz(ci, ci_p), a2.exposiciones, CAPITAL,
-        _modelo(),
-        rangos=pd.DataFrame({c: rangos[e2.simbolo_base(c)] for c in cols2
-                             if e2.simbolo_base(c) in rangos.columns},
-                            index=dias),
-        filtros=filtros, permitir_cortos=True,
-        financiacion_de_cortos=tasas).patrimonio
-
     # Un nulo de media exposicion, que es contra lo que hay que leer todo.
-    media = float(r_e0.exposicion.sum(axis=1).mean())
+    media = float(c.exposicion_e0.mean())
+    datos_btc = velas_btc[velas_btc.index >= dias[0]]
     curvas[f"Nulo {media:.0%}"] = (
         benchmarks.comprar_y_mantener(datos_btc, CAPITAL * media)
         + CAPITAL * (1.0 - media))

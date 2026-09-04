@@ -1,0 +1,240 @@
+==============================================================================
+ KINETIC - la frontera derivada y la atribucion de E0
+==============================================================================
+  Pasos 1 a 4 de la respuesta del analista del 2-sep-2026.
+  CERO pruebas de Deflated Sharpe: ninguno elige nada. El contador
+  de configuraciones probadas sigue en seis.
+
+  Cargando archivo y universo...
+  Armando E1...
+  Armando R1...
+  Armando R2...
+  Armando E2...
+  Ventana 2020-01-01 a 2024-12-31   (140 s)
+  Calibrando B3 al CAGR de E0...
+  Armando B4 (E0 sin compuerta)...
+
+==============================================================================
+ PASO 1 - U, D Y R SOBRE B1. LA FRONTERA QUEDA FIJADA
+==============================================================================
+  En log-retornos mensuales, sobre la ventana entera:
+
+    U  meses en que B1 subio (n=35)            +5.9174
+    D  meses en que B1 bajo  (n=25)            -3.3528
+    R = |D| / U                             0.5666
+
+  La frontera, tal como la escribio el analista:
+
+      c_up  >=  1 - (1 - c_down) * R
+
+      c_down    c_up exigido
+         0.0          0.4334
+         0.2          0.5467
+         0.4          0.6600
+         0.6          0.7734
+         0.8          0.8867
+         1.0          1.0000
+
+  Se lee asi: una estrategia que no perdiera NADA en ningun mes
+  bajista (c_down = 0) todavia necesitaria capturar el 43.3% de la
+  subida solo para empatar con comprar y no tocar.
+
+  Y no hay ningun numero elegido en esa linea: R se mide sobre B1
+  y el resto es despejar. Ganar la frontera y ganarle a B1 en
+  retorno total son EL MISMO EVENTO -- hay una prueba que lo exige.
+
+==============================================================================
+ PASO 2 - c_up Y c_down POR EL SIGNO DEL PROPIO MES
+==============================================================================
+                              c_up   c_down   exigido   margen      
+  B1 comprar y mantener      1.000    1.000     1.000   +0.000  PASA
+  B3 constante k=0.449       0.470    0.406     0.664   -0.194    NO
+  B4 sin compuerta           0.686    0.650     0.802   -0.116    NO
+  E0                         0.441    0.356     0.635   -0.194    NO
+  E1                         0.274    0.270     0.586   -0.312    NO
+  R1                         0.317    0.301     0.604   -0.286    NO
+  R2                         0.309    0.279     0.591   -0.283    NO
+  E2                        -0.063   -0.012     0.427   -0.489    NO
+
+  c_down NEGATIVO significa que la estrategia GANA en los meses en
+  que el mercado pierde. Es lo que hace E0, y por eso la palabra
+  'proteccion' se le quedaba corta.
+
+  Control de robustez -- el mismo cuadro en semanal y trimestral.
+  El criterio se fija en mensual, que es la convencion. Si el
+  veredicto cambiara con el periodo, hay que decirlo.
+
+                            c_up sem   pasa   c_up trim   pasa
+  B1 comprar y mantener        1.000     si       1.000     si
+  B3 constante k=0.449         0.462     NO       0.478     NO
+  B4 sin compuerta             0.647     NO       0.688     NO
+  E0                           0.421     NO       0.445     NO
+  E1                           0.266     NO       0.256     NO
+  R1                           0.316     NO       0.315     NO
+  R2                           0.303     NO       0.292     NO
+  E2                          -0.049     NO      -0.043     NO
+
+==============================================================================
+ LA MEZCLA DE PARTICIONES EN LA 5.1 DEL ANALISTA
+==============================================================================
+  El analista evalua contra la frontera un c_up de 0,34. Ese numero
+  sale de la particion VIEJA -- regimen de 12 meses -- y la
+  frontera esta definida sobre la particion NUEVA, la de su 4.3.
+
+  C-A vieja (regimen 12m), en log-retornos        0.3398
+  c_up nuevo (signo del propio mes)               0.4413
+  Frontera exigida a E0                           0.6348
+
+  Con la particion correcta E0 falla igual, pero por 0.194 y no
+  por 0.295. El veredicto no cambia; el margen si.
+
+  (Y la C-A vieja en retorno simple, la del 1-sep, era 0.108:
+   el cociente de acumulados que el propio analista retiro.)
+
+==============================================================================
+ PASO 3 - C-B' CON CDaR AL 95% EN VEZ DE LA CAIDA MAXIMA
+==============================================================================
+  La caida maxima tiene UNA observacion. La CDaR al 95% promedia el
+  peor 5% de la distribucion diaria de caida: cientos.
+
+                            caida max   frac.   CDaR 95%   frac.   C-B?
+  B1 comprar y mantener        -76.6%   1.000     -74.1%   1.000     NO
+  B3 constante k=0.449         -44.9%   0.586     -42.4%   0.573     NO
+  B4 sin compuerta             -59.2%   0.773     -56.6%   0.763     NO
+  E0                           -40.2%   0.524     -40.2%   0.542     NO
+  E1                           -44.7%   0.583     -41.0%   0.553     NO
+  R1                           -35.4%   0.462     -30.9%   0.417     si
+  R2                           -48.5%   0.633     -44.7%   0.603     NO
+  E2                           -60.9%   0.795     -59.6%   0.804     NO
+
+  C-B' pide la fraccion <= 0.50, que es literal 'la mitad de la
+  caida' del objetivo declarado por Felipe. Ese 0,50 no es
+  inventado por nadie: es el objetivo, escrito como cociente.
+
+  PERO LA CDaR NO ENTREGA LAS OBSERVACIONES QUE PROMETE
+  ------------------------------------------------------
+  El motivo del cambio era pasar de UNA observacion a cientos. Se
+  conto cuantos valores DISTINTOS hay en la cola del peor 5%:
+
+                            dias en la cola  valores distintos
+  B1 comprar y mantener                  91                 91
+  B3 constante k=0.449                   91                 91
+  B4 sin compuerta                       91                 91
+  E0                                     91                  1
+  E1                                     91                 34
+  R1                                     91                 34
+  R2                                     91                 34
+  E2                                     91                 91
+
+  Mientras una estrategia esta AFUERA del mercado su patrimonio no
+  se mueve, asi que su caida contra el maximo previo es la MISMA
+  todos esos dias. La cola de E0 son 91 copias de un solo numero.
+
+  O sea que para una estrategia con compuerta a efectivo la CDaR
+  degenera en la caida maxima, y el argumento de 'cientos de
+  observaciones' no vale justo para el tipo de estrategia que se
+  esta evaluando. El veredicto no cambia -- E0 falla C-B' con las
+  dos medidas -- pero la razon para cambiar de medida si.
+
+==============================================================================
+ C-C' - IC 95% DEL EXCESO MENSUAL DE LOG-RETORNO CONTRA B1
+==============================================================================
+  Antes se remuestreaba el cociente de captura y se preguntaba si
+  excluia 1,0. Con la frontera la indiferencia ya no esta en 1,0,
+  asi que se mide el exceso directo y se pide que excluya CERO.
+
+  B1 comprar y mantener   [ +0.0000,  +0.0000]   CONTIENE cero
+  B3 constante k=0.449    [ -0.0462,  +0.0113]   CONTIENE cero
+  B4 sin compuerta        [ -0.0323,  +0.0112]   CONTIENE cero
+  E0                      [ -0.0478,  +0.0190]   CONTIENE cero
+  E1                      [ -0.0699,  +0.0152]   CONTIENE cero
+  R1                      [ -0.0675,  +0.0179]   CONTIENE cero
+  R2                      [ -0.0652,  +0.0181]   CONTIENE cero
+  E2                      [ -0.1051,  +0.0085]   CONTIENE cero
+
+==============================================================================
+ PASO 4 - ATRIBUCION: DIMENSIONAMIENTO CONTRA TEMPORIZACION
+==============================================================================
+  B3 es exposicion constante calibrada al MISMO CAGR que E0: aisla
+  cuanto de E0 se consigue simplemente tomando menos posicion.
+  B4 es E0 sin la compuerta: aisla lo que aporta la compuerta.
+
+                                CAGR  caida max   Calmar   vs B1
+  B1 comprar y mantener      +66.97%     -76.6%    0.874   1.000
+  B3 constante k=0.449       +32.80%     -44.9%    0.731   0.836
+  B4 sin compuerta           +45.57%     -59.2%    0.769   0.880
+  E0                         +32.80%     -40.2%    0.816   0.934
+
+  La exposicion constante que iguala el CAGR de E0 es k = 0.449
+  (CAGR B3 +32.80% contra E0 +32.80%).
+
+  APORTE DE LA COMPUERTA sobre exposicion constante del mismo
+  CAGR:  +11.7% de Calmar
+  APORTE DE LA COMPUERTA sobre solo volatilidad objetivo (B4):  +6.1%
+
+  El analista estimo este aporte en +37% en su 2.3, con un B3 a
+  k~0,55 y Calmar 0,594. Corrido con el motor y los mismos costos,
+  la exposicion que iguala el CAGR es k=0.449 y su Calmar es
+  0.731. El aporte medido es +11.7%, no +37%.
+
+==============================================================================
+ A1 NO HACE FALTA CORRERLA: LA IDENTIDAD YA LA CONTESTA
+==============================================================================
+  A1 es 'E0 con k_max y sin objetivo de volatilidad': exposicion
+  1,0 cuando la compuerta esta abierta, 0 cuando esta cerrada.
+
+  A exposicion 1,0 el rebalanceo diario es no hacer nada, asi que
+  el log-retorno de A1 es EXACTAMENTE el de BTC en los dias con la
+  compuerta abierta, menos el costo de las transiciones. Y la
+  frontera es EXACTAMENTE igualar el retorno total de B1.
+
+  O sea que la pregunta 'pasa A1' es la misma pregunta que 'los
+  dias que la compuerta dejo afuera sumaron negativo'.
+
+  Dias con compuerta abierta     1128  de 1827  (61.7%)
+  Transiciones de la compuerta     39
+
+  log-retorno de BTC con la compuerta ABIERTA     +2.0727
+  log-retorno de BTC con la compuerta CERRADA     +0.4919
+  log-retorno total de B1                         +2.5646
+
+  **Los dias que la compuerta dejo afuera sumaron +0.4919.**
+  BTC SUBIO mientras E0 estaba afuera. Quedarse afuera costo
+  0.4919 de log-retorno, antes de cualquier costo de
+  operacion.
+
+  A1 termina con el 80.8% del log-retorno total de B1
+  y la frontera pide el 100%. **A1 falla, y no por poco.**
+
+  ESTO NO CUESTA PRUEBAS DE DSR y hay que decir por que: no se
+  corrio ninguna configuracion nueva. Es la compuerta de E0 --que
+  ya esta entre las seis-- descompuesta segun su propio estado.
+
+  PERO HAY QUE SER HONESTO CON LA ASIMETRIA: si esto hubiera dado
+  que A1 pasa, correrla despues seria confirmar algo ya sabido, no
+  explorar. Dio que no pasa, asi que ahorra la prueba en vez de
+  gastarla -- pero la asimetria existe y queda anotada.
+
+  Y sale de ahi una condicion general, que vale para CUALQUIER
+  compuerta de encendido y apagado a exposicion plena:
+
+      pasa la frontera  <=>  los dias que deja afuera suman
+                             negativo, por mas que el costo
+
+  Es necesaria y suficiente, y sale de la identidad. En una ventana
+  donde BTC multiplico por 13, es una condicion muy dura.
+
+==============================================================================
+ LO QUE CONTESTAN LOS CUATRO PASOS JUNTOS
+==============================================================================
+  Configuraciones evaluadas contra la frontera: 7
+  Las que la pasan: 0
+
+  E0, la mejor de todas, capturo 44.1% de la subida y
+  necesitaba 63.5%. Le faltan 0.194 de captura.
+
+  Y ninguna capa la acerca: la compuerta aporta lo que aporta, el
+  objetivo de volatilidad mueve por la linea de exposicion
+  constante, y la seleccion por momentum resta.
+
+  (160 s)

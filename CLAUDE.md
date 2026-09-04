@@ -110,7 +110,7 @@ cuenta. Está todo probado, no lo desarmes:
   `github.com/felipemunoz8604/Proyecto-KINETIC`, privado a propósito — el
   repo tiene la lógica de la estrategia y los resultados completos.
 
-## Dónde está parado el proyecto (31-ago-2026)
+## Dónde está parado el proyecto (3-sep-2026)
 
 **Fases 0, 1 y 2 CERRADAS. Ninguna fase abierta.**
 
@@ -145,13 +145,44 @@ agotado.**
 Inventar una después de ver fallar seis configuraciones, y conociendo ya los
 datos, es el barrido que este proyecto existe para evitar.
 
+### La vara nueva (3-sep-2026): la frontera derivada
+
+Dos consultas externas cambiaron el criterio. **Los umbrales inventados del 70%
+y el 40% se retiraron y los reemplaza una identidad**, en
+`metrics/frontera.py`:
+
+    c_up  >=  1 - (1 - c_down) * R        con R = |D| / U
+
+donde U y D son los log-retornos agregados de B1 en los meses que subió y bajó.
+**No hay ningún número elegido ahí.** Pasar esa frontera y superar el retorno
+total de B1 son el mismo evento, y hay una prueba que lo exige
+(`test_la_frontera_es_exactamente_ganarle_a_b1`).
+
+Sobre 2020-2024: **R = 0,5666**, y **ninguna de las siete configuraciones la
+pasa** en mensual, semanal ni trimestral. E0, la mejor, capturó 0,441 y
+necesitaba 0,635.
+
+**`metrics/regimen.py` es la vara VIEJA y se conserva a propósito** — su
+ventana de 12 meses resultó ser un parámetro libre que movía el resultado un
+factor de 15. No la uses para decidir nada; sirve para contrastar.
+
+**A1 no hay que correrla: la identidad ya la contesta.** A exposición plena una
+compuerta solo elige días, así que pasa si y solo si los días que deja afuera
+suman negativo. BTC subió +0,4919 en log-retorno mientras E0 estaba afuera.
+**A2 es la única ablación que sigue en pie y cuesta una prueba de DSR:** no se
+corre sin decisión explícita de Felipe.
+
 **El holdout (2025 en adelante) NO se miró** y sigue cerrado por código en
 `metrics/ventana.py`. Ninguna candidata llegó a merecerlo.
 
 Lo construido se reusa entero y no depende de la estrategia: datos sin sesgo
 de supervivencia, universo reconstruido mes a mes, costos por venue con
 financiación, riesgo v2, motor de cartera por exposición (con cortos), y
-métricas de robustez. **451 pruebas en verde.**
+métricas de robustez. **491 pruebas en verde.**
+
+**Las curvas de las seis corridas se arman en un solo lugar:
+`backtesting/corridas.py`.** Si necesitás las candidatas para comparar algo, usá
+ese módulo — no rearmes la construcción, que ya se copió dos veces.
 
 Cerrar la Fase 2 **no abre la Fase 3.** No hay estrategia validada que llevar
 a Testnet, y avanzar de fase necesita decisión explícita de Felipe.
